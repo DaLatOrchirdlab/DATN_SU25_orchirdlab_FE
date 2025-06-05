@@ -1,0 +1,41 @@
+.stepper {
+    display: flex;
+    align-items: center;
+    margin: 24px 0;
+  }
+  .stepper__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .stepper__circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #217a2b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+  }
+  .stepper__step--active .stepper__circle {
+    background: #217a2b;
+    color: #fff;
+  }
+  .stepper__label {
+    margin-top: 4px;
+    font-size: 14px;
+    color: #888;
+  }
+  .stepper__step--active .stepper__label {
+    color: #217a2b;
+    font-weight: bold;
+  }
+  .stepper__line {
+    width: 48px;
+    height: 2px;
+    background: #e0e0e0;
+    margin: 0 8px;
+  }

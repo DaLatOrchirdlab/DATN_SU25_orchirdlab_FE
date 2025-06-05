@@ -1,0 +1,78 @@
+/* createTask-sidebar.css */
+.sidebar {
+  width: 256px;
+  background-color: #2E7D32;
+  color: white;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+}
+
+/* .sidebar-logo {
+  padding: 1rem;
+  border-bottom: 1px solid #10b981;
+} */
+
+.sidebar-logo h2 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu > li {
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  color: #d1fae5;
+  font-size: 0.875rem;
+}
+
+.sidebar-menu-item:hover {
+  background-color: #10b981;
+  color: white;
+}
+
+.sidebar-menu-item.active {
+  background-color: #459880;
+  color: white;
+}
+
+.sidebar-bottom {
+  padding: 1rem;
+  border-top: 1px solid #10b981;
+}
+
+.sidebar-bottom-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-bottom-menu > li {
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-icon {
+  width: 20px;
+  height: 20px;
+}
