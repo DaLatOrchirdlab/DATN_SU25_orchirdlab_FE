@@ -17,7 +17,7 @@ const tabs = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 shadow flex flex-col bg-green-800">
+    <aside className="w-64 h-screen fixed top-0 left-0 z-30 shadow flex flex-col bg-green-800">
       <div className="h-16 flex items-center justify-center font-bold text-xl text-white border-b border-white/40">
         OrchidLab
       </div>

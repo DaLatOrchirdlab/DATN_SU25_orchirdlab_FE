@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const seedlings = [
+export const seedlings = [
   {
     id: 1,
     name: "Phalaenopsis Mix 1",
@@ -91,7 +91,7 @@ export default function Seedlings() {
         </h1>
         <button
           type="button"
-          onClick={() => navigate("/seedlings/new")}
+          onClick={() => void navigate("/seedlings/new")}
           className="bg-green-800 text-white px-5 py-2 rounded-full font-semibold hover:bg-green-950 transition cursor-pointer"
         >
           + New Seedling
@@ -157,7 +157,7 @@ export default function Seedlings() {
                   <button
                     type="button"
                     className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
-                    onClick={() => navigate(`/seedlings/${s.id}`)}
+                    onClick={() => void navigate(`/seedlings/${s.id}`)}
                   >
                     View
                   </button>
