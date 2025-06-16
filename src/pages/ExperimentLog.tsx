@@ -184,7 +184,7 @@ const ExperimentLog = () => {
           {/* Header và filters */}
           <div className="p-6 border-b">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Danh sách Kế hoạch nuôi cấys
+              Danh sách Kế hoạch nuôi cấy
             </h2>
             <p className="text-gray-600 text-sm mb-4">
               Quản lý và theo dõi các thí nghiệm của bạn
