@@ -1,11 +1,19 @@
-import React from 'react';
-import { Check } from 'lucide-react';
+import React from "react";
+import { Check } from "lucide-react";
 
 const ExperimentSteps = ({ currentStep = 1 }) => {
   const steps = [
-    { id: 1, name: 'Batch Info', description: 'Chọn Tissue Culture Batch và Method' },
-    { id: 2, name: 'Samples', description: 'Chọn cây bố và cây mẹ cho thí nghiệm' },
-    { id: 3, name: 'Review', description: 'Kiểm tra thông tin và hoàn thành tạo Experiment Log' }
+    {
+      id: 1,
+      name: "Thông tin lô nuôi cấy",
+      description: "Chọn Lô nuôi cấy và Phương pháp lai",
+    },
+    { id: 2, name: "Mẫu", description: "Chọn cây bố và cây mẹ cho thí nghiệm" },
+    {
+      id: 3,
+      name: "Review",
+      description: "Kiểm tra thông tin và hoàn thành tạo Experiment Log",
+    },
   ];
 
   return (
@@ -14,7 +22,12 @@ const ExperimentSteps = ({ currentStep = 1 }) => {
         <nav aria-label="Progress">
           <ol className="flex items-center">
             {steps.map((step, stepIdx) => (
-              <li key={step.id} className={`${stepIdx !== steps.length - 1 ? 'flex-1' : ''} flex items-center`}>
+              <li
+                key={step.id}
+                className={`${
+                  stepIdx !== steps.length - 1 ? "flex-1" : ""
+                } flex items-center`}
+              >
                 <div className="flex items-center">
                   <div className="flex items-center">
                     {step.id < currentStep ? (
@@ -23,28 +36,40 @@ const ExperimentSteps = ({ currentStep = 1 }) => {
                       </div>
                     ) : step.id === currentStep ? (
                       <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">{step.id}</span>
+                        <span className="text-white text-sm font-medium">
+                          {step.id}
+                        </span>
                       </div>
                     ) : (
                       <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="text-gray-600 text-sm font-medium">{step.id}</span>
+                        <span className="text-gray-600 text-sm font-medium">
+                          {step.id}
+                        </span>
                       </div>
                     )}
                     <div className="ml-4">
-                      <div className={`text-sm font-medium ${
-                        step.id <= currentStep ? 'text-green-600' : 'text-gray-500'
-                      }`}>
+                      <div
+                        className={`text-sm font-medium ${
+                          step.id <= currentStep
+                            ? "text-green-600"
+                            : "text-gray-500"
+                        }`}
+                      >
                         {step.name}
                       </div>
-                      <div className="text-xs text-gray-500">{step.description}</div>
+                      <div className="text-xs text-gray-500">
+                        {step.description}
+                      </div>
                     </div>
                   </div>
                 </div>
                 {stepIdx !== steps.length - 1 && (
                   <div className="flex-1 ml-4 mr-4">
-                    <div className={`h-0.5 ${
-                      step.id < currentStep ? 'bg-green-600' : 'bg-gray-300'
-                    }`} />
+                    <div
+                      className={`h-0.5 ${
+                        step.id < currentStep ? "bg-green-600" : "bg-gray-300"
+                      }`}
+                    />
                   </div>
                 )}
               </li>

@@ -6,43 +6,39 @@ export default function SeedlingSummary() {
   const { form } = useSeedlingForm();
 
   return (
-    <div>
+    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 ">
       <h2 className="text-2xl font-bold text-green-800 mb-4">
-        Add New Orchid Seedling
+        Thêm cây giống mới
       </h2>
       <div className="bg-white rounded-xl shadow p-8 max-w-3xl mx-auto">
         <h3 className="text-xl font-semibold text-green-800 mb-6">
-          Seedling Details
+          Chi tiết cây giống
         </h3>
         <div className="mb-6">
           <div className="mb-2">
-            <span className="font-semibold">Name:</span> {form.name}
+            <span className="font-semibold">Tên:</span> {form.name}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Parent:</span> {form.parent}
+            <span className="font-semibold">Cây bố:</span> {form.parent}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Parent 1:</span> {form.parent1}
+            <span className="font-semibold">Cây mẹ:</span> {form.parent1}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Description:</span>{" "}
-            {form.description}
+            <span className="font-semibold">Mô tả:</span> {form.description}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Date of Birth:</span>{" "}
-            {form.dateOfBirth}
+            <span className="font-semibold">Ngày sinh:</span> {form.dateOfBirth}
           </div>
         </div>
-        <h3 className="text-lg font-semibold text-green-800 mb-2">
-          Characteristics
-        </h3>
+        <h3 className="text-lg font-semibold text-green-800 mb-2">Đặc trưng</h3>
         <div className="overflow-x-auto">
           <table className="w-full border rounded">
             <thead>
               <tr className="bg-green-50 text-green-800 font-semibold">
-                <th className="py-2">Attribute</th>
-                <th className="py-2">Value</th>
-                <th className="py-2">Unit</th>
+                <th className="py-2">Thuộc tính</th>
+                <th className="py-2">Giá trị</th>
+                <th className="py-2">Đơn vị</th>
               </tr>
             </thead>
             <tbody>
@@ -64,17 +60,17 @@ export default function SeedlingSummary() {
             className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"
             onClick={() => navigate("/seedlings/new/characteristics")}
           >
-            Back
+            Trở về
           </button>
           <button
             type="button"
             className="bg-green-800 cursor-pointer text-white px-8 py-2 rounded font-semibold hover:bg-green-900 transition"
             onClick={() => navigate("/seedlings")}
           >
-            Create
+            Tạo
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

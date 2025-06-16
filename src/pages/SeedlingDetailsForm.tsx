@@ -31,79 +31,79 @@ export default function SeedlingDetailsForm() {
   }
 
   return (
-    <div>
+    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 ">
       <h2 className="text-2xl font-bold text-green-800 mb-4">
-        Add New Orchid Seedling
+        Thêm cây giống mới
       </h2>
       <div className="bg-white rounded-xl shadow p-8 max-w-3xl mx-auto">
         <h3 className="text-xl font-semibold text-green-800 mb-6">
-          Seedling Details
+          Chi tiết cây giống
         </h3>
         <div className="space-y-4">
           <div>
-            <label className="block font-medium mb-1">Name *</label>
+            <label className="block font-medium mb-1">Tên *</label>
             <input
               name="name"
               value={form.name}
               onChange={handleChange}
               className="w-full border rounded px-4 py-2"
-              placeholder="Enter seedling name"
+              placeholder="Nhập tên cây giống"
             />
             {touched && !form.name && (
-              <div className="text-red-500 text-sm">Required</div>
+              <div className="text-red-500 text-sm">Bắt buộc</div>
             )}
           </div>
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block font-medium mb-1">Parent *</label>
+              <label className="block font-medium mb-1">Cây bố *</label>
               <select
                 name="parent"
                 value={form.parent}
                 onChange={handleChange}
                 className="w-full border rounded px-4 py-2"
               >
-                <option value="">Select parent plant</option>
+                <option value="">Chọn cây bố</option>
                 {parentOptions.map((p) => (
                   <option key={p}>{p}</option>
                 ))}
               </select>
               {touched && !form.parent && (
-                <div className="text-red-500 text-sm">Required</div>
+                <div className="text-red-500 text-sm">Bắt buộc</div>
               )}
             </div>
             <div className="flex-1">
-              <label className="block font-medium mb-1">Parent 1 *</label>
+              <label className="block font-medium mb-1">Cây mẹ *</label>
               <select
                 name="parent1"
                 value={form.parent1}
                 onChange={handleChange}
                 className="w-full border rounded px-4 py-2"
               >
-                <option value="">Select parent 1 plant</option>
+                <option value="">Chọn cây mẹ</option>
                 {parent1Options.map((p) => (
                   <option key={p}>{p}</option>
                 ))}
               </select>
               {touched && !form.parent1 && (
-                <div className="text-red-500 text-sm">Required</div>
+                <div className="text-red-500 text-sm">Bắt buộc</div>
               )}
             </div>
           </div>
           <div>
-            <label className="block font-medium mb-1">Description *</label>
+            <label className="block font-medium mb-1">Miêu tả *</label>
             <textarea
               name="description"
               value={form.description}
               onChange={handleChange}
               className="w-full border rounded px-4 py-2"
-              placeholder="Enter detailed description of the seedling..."
+              placeholder="Nhập mô tả chi tiết về cây giống..."
             />
             {touched && !form.description && (
-              <div className="text-red-500 text-sm">Required</div>
+              <div className="text-red-500 text-sm">Bắt buộc</div>
             )}
           </div>
           <div>
-            <label className="block font-medium mb-1">Date of Birth *</label>
+            <label className="block font-medium mb-1">Ngày sinh *</label>
             <div className="flex items-center gap-2">
               <input
                 name="dateOfBirth"
@@ -114,7 +114,7 @@ export default function SeedlingDetailsForm() {
               />
             </div>
             {touched && !form.dateOfBirth && (
-              <div className="text-red-500 text-sm">Required</div>
+              <div className="text-red-500 text-sm">Bắt buộc</div>
             )}
           </div>
         </div>
@@ -124,18 +124,18 @@ export default function SeedlingDetailsForm() {
             className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"
             onClick={() => navigate("/seedlings")}
           >
-            Cancel
+            Hủy
           </button>
           <button
             type="button"
             className="bg-green-800 cursor-pointer text-white px-8 py-2 rounded font-semibold hover:bg-green-900 transition"
             onClick={handleNext}
           >
-            Next
+            Tiếp theo
           </button>
         </div>
-        <div className="text-xs text-gray-400 mt-2">* Required fields</div>
+        <div className="text-xs text-gray-400 mt-2">* Các trường bắt buộc</div>
       </div>
-    </div>
+    </main>
   );
 }
