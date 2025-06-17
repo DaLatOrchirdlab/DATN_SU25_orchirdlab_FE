@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ExperimentSteps from "../Step/ExperimentSteps";
-import { seedlings } from "../../Seedlings"; // Import seedlings data
+import { seedlings } from "../../seedling/Seedlings"; // Import seedlings data
 
 interface Seedling {
   id: number;

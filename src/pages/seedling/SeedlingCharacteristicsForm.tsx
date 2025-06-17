@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { useSeedlingForm } from "../context/SeedlingFormContext";
+
 import { useState } from "react";
 import { FaPlus, FaMinus } from "react-icons/fa";
-import type { SeedlingCharacteristic } from "../types/Seedling";
+
+import { useSeedlingForm } from "../../context/SeedlingFormContext";
+import type { SeedlingCharacteristic } from "../../types/Seedling";
 
 const attributeOptions = ["Chiều cao", "Màu hoa", "Số lá", "Số rễ"];
 

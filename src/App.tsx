@@ -6,15 +6,13 @@ import {
 } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
-import Method from "./pages/Method";
+import Method from "./pages/method/Method";
 import Tasks from "./pages/Tasks";
 import ExperimentLog from "./pages/ExperimentLog";
-import Seedlings from "./pages/Seedlings";
+import Seedlings from "./pages/seedling/Seedlings";
 import Reports from "./pages/Reports";
-import SeedlingDetail from "./pages/SeedlingDetail";
-import SeedlingDetailsForm from "./pages/SeedlingDetailsForm";
-import SeedlingCharacteristicsForm from "./pages/SeedlingCharacteristicsForm";
-import SeedlingSummary from "./pages/SeedlingSummary";
+import SeedlingDetail from "./pages/seedling/SeedlingDetail";
+
 import { SeedlingFormProvider } from "./context/SeedlingFormContext";
 import CreateTaskContainer from "./pages/CreateTask/Form/CreateTaskContainer";
 import SelectCageContainer from "./pages/CreateTask/Form/SelectCageContainer";
@@ -26,6 +24,11 @@ import CreateExperimentStep1 from "./pages/CreateExperimentLog/Form/CreateExperi
 import CreateExperimentStep2 from "./pages/CreateExperimentLog/Form/CreateExperimentStep2";
 import CreateExperimentStep3 from "./pages/CreateExperimentLog/Form/CreateExperimentStep3";
 import ProfilePage from "./pages/ProfilePage";
+import MethodDetail from "./pages/method/MethodDetail";
+import MethodCreate from "./pages/method/MethodCreate";
+import SeedlingDetailsForm from "./pages/seedling/SeedlingDetailsForm";
+import SeedlingCharacteristicsForm from "./pages/seedling/SeedlingCharacteristicsForm";
+import SeedlingSummary from "./pages/seedling/SeedlingSummary";
 
 function App() {
   return (
@@ -38,6 +41,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/method" replace />} />
               <Route path="/method" element={<Method />} />
+              <Route path="/method/:id" element={<MethodDetail />} />
+              <Route path="/method/new" element={<MethodCreate />} />
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/experiment-log" element={<ExperimentLog />} />
               <Route path="/seedlings" element={<Seedlings />} />
@@ -58,19 +63,48 @@ function App() {
                 }
               />
               <Route path="/reports" element={<Reports />} />
-              <Route path="/create-task" element={<Navigate to="/create-task/step-1" replace />} />
-              <Route path="/create-task/step-1" element={<CreateTaskContainer />} />
-              <Route path="/create-task/step-2" element={<SelectCageContainer />} />
-              <Route path="/create-task/step-3" element={<SelectTechnicianContainer />} />
-              <Route path="/create-task/step-4" element={<ConfirmTaskContainer />} />
+              <Route
+                path="/create-task"
+                element={<Navigate to="/create-task/step-1" replace />}
+              />
+              <Route
+                path="/create-task/step-1"
+                element={<CreateTaskContainer />}
+              />
+              <Route
+                path="/create-task/step-2"
+                element={<SelectCageContainer />}
+              />
+              <Route
+                path="/create-task/step-3"
+                element={<SelectTechnicianContainer />}
+              />
+              <Route
+                path="/create-task/step-4"
+                element={<ConfirmTaskContainer />}
+              />
               <Route path="/tasks/:id" element={<TaskDetailPage />} />
               <Route path="/tasks/:id/edit" element={<EditTask />} />
 
               {/* Experiment Log Creation Routes */}
-              <Route path="/experiment-log/create" element={<Navigate to="/experiment-log/create/step-1" replace />} />
-              <Route path="/experiment-log/create/step-1" element={<CreateExperimentStep1 />} />
-              <Route path="/experiment-log/create/step-2" element={<CreateExperimentStep2 />} />
-              <Route path="/experiment-log/create/step-3" element={<CreateExperimentStep3 />} />
+              <Route
+                path="/experiment-log/create"
+                element={
+                  <Navigate to="/experiment-log/create/step-1" replace />
+                }
+              />
+              <Route
+                path="/experiment-log/create/step-1"
+                element={<CreateExperimentStep1 />}
+              />
+              <Route
+                path="/experiment-log/create/step-2"
+                element={<CreateExperimentStep2 />}
+              />
+              <Route
+                path="/experiment-log/create/step-3"
+                element={<CreateExperimentStep3 />}
+              />
               <Route path="/profile" element={<ProfilePage />} />
             </Routes>
           </main>

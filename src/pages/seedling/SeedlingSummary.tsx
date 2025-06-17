@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { useSeedlingForm } from "../context/SeedlingFormContext";
-import type { SeedlingCharacteristic } from "../types/Seedling";
+
+import { useSeedlingForm } from "../../context/SeedlingFormContext";
+import type { SeedlingCharacteristic } from "../../types/Seedling";
 export default function SeedlingSummary() {
   const navigate = useNavigate();
   const { form } = useSeedlingForm();
