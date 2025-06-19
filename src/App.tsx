@@ -29,6 +29,7 @@ import MethodCreate from "./pages/method/MethodCreate";
 import SeedlingDetailsForm from "./pages/seedling/SeedlingDetailsForm";
 import SeedlingCharacteristicsForm from "./pages/seedling/SeedlingCharacteristicsForm";
 import SeedlingSummary from "./pages/seedling/SeedlingSummary";
+import ExperimentLogDetail from "./pages/ExperimentLogDetail";
 
 function App() {
   return (
