@@ -27,83 +27,49 @@ export default function SeedlingDetail() {
   };
 
   return (
-    <div className="ml-64 mt-16 p-8">
+    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 ">
       <button
         type="button"
         className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-4 hover:bg-green-800 hover:text-white transition"
-        onClick={() => void navigate("/seedlings")}
+        onClick={() => navigate("/seedlings")}
       >
-        &larr; Back to List
+        &larr; Trở về
       </button>
       <h1 className="text-3xl font-bold text-green-800 mb-1">
         {seedling.name}
       </h1>
-      <div className="text-gray-500 mb-4">Detailed Information</div>
+      <div className="text-gray-500 mb-4">Thông tin chi tiết</div>
       <div className="bg-white rounded shadow p-6 flex gap-8">
         <div className="flex-1">
           <div className="mb-2">
-            <span className="font-semibold">Name:</span> {seedling.name}
+            <span className="font-semibold">Tên:</span> {seedling.name}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Parent:</span> {seedling.parent}
+            <span className="font-semibold">Cây bố:</span> {seedling.parent}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Parent1:</span> {seedling.parent1}
+            <span className="font-semibold">Cây mẹ:</span> {seedling.parent1}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Description:</span>{" "}
+            <span className="font-semibold">Miêu tả:</span>{" "}
             {seedling.description}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Date of Birth:</span>{" "}
+            <span className="font-semibold">Ngày sinh:</span>{" "}
             {seedling.dateOfBirth}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Created At:</span>{" "}
+            <span className="font-semibold">Ngày tạo:</span>{" "}
             {seedling.createdAt}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Created By:</span>{" "}
-            {seedling.createdBy}
+            <span className="font-semibold">Tạo bởi:</span> {seedling.createdBy}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Status:</span>{" "}
+            <span className="font-semibold">Trạng thái:</span>{" "}
             <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold">
               {seedling.status}
             </span>
-          </div>
-        </div>
-        <div className="w-80 bg-green-50 rounded p-4">
-          <div className="font-semibold text-green-800 mb-2">
-            Growth Information
-          </div>
-          <div className="mb-1">
-            <span className="font-semibold">Current Stage:</span>{" "}
-            {seedling.growth.stage}
-          </div>
-          <div className="mb-1">
-            <span className="font-semibold">Height:</span>{" "}
-            {seedling.growth.height}
-          </div>
-          <div className="mb-1">
-            <span className="font-semibold">Leaf Count:</span>{" "}
-            {seedling.growth.leafCount}
-          </div>
-          <div className="mb-1">
-            <span className="font-semibold">Root Development:</span>{" "}
-            {seedling.growth.root}
-          </div>
-          <div className="mb-1">
-            <span className="font-semibold">Expected Bloom:</span>{" "}
-            {seedling.growth.bloom}
-          </div>
-          <div className="mb-1">
-            <span className="font-semibold">Last Watered:</span>{" "}
-            {seedling.growth.lastWatered}
-          </div>
-          <div className="mb-1">
-            <span className="font-semibold">Next Care Date:</span>{" "}
-            {seedling.growth.nextCare}
           </div>
         </div>
       </div>
@@ -112,15 +78,15 @@ export default function SeedlingDetail() {
           type="button"
           className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"
         >
-          Edit
+          Sửa
         </button>
         <button
           type="button"
           className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"
         >
-          Delete
+          Xóa
         </button>
       </div>
-    </div>
+    </main>
   );
 }

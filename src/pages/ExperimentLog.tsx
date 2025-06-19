@@ -81,7 +81,7 @@ const ExperimentLog = () => {
   };
 
   const getStatusCount = (status: ExperimentStatus): number => {
-    return logs.filter(log => log.status === status).length;
+    return logs.filter((log) => log.status === status).length;
   };
 
   const filteredLogs = logs.filter(log => {
@@ -157,10 +157,12 @@ const ExperimentLog = () => {
               </div>
               <div className="flex items-center gap-2 min-w-[180px]">
                 <Filter className="text-gray-400 w-4 h-4" />
-                <select 
+                <select
                   className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as ExperimentStatus | 'all')}
+                  onChange={(e) =>
+                    setStatusFilter(e.target.value as ExperimentStatus | "all")
+                  }
                 >
                   <option value="all">Tất cả trạng thái</option>
                   <option value="Đang thực hiện">Đang thực hiện</option>
@@ -213,16 +215,30 @@ const ExperimentLog = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{log.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.method}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.tissueCultureBatch}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.createdDate}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {log.id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {log.method}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {log.tissueCultureBatch}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {log.createdDate}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(log.status)}`}>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                          log.status
+                        )}`}
+                      >
                         {log.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.samples}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {log.samples}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex gap-2">
                       <button
                         onClick={() => { void navigate(`/experiment-log/${log.id}`); }}
@@ -245,9 +261,15 @@ const ExperimentLog = () => {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">Trang</span>
-              <button className="bg-green-600 text-white px-3 py-1 rounded text-sm">1</button>
-              <button className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm">2</button>
-              <button className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm">3</button>
+              <button className="bg-green-600 text-white px-3 py-1 rounded text-sm">
+                1
+              </button>
+              <button className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm">
+                2
+              </button>
+              <button className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm">
+                3
+              </button>
               <span className="text-sm text-gray-500">Sau</span>
             </div>
           </div>
@@ -259,30 +281,58 @@ const ExperimentLog = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
             <div className="bg-green-600 text-white px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Chi tiết Experiment Log - {selectedLog.id}</h2>
-              <button onClick={handleClosePopup} className="text-white hover:text-gray-200">
+              <h2 className="text-xl font-semibold">
+                Chi tiết Kế hoạch nuôi cấy - {selectedLog.id}
+              </h2>
+              <button
+                onClick={handleClosePopup}
+                className="text-white hover:text-gray-200"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <h3 className="font-medium text-gray-900 mb-1">Thông tin cơ bản</h3>
-                <p className="text-sm text-gray-700"><strong>Method:</strong> {selectedLog.method}</p>
-                <p className="text-sm text-gray-700"><strong>Batch:</strong> {selectedLog.tissueCultureBatch}</p>
-                <p className="text-sm text-gray-700"><strong>Created Date:</strong> {selectedLog.createdDate}</p>
-                <p className="text-sm text-gray-700"><strong>Status:</strong> <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusColor(selectedLog.status)}`}>{selectedLog.status}</span></p>
-                <p className="text-sm text-gray-700"><strong>Samples:</strong> {selectedLog.samples}</p>
+                <h3 className="font-medium text-gray-900 mb-1">
+                  Thông tin cơ bản
+                </h3>
+                <p className="text-sm text-gray-700">
+                  <strong>Phương pháp lai:</strong> {selectedLog.method}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <strong>Lô nuôi cấy:</strong> {selectedLog.tissueCultureBatch}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <strong>Ngày tạo:</strong> {selectedLog.createdDate}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <strong>Trạng thái:</strong>{" "}
+                  <span
+                    className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusColor(
+                      selectedLog.status
+                    )}`}
+                  >
+                    {selectedLog.status}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-700">
+                  <strong>Mẫu:</strong> {selectedLog.samples}
+                </p>
               </div>
               {/* Thêm các chi tiết khác nếu có */}
               <div>
-                <h3 className="font-medium text-gray-900 mb-1">Các giai đoạn</h3>
+                <h3 className="font-medium text-gray-900 mb-1">
+                  Các giai đoạn
+                </h3>
                 <ul className="list-disc list-inside text-sm text-gray-700 ml-4">
                   <li>{selectedLog.stage}</li>
                 </ul>
               </div>
               {/* Sample Status section - for visual representation as in image */}
               <div>
-                <h3 className="font-medium text-gray-900 mb-1">Sample Status</h3>
+                <h3 className="font-medium text-gray-900 mb-1">
+                  Trạng thái mẫu
+                </h3>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-green-500"></span>
                   <span className="w-3 h-3 rounded-full bg-yellow-500"></span>

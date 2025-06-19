@@ -8,11 +8,11 @@ import {
 } from "react-icons/fa";
 
 const tabs = [
-  { name: "Method", path: "/method", icon: <FaFlask /> },
-  { name: "Tasks", path: "/tasks", icon: <FaTasks /> },
-  { name: "Experiment Log", path: "/experiment-log", icon: <FaBook /> },
-  { name: "Seedlings", path: "/seedlings", icon: <FaSeedling /> },
-  { name: "Reports", path: "/reports", icon: <FaChartBar /> },
+  { name: "Phương pháp lai", path: "/method", icon: <FaFlask /> },
+  { name: "Nhiệm vụ", path: "/tasks", icon: <FaTasks /> },
+  { name: "Kế hoạch lai tạo", path: "/experiment-log", icon: <FaBook /> },
+  { name: "Cây giống", path: "/seedlings", icon: <FaSeedling /> },
+  { name: "Báo cáo", path: "/reports", icon: <FaChartBar /> },
 ];
 
 export default function Sidebar() {

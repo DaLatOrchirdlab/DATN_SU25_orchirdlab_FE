@@ -9,29 +9,35 @@ interface CreateTaskStepperProps {
 }
 
 const steps: Step[] = [
-  { label: "Basic Info" },
-  { label: "Cage" },
+  { label: "Thông tin cơ bản " },
+  { label: "Lô nuôi cấy" },
   { label: "Technician" },
-  { label: "Review" }
+  { label: "Review" },
 ];
 
-const CreateTaskStepper: React.FC<CreateTaskStepperProps> = ({ currentStep = 1 }) => (
+const CreateTaskStepper: React.FC<CreateTaskStepperProps> = ({
+  currentStep = 1,
+}) => (
   <div className="flex items-center my-6">
     {steps.map((step, idx) => (
       <React.Fragment key={step.label}>
         <div className="flex flex-col items-center">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg ${
-            currentStep === idx + 1 
-              ? 'bg-green-700 text-white' 
-              : 'bg-gray-300 text-green-700'
-          }`}>
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg ${
+              currentStep === idx + 1
+                ? "bg-green-700 text-white"
+                : "bg-gray-300 text-green-700"
+            }`}
+          >
             {idx + 1}
           </div>
-          <div className={`mt-1 text-sm ${
-            currentStep === idx + 1 
-              ? 'text-green-700 font-bold' 
-              : 'text-gray-500'
-          }`}>
+          <div
+            className={`mt-1 text-sm ${
+              currentStep === idx + 1
+                ? "text-green-700 font-bold"
+                : "text-gray-500"
+            }`}
+          >
             {step.label}
           </div>
         </div>

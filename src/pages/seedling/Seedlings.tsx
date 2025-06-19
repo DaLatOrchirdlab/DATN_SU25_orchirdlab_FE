@@ -84,17 +84,15 @@ export default function Seedlings() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="ml-64 mt-16 p-8">
+    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 ">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-green-800">
-          Orchid Seedling Registry
-        </h1>
+        <h1 className="text-2xl font-bold text-green-800">Cây giống hoa lan</h1>
         <button
           type="button"
           onClick={() => void navigate("/seedlings/new")}
           className="bg-green-800 text-white px-5 py-2 rounded-full font-semibold hover:bg-green-950 transition cursor-pointer"
         >
-          + New Seedling
+          + Thêm cây giống
         </button>
       </div>
       <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -103,7 +101,7 @@ export default function Seedlings() {
             <input
               type="text"
               className="w-full border border-gray-300 rounded-full px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-green-800"
-              placeholder="Search by name, parent, description..."
+              placeholder="Tìm kiếm theo tên, cây bố mẹ, mô tả..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -121,7 +119,7 @@ export default function Seedlings() {
             </span>
           </div>
         </div>
-        {filters.map((f) => (
+        {/* {filters.map((f) => (
           <button
             type="button"
             key={f.label}
@@ -129,19 +127,19 @@ export default function Seedlings() {
           >
             {f.label}
           </button>
-        ))}
+        ))} */}
       </div>
       <div className="bg-white rounded shadow p-0 overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="bg-green-50 text-green-800 font-semibold">
-              <th className="py-3 px-4">Name</th>
-              <th className="px-4">Parent</th>
-              <th className="px-4">Parent 1</th>
-              <th className="px-4">Date of Birth</th>
-              <th className="px-4">Created At</th>
-              <th className="px-4">Created By</th>
-              <th className="px-4">Actions</th>
+              <th className="py-3 px-4">Tên</th>
+              <th className="px-4">Cây bố</th>
+              <th className="px-4">Cây mẹ</th>
+              <th className="px-4">Ngày sinh</th>
+              <th className="px-4">Ngày tạo</th>
+              <th className="px-4">Tạo bởi</th>
+              <th className="px-4">Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -159,7 +157,7 @@ export default function Seedlings() {
                     className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
                     onClick={() => void navigate(`/seedlings/${s.id}`)}
                   >
-                    View
+                    Chi tiết
                   </button>
                 </td>
               </tr>
@@ -167,7 +165,7 @@ export default function Seedlings() {
             {paginated.length === 0 && (
               <tr>
                 <td colSpan={7} className="text-center py-8 text-gray-400">
-                  No seedlings found.
+                  Không tìm thấy cây giống.
                 </td>
               </tr>
             )}
@@ -177,19 +175,8 @@ export default function Seedlings() {
       {/* Summary cards */}
       <div className="flex gap-4 mt-6 mb-2">
         <div className="bg-green-50 rounded p-4 flex-1">
-          <div className="font-semibold text-green-800">Total Seedlings</div>
-          <div className="text-2xl font-bold text-green-800">47</div>
-          <div className="text-xs text-gray-500">Active records</div>
-        </div>
-        <div className="bg-green-50 rounded p-4 flex-1">
-          <div className="font-semibold text-green-800">This Month</div>
-          <div className="text-2xl font-bold text-green-800">12</div>
-          <div className="text-xs text-gray-500">New additions</div>
-        </div>
-        <div className="bg-green-50 rounded p-4 flex-1">
-          <div className="font-semibold text-green-800">Varieties</div>
-          <div className="text-2xl font-bold text-green-800">8</div>
-          <div className="text-xs text-gray-500">Species tracked</div>
+          <div className="font-semibold text-green-800">Tổng số cây giống</div>
+          <div className="text-2xl font-bold text-green-800">6</div>
         </div>
       </div>
       {/* Pagination */}
@@ -209,6 +196,6 @@ export default function Seedlings() {
           </button>
         ))}
       </div>
-    </div>
+    </main>
   );
 }
