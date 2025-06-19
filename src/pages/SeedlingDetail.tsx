@@ -27,11 +27,11 @@ export default function SeedlingDetail() {
   };
 
   return (
-    <div>
+    <div className="ml-64 mt-16 p-8">
       <button
         type="button"
         className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-4 hover:bg-green-800 hover:text-white transition"
-        onClick={() => navigate("/seedlings")}
+        onClick={() => void navigate("/seedlings")}
       >
         &larr; Back to List
       </button>

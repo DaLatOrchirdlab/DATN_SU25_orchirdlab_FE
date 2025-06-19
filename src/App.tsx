@@ -26,6 +26,7 @@ import CreateExperimentStep1 from "./pages/CreateExperimentLog/Form/CreateExperi
 import CreateExperimentStep2 from "./pages/CreateExperimentLog/Form/CreateExperimentStep2";
 import CreateExperimentStep3 from "./pages/CreateExperimentLog/Form/CreateExperimentStep3";
 import ProfilePage from "./pages/ProfilePage";
+import ExperimentLogDetail from './pages/ExperimentLogDetail';
 
 function App() {
   return (
@@ -72,6 +73,7 @@ function App() {
               <Route path="/experiment-log/create/step-2" element={<CreateExperimentStep2 />} />
               <Route path="/experiment-log/create/step-3" element={<CreateExperimentStep3 />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/experiment-log/:id" element={<ExperimentLogDetail />} />
             </Routes>
           </main>
         </div>

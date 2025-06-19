@@ -52,11 +52,11 @@ export default function SeedlingCharacteristicsForm() {
 
   function handleNext() {
     setTouched(true);
-    if (isValid) navigate("/seedlings/new/summary");
+    if (isValid) void navigate("/seedlings/new/summary");
   }
 
   return (
-    <div>
+    <div className="ml-64 mt-16 p-8">
       <h2 className="text-2xl font-bold text-green-800 mb-4">
         Add New Orchid Seedling
       </h2>
@@ -144,14 +144,14 @@ export default function SeedlingCharacteristicsForm() {
           <button
             type="button"
             className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"
-            onClick={() => navigate("/seedlings/new")}
+            onClick={() => void navigate("/seedlings/new")}
           >
             Back
           </button>
           <button
             type="button"
             className="bg-green-800 cursor-pointer text-white px-8 py-2 rounded font-semibold hover:bg-green-900 transition"
-            onClick={handleNext}
+            onClick={() => void handleNext()}
           >
             Next
           </button>

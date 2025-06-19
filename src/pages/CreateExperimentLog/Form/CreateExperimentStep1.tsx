@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronDown, ArrowRight } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import ExperimentSteps from '../Step/ExperimentSteps';
 
 const CreateExperimentStep1 = () => {
@@ -16,19 +16,21 @@ const CreateExperimentStep1 = () => {
 
   const methods = [
     {
-      id: 'tissue-culture',
-      name: 'Tissue Culture Method',
-      description: 'Phương pháp nuôi cấy mô thực vật trong môi trường vô trung để tạo ra các cây con từ mô xúc.'
+      id: 'Cấy mô',
+      name: 'Cấy mô',
+      description: 'Phương pháp nuôi cấy mô thực vật trong môi trường vô trùng để tạo ra các cây con từ mô.'
     },
     {
-      id: 'hybridization',
-      name: 'Hybridization Method',
+      id: 'Lai ghép',
+      name: 'Lai ghép',
       description: 'Phương pháp lai tạo giữa các giống khác nhau để tạo ra các dòng mới có tính trạng mong muốn.'
     }
   ];
 
   const handleNext = () => {
     if (selectedBatch && selectedMethod) {
+      localStorage.setItem('experiment_method', selectedMethod);
+      localStorage.setItem('experiment_batch', selectedBatch);
       void navigate('/experiment-log/create/step-2');
     }
   };
@@ -41,8 +43,8 @@ const CreateExperimentStep1 = () => {
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow">
             <div className="p-6 border-b">
-              <h1 className="text-2xl font-bold text-gray-900">Tạo Experiment Log Mới</h1>
-              <p className="text-gray-600 mt-1">Bước 1: Chọn Tissue Culture Batch và Method</p>
+              <h1 className="text-2xl font-bold text-gray-900">Tạo nhật ký thí nghiệm mới</h1>
+              <p className="text-gray-600 mt-1">Bước 1: Chọn lô thí nghiệm và phương pháp</p>
             </div>
 
             <div className="p-6">
@@ -52,7 +54,7 @@ const CreateExperimentStep1 = () => {
                   {/* Tissue Culture Batch */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tissue Culture Batch <span className="text-red-500">*</span>
+                      Lô thí nghiệm <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <select
@@ -60,10 +62,10 @@ const CreateExperimentStep1 = () => {
                         onChange={(e) => setSelectedBatch(e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
                       >
-                        <option value="">Chọn tissue culture batch</option>
+                        <option value="">Chọn lô thí nghiệm</option>
                         {batches.map((batch) => (
                           <option key={batch.id} value={batch.id}>
-                            {batch.name} - {batch.samples} samples
+                            {batch.name} - {batch.samples} mẫu
                           </option>
                         ))}
                       </select>
@@ -74,7 +76,7 @@ const CreateExperimentStep1 = () => {
                   {/* Method */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Method <span className="text-red-500">*</span>
+                      Phương pháp <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <select
@@ -82,7 +84,7 @@ const CreateExperimentStep1 = () => {
                         onChange={(e) => setSelectedMethod(e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
                       >
-                        <option value="">Tissue Culture Method</option>
+                        <option value="">Chọn phương pháp</option>
                         {methods.map((method) => (
                           <option key={method.id} value={method.id}>
                             {method.name}
@@ -96,24 +98,30 @@ const CreateExperimentStep1 = () => {
                   {/* Chi Tiết Method */}
                   {selectedMethod && (
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-gray-900 mb-2">Chi Tiết Method: Tissue Culture Method</h3>
+                      <h3 className="font-medium text-gray-900 mb-2">Chi tiết phương pháp: {selectedMethod}</h3>
                       <div className="space-y-2 text-sm text-gray-600">
                         <div>
                           <strong>Mô tả:</strong>
-                          <p>Phương pháp nuôi cấy mô thực vật trong môi trường vô trung để tạo ra các cây con từ mô xúc.</p>
+                          <p>{methods.find(m => m.id === selectedMethod)?.description}</p>
                         </div>
                         <div>
-                          <strong>Các Giai Đoạn:</strong>
+                          <strong>Các giai đoạn:</strong>
                           <ul className="list-disc list-inside ml-4 space-y-1">
-                            <li>Giai đoạn 1: Khử trùng mẫu vật</li>
-                            <li>Giai đoạn 2: Cấy mô lên môi trường nuôi cấy</li>
-                            <li>Giai đoạn 3: Theo dõi và chuyển cấy</li>
-                            <li>Giai đoạn 4: Tạo rễ và thích nghi</li>
+                            {selectedMethod === 'Cấy mô' ? (
+                              <>
+                                <li>Giai đoạn 1: Khử trùng mẫu vật</li>
+                                <li>Giai đoạn 2: Cấy mô lên môi trường nuôi cấy</li>
+                                <li>Giai đoạn 3: Theo dõi và chuyển cấy</li>
+                                <li>Giai đoạn 4: Tạo rễ và thích nghi</li>
+                              </>
+                            ) : (
+                              <>
+                                <li>Giai đoạn 1: Lai tạo bố mẹ</li>
+                                <li>Giai đoạn 2: Kiểm tra sinh trưởng</li>
+                                <li>Giai đoạn 3: Thu hoạch</li>
+                              </>
+                            )}
                           </ul>
-                        </div>
-                        <div>
-                          <strong>Yếu Tố Cần Thiết:</strong>
-                          <p>Môi trường MS, NAA, BAP, Agar, Đường sucrose</p>
                         </div>
                       </div>
                     </div>
@@ -124,14 +132,14 @@ const CreateExperimentStep1 = () => {
                 <div className="space-y-4">
                   {/* Hướng dẫn */}
                   <div className="bg-green-50 p-4 rounded-lg">
-                    <h3 className="font-medium text-green-800 mb-2">Hướng Dẫn Bước 1</h3>
+                    <h3 className="font-medium text-green-800 mb-2">Hướng dẫn bước 1</h3>
                     <ul className="text-sm text-green-700 space-y-1">
-                      <li>• Chọn batch có trạng thái Active</li>
-                      <li>• Chọn method phù hợp với loại thí nghiệm</li>
+                      <li>• Chọn lô thí nghiệm có trạng thái phù hợp</li>
+                      <li>• Chọn phương pháp phù hợp với loại thí nghiệm</li>
                       <li>• Kiểm tra số lượng mẫu có sẵn</li>
-                      <li>• Chú ý đến đặc tính của từng method</li>
-                      <li>• Bước 2: Nhập samples</li>
-                      <li>• Bước 3: Review & tạo log</li>
+                      <li>• Chú ý đến đặc tính của từng phương pháp</li>
+                      <li>• Bước 2: Nhập mẫu cây</li>
+                      <li>• Bước 3: Xem lại & tạo nhật ký</li>
                     </ul>
                   </div>
 
@@ -170,8 +178,7 @@ const CreateExperimentStep1 = () => {
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  Next
-                  <ArrowRight className="w-4 h-4" />
+                  Tiếp tục
                 </button>
               </div>
               <div className="text-sm text-gray-500">
