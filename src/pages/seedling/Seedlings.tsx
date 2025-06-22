@@ -84,7 +84,7 @@ export default function Seedlings() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 ">
+    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-green-800">Cây giống hoa lan</h1>
         <button
@@ -174,7 +174,7 @@ export default function Seedlings() {
       </div>
       {/* Summary cards */}
       <div className="flex gap-4 mt-6 mb-2">
-        <div className="bg-green-50 rounded p-4 flex-1">
+        <div className="bg-green-100 rounded p-4 w-1/4">
           <div className="font-semibold text-green-800">Tổng số cây giống</div>
           <div className="text-2xl font-bold text-green-800">6</div>
         </div>

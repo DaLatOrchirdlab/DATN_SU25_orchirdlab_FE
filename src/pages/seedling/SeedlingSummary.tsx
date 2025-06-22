@@ -7,11 +7,11 @@ export default function SeedlingSummary() {
   const { form } = useSeedlingForm();
 
   return (
-    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 ">
+    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
       <h2 className="text-2xl font-bold text-green-800 mb-4">
         Thêm cây giống mới
       </h2>
-      <div className="bg-white rounded-xl shadow p-8 max-w-3xl mx-auto">
+      <div className="bg-white rounded-xl shadow p-8 max-w-4xl mx-auto">
         <h3 className="text-xl font-semibold text-green-800 mb-6">
           Chi tiết cây giống
         </h3>

@@ -27,7 +27,7 @@ export default function SeedlingDetail() {
   };
 
   return (
-    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 ">
+    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
       <button
         type="button"
         className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-4 hover:bg-green-800 hover:text-white transition"

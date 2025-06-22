@@ -200,14 +200,14 @@ export default function MethodDetail() {
   if (!method) return <div>Không tìm thấy phương pháp.</div>;
 
   return (
-    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 ">
+    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
+      <button
+        className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-4 hover:bg-green-800 hover:text-white transition"
+        onClick={() => navigate(-1)}
+      >
+        ← Trở về
+      </button>
       <div className="max-w-full mx-auto bg-white rounded shadow p-6">
-        <button
-          className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-4 hover:bg-green-800 hover:text-white transition"
-          onClick={() => navigate(-1)}
-        >
-          ← Trở về
-        </button>
         <h2 className="text-2xl font-bold mb-2 text-green-800">
           {method.name}
         </h2>
@@ -218,9 +218,9 @@ export default function MethodDetail() {
         </div>
         <div className="mb-4 text-gray-700">{method.description}</div>
         <h3 className="text-lg font-semibold mb-2">Quy trình chi tiết:</h3>
-        <ol className="list-decimal ml-6 space-y-3">
+        <ol className="ml-6 space-y-3">
           {method.steps.map((step: any, idx: number) => (
-            <li key={idx}>
+            <li key={idx} className="mb-4">
               <div className="font-semibold">{step.title}</div>
               <div className="text-gray-700">{step.content}</div>
             </li>

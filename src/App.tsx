@@ -10,7 +10,9 @@ import Method from "./pages/method/Method";
 import Tasks from "./pages/Tasks";
 import ExperimentLog from "./pages/ExperimentLog";
 import Seedlings from "./pages/seedling/Seedlings";
-import Reports from "./pages/Reports";
+import Reports from "./pages/reports/Reports";
+import ReportsDetails from "./pages/reports/ReportsDetails";
+import ReportsFollowUpDetails from "./pages/reports/ReportsFollowUpDetails";
 import SeedlingDetail from "./pages/seedling/SeedlingDetail";
 
 import { SeedlingFormProvider } from "./context/SeedlingFormContext";
@@ -63,6 +65,11 @@ function App() {
                 }
               />
               <Route path="/reports" element={<Reports />} />
+              <Route path="/reports/:id" element={<ReportsDetails />} />
+              <Route
+                path="/reports/:id/follow-up"
+                element={<ReportsFollowUpDetails />}
+              />
               <Route
                 path="/create-task"
                 element={<Navigate to="/create-task/step-1" replace />}

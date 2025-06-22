@@ -55,7 +55,7 @@ export default function Method() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 ">
+    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-green-800">
           Quản lý phương pháp cấy lan
