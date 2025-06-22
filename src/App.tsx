@@ -31,6 +31,7 @@ import MethodCreate from "./pages/method/MethodCreate";
 import SeedlingDetailsForm from "./pages/seedling/SeedlingDetailsForm";
 import SeedlingCharacteristicsForm from "./pages/seedling/SeedlingCharacteristicsForm";
 import SeedlingSummary from "./pages/seedling/SeedlingSummary";
+import ExperimentLogDetail from "./pages/ExperimentLogDetail";
 
 function App() {
   return (
@@ -113,6 +114,7 @@ function App() {
                 element={<CreateExperimentStep3 />}
               />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/experiment-log/:id" element={<ExperimentLogDetail />} />
             </Routes>
           </main>
         </div>

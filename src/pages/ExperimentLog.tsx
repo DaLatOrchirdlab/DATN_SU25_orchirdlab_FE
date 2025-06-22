@@ -1,13 +1,8 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { Search, Filter, Eye, X } from "lucide-react";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, Filter, Eye, X } from 'lucide-react';
 
-type ExperimentStatus =
-  | "Active"
-  | "Completed"
-  | "In Progress"
-  | "Pending"
-  | "Failed";
+type ExperimentStatus = 'Đang thực hiện' | 'Hoàn thành' | 'Thất bại';
 
 interface ExperimentLogEntry {
   id: string;
@@ -16,75 +11,72 @@ interface ExperimentLogEntry {
   createdDate: string;
   status: ExperimentStatus;
   samples: number;
+  stage: string;
 }
 
 const ExperimentLog = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ExperimentStatus | "all">(
-    "all"
-  );
-  const [logs, setLogs] = useState<ExperimentLogEntry[]>([
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ExperimentStatus | 'all'>('all');
+  const [methodFilter, setMethodFilter] = useState<'all' | 'Cấy mô' | 'Lai ghép'>('all');
+  const [stageFilter, setStageFilter] = useState<'all' | 'Giai đoạn 1' | 'Giai đoạn 2' | 'Giai đoạn 3'>('all');
+  const [logs] = useState<ExperimentLogEntry[]>([
     {
-      id: "EXP001",
-      method: "Tissue Culture",
-      tissueCultureBatch: "TC_BATCH_001",
-      createdDate: "15/05/2025",
-      status: "Active",
+      id: 'EXP001',
+      method: 'Cấy mô',
+      tissueCultureBatch: 'TC_BATCH_001',
+      createdDate: '15/05/2025',
+      status: 'Đang thực hiện',
       samples: 12,
+      stage: 'Giai đoạn 1',
     },
     {
-      id: "EXP002",
-      method: "Hybridization",
-      tissueCultureBatch: "TC_BATCH_002",
-      createdDate: "12/05/2025",
-      status: "Completed",
+      id: 'EXP002',
+      method: 'Lai ghép',
+      tissueCultureBatch: 'TC_BATCH_002',
+      createdDate: '12/05/2025',
+      status: 'Hoàn thành',
       samples: 8,
+      stage: 'Giai đoạn 3',
     },
     {
-      id: "EXP003",
-      method: "Growth Analysis",
-      tissueCultureBatch: "TC_BATCH_003",
-      createdDate: "10/05/2025",
-      status: "In Progress",
+      id: 'EXP003',
+      method: 'Growth Analysis',
+      tissueCultureBatch: 'TC_BATCH_003',
+      createdDate: '10/05/2025',
+      status: 'Đang thực hiện',
       samples: 15,
+      stage: 'Giai đoạn 2',
     },
     {
-      id: "EXP004",
-      method: "Disease Analysis",
-      tissueCultureBatch: "TC_BATCH_001",
-      createdDate: "08/05/2025",
-      status: "Pending",
+      id: 'EXP004',
+      method: 'Disease Analysis',
+      tissueCultureBatch: 'TC_BATCH_001',
+      createdDate: '08/05/2025',
+      status: 'Thất bại',
       samples: 5,
+      stage: 'Giai đoạn 1',
     },
     {
-      id: "EXP005",
-      method: "Propagation",
-      tissueCultureBatch: "TC_BATCH_004",
-      createdDate: "05/05/2025",
-      status: "Failed",
+      id: 'EXP005',
+      method: 'Propagation',
+      tissueCultureBatch: 'TC_BATCH_004',
+      createdDate: '05/05/2025',
+      status: 'Hoàn thành',
       samples: 3,
-    },
+      stage: 'Giai đoạn 3',
+    }
   ]);
 
   const [showDetailPopup, setShowDetailPopup] = useState(false);
-  const [selectedLog, setSelectedLog] = useState<ExperimentLogEntry | null>(
-    null
-  );
+  const [selectedLog, setSelectedLog] = useState<ExperimentLogEntry | null>(null);
+  const navigate = useNavigate();
 
   const getStatusColor = (status: ExperimentStatus): string => {
     switch (status) {
-      case "Active":
-        return "bg-green-100 text-green-800";
-      case "Completed":
-        return "bg-purple-100 text-purple-800";
-      case "In Progress":
-        return "bg-yellow-100 text-yellow-800";
-      case "Pending":
-        return "bg-orange-100 text-orange-800";
-      case "Failed":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+      case 'Đang thực hiện': return 'bg-green-100 text-green-800';
+      case 'Hoàn thành': return 'bg-purple-100 text-purple-800';
+      case 'Thất bại': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -92,29 +84,15 @@ const ExperimentLog = () => {
     return logs.filter((log) => log.status === status).length;
   };
 
-  const filteredLogs = logs.filter((log) => {
-    const matchesSearch =
-      log.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.method.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.tissueCultureBatch.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || log.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const filteredLogs = logs.filter(log => {
+    const matchesSearch = log.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         log.method.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         log.tissueCultureBatch.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || log.status === statusFilter;
+    const matchesMethod = methodFilter === 'all' || log.method === methodFilter;
+    const matchesStage = stageFilter === 'all' || log.stage === stageFilter;
+    return matchesSearch && matchesStatus && matchesMethod && matchesStage;
   });
-
-  const handleDelete = (id: string) => {
-    if (
-      window.confirm(
-        `Bạn có chắc chắn muốn xóa Kế hoạch nuôi cấy ${id} này không?`
-      )
-    ) {
-      setLogs(logs.filter((log) => log.id !== id));
-    }
-  };
-
-  const handleViewDetails = (log: ExperimentLogEntry) => {
-    setSelectedLog(log);
-    setShowDetailPopup(true);
-  };
 
   const handleClosePopup = () => {
     setShowDetailPopup(false);
@@ -127,52 +105,32 @@ const ExperimentLog = () => {
       <div className="bg-white shadow-sm border-b">
         <div className="px-6 py-4">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Kế hoạch nuôi cấy
-            </h1>
-            <Link
+            <h1 className="text-2xl font-bold text-gray-900">Nhật ký thí nghiệm</h1>
+            <Link 
               to="/experiment-log/create/step-1"
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
-              Tạo Kế hoạch nuôi cấy mới
+              Tạo nhật ký thí nghiệm mới
             </Link>
           </div>
 
           {/* Thống kê cards */}
           <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-green-600 text-sm font-medium">
-                TỔNG THÍ NGHIỆM
-              </div>
-              <div className="text-2xl font-bold text-green-700">
-                {getStatusCount("Active") +
-                  getStatusCount("In Progress") +
-                  getStatusCount("Completed") +
-                  getStatusCount("Pending") +
-                  getStatusCount("Failed")}
-              </div>
+              <div className="text-green-600 text-sm font-medium">TỔNG THÍ NGHIỆM</div>
+              <div className="text-2xl font-bold text-green-700">{getStatusCount('Đang thực hiện') + getStatusCount('Hoàn thành') + getStatusCount('Thất bại')}</div>
             </div>
             <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="text-blue-600 text-sm font-medium">
-                ĐANG THỰC HIỆN
-              </div>
-              <div className="text-2xl font-bold text-blue-700">
-                {getStatusCount("In Progress")}
-              </div>
+              <div className="text-blue-600 text-sm font-medium">ĐANG THỰC HIỆN</div>
+              <div className="text-2xl font-bold text-blue-700">{getStatusCount('Đang thực hiện')}</div>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg">
-              <div className="text-purple-600 text-sm font-medium">
-                HOÀN THÀNH
-              </div>
-              <div className="text-2xl font-bold text-purple-700">
-                {getStatusCount("Completed")}
-              </div>
+              <div className="text-purple-600 text-sm font-medium">HOÀN THÀNH</div>
+              <div className="text-2xl font-bold text-purple-700">{getStatusCount('Hoàn thành')}</div>
             </div>
             <div className="bg-red-50 p-4 rounded-lg">
               <div className="text-red-600 text-sm font-medium">THẤT BẠI</div>
-              <div className="text-2xl font-bold text-red-700">
-                {getStatusCount("Failed")}
-              </div>
+              <div className="text-2xl font-bold text-red-700">{getStatusCount('Thất bại')}</div>
             </div>
           </div>
         </div>
@@ -183,25 +141,21 @@ const ExperimentLog = () => {
         <div className="bg-white rounded-lg shadow">
           {/* Header và filters */}
           <div className="p-6 border-b">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Danh sách Kế hoạch nuôi cấy
-            </h2>
-            <p className="text-gray-600 text-sm mb-4">
-              Quản lý và theo dõi các thí nghiệm của bạn
-            </p>
-
-            <div className="flex gap-4">
-              <div className="flex-1 relative">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Danh sách nhật ký thí nghiệm</h2>
+            <p className="text-gray-600 text-sm mb-4">Quản lý và theo dõi các thí nghiệm của bạn</p>
+            
+            <div className="flex gap-4 flex-wrap">
+              <div className="flex-1 relative min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm kế hoạch nuôi cấy..."
+                  placeholder="Tìm kiếm nhật ký thí nghiệm..."
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-[180px]">
                 <Filter className="text-gray-400 w-4 h-4" />
                 <select
                   className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -211,11 +165,34 @@ const ExperimentLog = () => {
                   }
                 >
                   <option value="all">Tất cả trạng thái</option>
-                  <option value="Active">Active</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Failed">Failed</option>
+                  <option value="Đang thực hiện">Đang thực hiện</option>
+                  <option value="Hoàn thành">Hoàn thành</option>
+                  <option value="Thất bại">Thất bại</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 min-w-[180px]">
+                <span className="text-gray-600 text-sm">Phương pháp:</span>
+                <select
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  value={methodFilter}
+                  onChange={e => setMethodFilter(e.target.value as 'all' | 'Cấy mô' | 'Lai ghép')}
+                >
+                  <option value="all">Tất cả</option>
+                  <option value="Cấy mô">Cấy mô</option>
+                  <option value="Lai ghép">Lai ghép</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 min-w-[180px]">
+                <span className="text-gray-600 text-sm">Giai đoạn:</span>
+                <select
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  value={stageFilter}
+                  onChange={e => setStageFilter(e.target.value as 'all' | 'Giai đoạn 1' | 'Giai đoạn 2' | 'Giai đoạn 3')}
+                >
+                  <option value="all">Tất cả</option>
+                  <option value="Giai đoạn 1">Giai đoạn 1</option>
+                  <option value="Giai đoạn 2">Giai đoạn 2</option>
+                  <option value="Giai đoạn 3">Giai đoạn 3</option>
                 </select>
               </div>
             </div>
@@ -226,27 +203,13 @@ const ExperimentLog = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    PHƯƠNG PHÁP LAI
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    lÔ NUÔI CẤY
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    NGÀY TẠO
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    TRẠNG THÁI
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    MẪU
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    HÀNH ĐỘNG
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phương pháp</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lô thí nghiệm</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số lượng mẫu</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -278,18 +241,11 @@ const ExperimentLog = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex gap-2">
                       <button
-                        onClick={() => handleViewDetails(log)}
+                        onClick={() => { void navigate(`/experiment-log/${log.id}`); }}
                         className="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1"
                       >
                         <Eye className="w-3 h-3" />
                         Xem
-                      </button>
-                      <button
-                        onClick={() => handleDelete(log.id)}
-                        className="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1"
-                      >
-                        <X className="w-3 h-3" />
-                        Xóa
                       </button>
                     </td>
                   </tr>
@@ -369,9 +325,7 @@ const ExperimentLog = () => {
                   Các giai đoạn
                 </h3>
                 <ul className="list-disc list-inside text-sm text-gray-700 ml-4">
-                  <li>Khử trùng + Cấy chuyển + Nuôi cấy</li>
-                  <li>Kiểm tra sinh trưởng</li>
-                  <li>Thu hoạch</li>
+                  <li>{selectedLog.stage}</li>
                 </ul>
               </div>
               {/* Sample Status section - for visual representation as in image */}
