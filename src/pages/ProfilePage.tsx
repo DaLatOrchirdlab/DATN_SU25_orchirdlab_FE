@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 interface UserProfile {
   fullName: string;
@@ -26,7 +25,6 @@ const mockUserProfile: UserProfile = {
 const ProfilePage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<UserProfile>(mockUserProfile);
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -58,17 +56,23 @@ const ProfilePage: React.FC = () => {
             Quản lý thông tin cá nhân và cài đặt tài khoản của bạn
           </p>
 
-          {/* Profile Picture */}
+          {/* Profile Picture and Role */}
           <div className="flex items-center space-x-6 mb-8">
             <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-2xl font-bold">
               NA
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
               <h3 className="text-lg font-medium text-gray-900">Ảnh hồ sơ</h3>
               <p className="text-gray-600 text-sm">Tải lên ảnh đại diện mới</p>
               <button className="mt-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors">
                 Change Photo
               </button>
+            </div>
+            <div className="ml-auto flex flex-col items-end">
+              <span className="text-sm text-gray-500">Vai trò</span>
+              <span className="text-base font-semibold text-green-700 bg-green-50 px-4 py-1 rounded-full border border-green-200 mt-1">
+                {profile.role}
+              </span>
             </div>
           </div>
 
@@ -107,13 +111,8 @@ const ProfilePage: React.FC = () => {
                 id="username"
                 name="username"
                 value={profile.username}
-                onChange={handleChange}
-                readOnly={!isEditing}
-                className={`w-full border ${
-                  isEditing
-                    ? "border-gray-300 focus:ring-green-500 focus:border-green-500"
-                    : "border-transparent bg-gray-100"
-                } rounded-lg px-3 py-2 transition-colors`}
+                readOnly
+                className="w-full border border-transparent bg-gray-100 rounded-lg px-3 py-2 text-gray-500"
               />
             </div>
             <div>
@@ -139,63 +138,24 @@ const ProfilePage: React.FC = () => {
             </div>
             <div>
               <label
-                htmlFor="role"
+                htmlFor="department"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Role
+                Phòng ban
               </label>
-              {isEditing ? (
-                <select
-                  id="role"
-                  name="role"
-                  value={profile.role}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500 appearance-none bg-white"
-                >
-                  <option value="Researcher">Researcher</option>
-                  <option value="Admin">Admin</option>
-                  <option value="Manager">Manager</option>
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  id="role"
-                  name="role"
-                  value={profile.role}
-                  readOnly
-                  className="w-full border border-transparent bg-gray-100 rounded-lg px-3 py-2"
-                />
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Mật khẩu
-              </label>
-              <div className="relative flex items-center w-full">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  name="passwordHash"
-                  value={profile.passwordHash}
-                  onChange={handleChange}
-                  readOnly={!isEditing}
-                  className={`w-full border ${
-                    isEditing
-                      ? "border-gray-300 focus:ring-green-500 focus:border-green-500"
-                      : "border-transparent bg-gray-100"
-                  } rounded-lg px-3 py-2 pr-10 transition-colors`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
-              </div>
+              <input
+                type="text"
+                id="department"
+                name="department"
+                value={profile.department}
+                onChange={handleChange}
+                readOnly={!isEditing}
+                className={`w-full border ${
+                  isEditing
+                    ? "border-gray-300 focus:ring-green-500 focus:border-green-500"
+                    : "border-transparent bg-gray-100"
+                } rounded-lg px-3 py-2 transition-colors`}
+              />
             </div>
             <div>
               <label
@@ -216,6 +176,22 @@ const ProfilePage: React.FC = () => {
                     ? "border-gray-300 focus:ring-green-500 focus:border-green-500"
                     : "border-transparent bg-gray-100"
                 } rounded-lg px-3 py-2 transition-colors`}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="joinDate"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Ngày tham gia
+              </label>
+              <input
+                type="text"
+                id="joinDate"
+                name="joinDate"
+                value={profile.joinDate}
+                readOnly
+                className="w-full border border-transparent bg-gray-100 rounded-lg px-3 py-2 text-gray-500"
               />
             </div>
           </div>
@@ -246,17 +222,6 @@ const ProfilePage: React.FC = () => {
               </button>
             )}
           </div>
-        </div>
-
-        {/* Security Settings Section */}
-        <div className="bg-white rounded-lg shadow-md p-6 mt-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Security Settings
-          </h2>
-          <p className="text-gray-600 text-sm">
-            Two-factor authentication, login history, and security preferences
-          </p>
-          {/* Add more security settings content here if needed */}
         </div>
       </div>
     </main>

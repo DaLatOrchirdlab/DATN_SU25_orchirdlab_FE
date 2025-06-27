@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Filter, Eye, X } from 'lucide-react';
+import { Search, Filter, X } from 'lucide-react';
 
 type ExperimentStatus = 'Đang thực hiện' | 'Hoàn thành' | 'Thất bại';
 
@@ -144,13 +144,13 @@ const ExperimentLog = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Danh sách nhật ký thí nghiệm</h2>
             <p className="text-gray-600 text-sm mb-4">Quản lý và theo dõi các thí nghiệm của bạn</p>
             
-            <div className="flex gap-4 flex-wrap">
+            <div className="flex gap-4 flex-wrap mb-4 bg-white p-4 rounded-lg shadow-sm">
               <div className="flex-1 relative min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Tìm kiếm nhật ký thí nghiệm..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -158,7 +158,7 @@ const ExperimentLog = () => {
               <div className="flex items-center gap-2 min-w-[180px]">
                 <Filter className="text-gray-400 w-4 h-4" />
                 <select
-                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="border border-gray-300 rounded-full px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                   value={statusFilter}
                   onChange={(e) =>
                     setStatusFilter(e.target.value as ExperimentStatus | "all")
@@ -173,7 +173,7 @@ const ExperimentLog = () => {
               <div className="flex items-center gap-2 min-w-[180px]">
                 <span className="text-gray-600 text-sm">Phương pháp:</span>
                 <select
-                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="border border-gray-300 rounded-full px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                   value={methodFilter}
                   onChange={e => setMethodFilter(e.target.value as 'all' | 'Cấy mô' | 'Lai ghép')}
                 >
@@ -185,7 +185,7 @@ const ExperimentLog = () => {
               <div className="flex items-center gap-2 min-w-[180px]">
                 <span className="text-gray-600 text-sm">Giai đoạn:</span>
                 <select
-                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="border border-gray-300 rounded-full px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                   value={stageFilter}
                   onChange={e => setStageFilter(e.target.value as 'all' | 'Giai đoạn 1' | 'Giai đoạn 2' | 'Giai đoạn 3')}
                 >
@@ -209,12 +209,15 @@ const ExperimentLog = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số lượng mẫu</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {filteredLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50">
+                  <tr
+                    key={log.id}
+                    className="hover:bg-green-50 cursor-pointer transition"
+                    onClick={() => void navigate(`/experiment-log/${log.id}`)}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {log.id}
                     </td>
@@ -238,15 +241,6 @@ const ExperimentLog = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {log.samples}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex gap-2">
-                      <button
-                        onClick={() => { void navigate(`/experiment-log/${log.id}`); }}
-                        className="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1"
-                      >
-                        <Eye className="w-3 h-3" />
-                        Xem
-                      </button>
                     </td>
                   </tr>
                 ))}
