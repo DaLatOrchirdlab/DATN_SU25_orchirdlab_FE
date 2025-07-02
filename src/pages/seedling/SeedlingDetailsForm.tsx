@@ -1,22 +1,36 @@
 import { useNavigate } from "react-router-dom";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSeedlingForm } from "../../context/SeedlingFormContext";
-
-const parentOptions = ["Dendrobium Nobile", "Phalaenopsis White"];
-const parent1Options = ["Dendrobium Biggibum", "Phalaenopsis Pink"];
+import type { Seedling, SeedlingApiResponse } from "../../types/Seedling";
 
 export default function SeedlingDetailsForm() {
   const navigate = useNavigate();
   const { form, setForm } = useSeedlingForm();
   const [touched, setTouched] = useState(false);
+  const [seedlings, setSeedlings] = useState<Seedling[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSeedlings = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          "https://net-api.orchid-lab.systems/api/seedling?pageNumber=1&pageSize=100"
+        );
+        const data = (await res.json()) as SeedlingApiResponse;
+        setSeedlings(data.value.data || []);
+      } catch {
+        setSeedlings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetchSeedlings();
+  }, []);
 
   const isValid =
-    form.name &&
-    form.parent &&
-    form.parent1 &&
-    form.description &&
-    form.dateOfBirth;
+    form.name && form.fatherID && form.motherID && form.description && form.doB;
 
   function handleChange(
     e: React.ChangeEvent<
@@ -28,7 +42,15 @@ export default function SeedlingDetailsForm() {
 
   function handleNext() {
     setTouched(true);
-    if (isValid) navigate("/seedlings/new/characteristics");
+    if (isValid) void navigate("/seedlings/new/characteristics");
+  }
+
+  if (loading) {
+    return (
+      <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-500">Đang tải dữ liệu...</div>
+      </main>
+    );
   }
 
   return (
@@ -58,34 +80,38 @@ export default function SeedlingDetailsForm() {
             <div className="flex-1">
               <label className="block font-medium mb-1">Cây bố *</label>
               <select
-                name="parent"
-                value={form.parent}
+                name="fatherID"
+                value={form.fatherID}
                 onChange={handleChange}
                 className="w-full border rounded px-4 py-2"
               >
                 <option value="">Chọn cây bố</option>
-                {parentOptions.map((p) => (
-                  <option key={p}>{p}</option>
+                {seedlings.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
-              {touched && !form.parent && (
+              {touched && !form.fatherID && (
                 <div className="text-red-500 text-sm">Bắt buộc</div>
               )}
             </div>
             <div className="flex-1">
               <label className="block font-medium mb-1">Cây mẹ *</label>
               <select
-                name="parent1"
-                value={form.parent1}
+                name="motherID"
+                value={form.motherID}
                 onChange={handleChange}
                 className="w-full border rounded px-4 py-2"
               >
                 <option value="">Chọn cây mẹ</option>
-                {parent1Options.map((p) => (
-                  <option key={p}>{p}</option>
+                {seedlings.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
-              {touched && !form.parent1 && (
+              {touched && !form.motherID && (
                 <div className="text-red-500 text-sm">Bắt buộc</div>
               )}
             </div>
@@ -107,14 +133,14 @@ export default function SeedlingDetailsForm() {
             <label className="block font-medium mb-1">Ngày sinh *</label>
             <div className="flex items-center gap-2">
               <input
-                name="dateOfBirth"
+                name="doB"
                 type="date"
-                value={form.dateOfBirth}
+                value={form.doB}
                 onChange={handleChange}
                 className="border rounded px-4 py-2 flex-1"
               />
             </div>
-            {touched && !form.dateOfBirth && (
+            {touched && !form.doB && (
               <div className="text-red-500 text-sm">Bắt buộc</div>
             )}
           </div>
@@ -123,7 +149,7 @@ export default function SeedlingDetailsForm() {
           <button
             type="button"
             className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"
-            onClick={() => navigate("/seedlings")}
+            onClick={() => void navigate("/seedlings")}
           >
             Hủy
           </button>

@@ -6,7 +6,12 @@ import { FaPlus, FaMinus } from "react-icons/fa";
 import { useSeedlingForm } from "../../context/SeedlingFormContext";
 import type { SeedlingCharacteristic } from "../../types/Seedling";
 
-const attributeOptions = ["Chiều cao", "Màu hoa", "Số lá", "Số rễ"];
+const attributeOptions = [
+  { name: "Chiều cao", description: "cm" },
+  { name: "Màu hoa", description: "" },
+  { name: "Số lá", description: "lá" },
+  { name: "Số rễ", description: "rễ" },
+];
 
 export default function SeedlingCharacteristicsForm() {
   const navigate = useNavigate();
@@ -17,11 +22,21 @@ export default function SeedlingCharacteristicsForm() {
 
   function handleChange(
     idx: number,
-    field: keyof SeedlingCharacteristic,
+    field: "name" | "description" | "value",
     value: string
   ) {
     const updated = characteristics.map((c, i) =>
-      i === idx ? { ...c, [field]: value } : c
+      i === idx
+        ? field === "value"
+          ? { ...c, value: value === "" ? 0 : Number(value) }
+          : {
+              ...c,
+              seedlingAttribute: {
+                ...c.seedlingAttribute,
+                [field]: value,
+              },
+            }
+        : c
     );
     setForm({ ...form, characteristics: updated });
   }
@@ -31,7 +46,7 @@ export default function SeedlingCharacteristicsForm() {
       ...form,
       characteristics: [
         ...(form.characteristics || []),
-        { attribute: "", value: "", unit: "" },
+        { value: 0, seedlingAttribute: { name: "", description: "" } },
       ],
     });
   }
@@ -45,11 +60,16 @@ export default function SeedlingCharacteristicsForm() {
 
   const isValid =
     characteristics.length > 0 &&
-    characteristics.every((c) => c.attribute && c.value && c.unit);
+    characteristics.every(
+      (c) =>
+        c.seedlingAttribute.name &&
+        c.value !== 0 &&
+        c.seedlingAttribute.description !== undefined
+    );
 
   function handleNext() {
     setTouched(true);
-    if (isValid) navigate("/seedlings/new/summary");
+    if (isValid) void navigate("/seedlings/new/summary");
   }
 
   return (
@@ -84,17 +104,17 @@ export default function SeedlingCharacteristicsForm() {
                   </label>
                   <select
                     className="w-full border rounded px-2 py-1"
-                    value={c.attribute}
-                    onChange={(e) =>
-                      handleChange(idx, "attribute", e.target.value)
-                    }
+                    value={c.seedlingAttribute.name}
+                    onChange={(e) => handleChange(idx, "name", e.target.value)}
                   >
                     <option value="">Chọn thuộc tính</option>
                     {attributeOptions.map((opt) => (
-                      <option key={opt}>{opt}</option>
+                      <option key={opt.name} value={opt.name}>
+                        {opt.name}
+                      </option>
                     ))}
                   </select>
-                  {touched && !c.attribute && (
+                  {touched && !c.seedlingAttribute.name && (
                     <div className="text-red-500 text-xs">Phải điền</div>
                   )}
                 </div>
@@ -114,15 +134,17 @@ export default function SeedlingCharacteristicsForm() {
                 </div>
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-1">
-                    Đơn vị*
+                    Mô tả*
                   </label>
                   <input
                     className="w-full border rounded px-2 py-1"
-                    value={c.unit}
-                    onChange={(e) => handleChange(idx, "unit", e.target.value)}
-                    placeholder="Unit"
+                    value={c.seedlingAttribute.description}
+                    onChange={(e) =>
+                      handleChange(idx, "description", e.target.value)
+                    }
+                    placeholder="Mô tả chi tiết"
                   />
-                  {touched && !c.unit && (
+                  {touched && !c.seedlingAttribute.description && (
                     <div className="text-red-500 text-xs">Phải điền</div>
                   )}
                 </div>
@@ -146,7 +168,7 @@ export default function SeedlingCharacteristicsForm() {
             <button
               type="button"
               className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"
-              onClick={() => navigate("/seedlings/new")}
+              onClick={() => void navigate("/seedlings/new")}
             >
               Trở về
             </button>

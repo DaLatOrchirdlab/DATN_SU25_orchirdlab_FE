@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import type { Method, MethodApiResponse } from "../../types/Method";
 
 const methodTypes = [
   { label: "Tất cả", value: "" },
@@ -7,51 +8,48 @@ const methodTypes = [
   { label: "Nhân giống hữu tính", value: "huu_tinh" },
 ];
 
-const methods = [
-  {
-    id: 1,
-    name: "Nhân giống từ lá",
-    type: "Nhân giống vô tính",
-  },
-  {
-    id: 2,
-    name: "Nhân giống từ chồi",
-    type: "Nhân giống vô tính",
-  },
-  {
-    id: 3,
-    name: "Nhân giống từ thân",
-    type: "Nhân giống vô tính",
-  },
-  {
-    id: 4,
-    name: "Thụ phấn chéo",
-    type: "Nhân giống hữu tính",
-  },
-  {
-    id: 5,
-    name: "Lấy phấn cây này thụ phấn cho cây kia",
-    type: "Nhân giống hữu tính",
-  },
-];
-
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 2;
 
 export default function Method() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
+  const [data, setData] = useState<Method[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-  const filtered = methods.filter(
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `https://net-api.orchid-lab.systems/api/method?pageNumber=${page}&pageSize=${PAGE_SIZE}`
+        );
+        const json = (await res.json()) as MethodApiResponse;
+        setData(json.value.data || []);
+        setTotal(json.value.totalCount || 0);
+        setTotalPages(json.value.pageCount || 1);
+      } catch {
+        setData([]);
+        setTotal(0);
+        setTotalPages(1);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetchData();
+  }, [page]);
+
+  const filtered = data.filter(
     (m) =>
       (filterType === "" ||
-        (filterType === "vo_tinh" && m.type === "Nhân giống vô tính") ||
-        (filterType === "huu_tinh" && m.type === "Nhân giống hữu tính")) &&
+        (filterType === "vo_tinh" && m.name === "Subculturing") ||
+        (filterType === "huu_tinh" && m.name === "Sterilization")) &&
       (m.name.toLowerCase().includes(search.toLowerCase()) ||
         m.type.toLowerCase().includes(search.toLowerCase()))
   );
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
@@ -63,7 +61,7 @@ export default function Method() {
         <button
           type="button"
           className="bg-green-800 text-white px-5 py-2 rounded-full font-semibold hover:bg-green-950 transition cursor-pointer"
-          onClick={() => navigate("/method/new")} // Nếu có trang thêm mới
+          onClick={() => void navigate("/method/new")} // Nếu có trang thêm mới
         >
           + Thêm mới
         </button>
@@ -108,17 +106,53 @@ export default function Method() {
         </select>
       </div>
       <div className="bg-white rounded shadow p-0 overflow-x-auto">
-        <table className="w-full text-left">
+        <table className="w-full text-left table-fixed">
           <thead>
             <tr className="bg-green-50 text-green-800 font-semibold">
-              <th className="py-3 px-4">ID</th>
-              <th className="px-4">Tên phương pháp</th>
+              <th className="py-3 px-4">Tên phương pháp</th>
               <th className="px-4">Loại</th>
+              <th className="px-4">Trạng thái</th>
               <th className="px-4">Hành động</th>
             </tr>
           </thead>
           <tbody>
-            {paginated.map((m) => (
+            {loading ? (
+              Array.from({ length: PAGE_SIZE }).map((_, idx) => (
+                // eslint-disable-next-line react-x/no-array-index-key
+                <tr key={`skeleton-${idx}`} className="border-t animate-pulse">
+                  <td colSpan={5} className="py-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto" />
+                  </td>
+                </tr>
+              ))
+            ) : paginated.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="text-center py-8 text-gray-400">
+                  Không có dữ liệu
+                </td>
+              </tr>
+            ) : (
+              paginated.map((m) => (
+                <tr key={m.id} className="border-t hover:bg-green-50">
+                  <td className="py-3 px-4">{m.name}</td>
+                  <td className="px-4">{m.type}</td>
+                  <td className="px-4">
+                    {m.status == true ? "Active" : "Inactive"}
+                  </td>
+                  <td className="px-4">
+                    <button
+                      type="button"
+                      className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
+                      onClick={() => void navigate(`/method/${m.id}`)} // Nếu có trang chi tiết
+                    >
+                      Chi tiết
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+
+            {/* {paginated.map((m) => (
               <tr key={m.id} className="border-t hover:bg-green-50">
                 <td className="py-3 px-4">{m.id}</td>
                 <td className="px-4">{m.name}</td>
@@ -127,7 +161,7 @@ export default function Method() {
                   <button
                     type="button"
                     className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
-                    onClick={() => navigate(`/method/${m.id}`)} // Nếu có trang chi tiết
+                    onClick={() => void navigate(`/method/${m.id}`)} // Nếu có trang chi tiết
                   >
                     Chi tiết
                   </button>
@@ -140,9 +174,18 @@ export default function Method() {
                   Không có phương pháp nào phù hợp.
                 </td>
               </tr>
-            )}
+            )} */}
           </tbody>
         </table>
+      </div>
+      {/* Summary cards */}
+      <div className="flex gap-4 mt-6 mb-2">
+        <div className="bg-green-100 rounded p-4 w-1/4">
+          <div className="font-semibold text-green-800">
+            Tổng số phương pháp
+          </div>
+          <div className="text-2xl font-bold text-green-800">{total}</div>
+        </div>
       </div>
       {/* Pagination */}
       <div className="flex justify-end mt-4 gap-2">

@@ -1,87 +1,48 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-export const seedlings = [
-  {
-    id: 1,
-    name: "Phalaenopsis Mix 1",
-    parent: "Phalaenopsis White",
-    parent1: "Phalaenopsis Pink",
-    dateOfBirth: "2024-01-15",
-    createdAt: "2024-03-01 10:30",
-    createdBy: "Dr. Lee",
-  },
-  {
-    id: 2,
-    name: "Phalaenopsis Mix 2",
-    parent: "Phalaenopsis Purple",
-    parent1: "Phalaenopsis Yellow",
-    dateOfBirth: "2024-01-20",
-    createdAt: "2024-03-05 14:15",
-    createdBy: "Dr. Chen",
-  },
-  {
-    id: 3,
-    name: "Dendrobium Mix",
-    parent: "Dendrobium Nobile",
-    parent1: "Dendrobium Biggibum",
-    dateOfBirth: "2024-02-10",
-    createdAt: "2024-03-10 09:45",
-    createdBy: "Dr. Wang",
-  },
-  {
-    id: 4,
-    name: "Cattleya Mix",
-    parent: "Cattleya Warscewiczii",
-    parent1: "Cattleya Labiata",
-    dateOfBirth: "2024-02-28",
-    createdAt: "2024-03-15 16:20",
-    createdBy: "Dr. Kim",
-  },
-  {
-    id: 5,
-    name: "Vanda Mix",
-    parent: "Vanda Coerulea",
-    parent1: "Vanda Tricolor",
-    dateOfBirth: "2024-03-05",
-    createdAt: "2024-03-20 11:10",
-    createdBy: "Dr. Park",
-  },
-  {
-    id: 6,
-    name: "Vanda Mix 2",
-    parent: "Vanda Coerulea Var. Alba",
-    parent1: "Vanda Tricolor",
-    dateOfBirth: "2024-03-05",
-    createdAt: "2024-03-20 11:10",
-    createdBy: "Dr. Park Bom",
-  },
-];
+import type { Seedling, SeedlingApiResponse } from "../../types/Seedling";
 
 const PAGE_SIZE = 5;
 
 export default function Seedlings() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
+  const [data, setData] = useState<Seedling[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [byMother, setByMother] = useState("");
+  const [byFather, setByFather] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // For demonstration, filters are not functional
-  const filters = [
-    { label: "All Parents" },
-    { label: "All Ages" },
-    { label: "Created By" },
-    { label: "Export CSV" },
-  ];
-
-  // Filtered and paginated data
-  const filtered = seedlings.filter(
-    (s) =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.parent.toLowerCase().includes(search.toLowerCase()) ||
-      s.parent1.toLowerCase().includes(search.toLowerCase())
-  );
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          pageNumber: String(page),
+          pageSize: String(PAGE_SIZE),
+          ...(searchTerm ? { searchTerm } : {}),
+          ...(byMother ? { byMother } : {}),
+          ...(byFather ? { byFather } : {}),
+        });
+        const res = await fetch(
+          `https://net-api.orchid-lab.systems/api/seedling?${params}`
+        );
+        const json = (await res.json()) as SeedlingApiResponse;
+        setData(json.value.data || []);
+        setTotal(json.value.totalCount || 0);
+        setTotalPages(json.value.pageCount || 1);
+      } catch {
+        setData([]);
+        setTotal(0);
+        setTotalPages(1);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetchData();
+  }, [page, searchTerm, byMother, byFather]);
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
@@ -102,9 +63,9 @@ export default function Seedlings() {
               type="text"
               className="w-full border border-gray-300 rounded-full px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-green-800"
               placeholder="Tìm kiếm theo tên, cây bố mẹ, mô tả..."
-              value={search}
+              value={searchTerm}
               onChange={(e) => {
-                setSearch(e.target.value);
+                setSearchTerm(e.target.value);
                 setPage(1);
               }}
             />
@@ -119,18 +80,29 @@ export default function Seedlings() {
             </span>
           </div>
         </div>
-        {/* {filters.map((f) => (
-          <button
-            type="button"
-            key={f.label}
-            className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-2 font-medium hover:bg-green-800 hover:text-white transition"
-          >
-            {f.label}
-          </button>
-        ))} */}
+        <input
+          type="text"
+          placeholder="Lọc theo mẹ"
+          className="border rounded px-3 py-2"
+          value={byMother}
+          onChange={(e) => {
+            setByMother(e.target.value);
+            setPage(1);
+          }}
+        />
+        <input
+          type="text"
+          placeholder="Lọc theo bố"
+          className="border rounded px-3 py-2"
+          value={byFather}
+          onChange={(e) => {
+            setByFather(e.target.value);
+            setPage(1);
+          }}
+        />
       </div>
       <div className="bg-white rounded shadow p-0 overflow-x-auto">
-        <table className="w-full text-left">
+        <table className="w-full text-left table-fixed">
           <thead>
             <tr className="bg-green-50 text-green-800 font-semibold">
               <th className="py-3 px-4">Tên</th>
@@ -143,40 +115,73 @@ export default function Seedlings() {
             </tr>
           </thead>
           <tbody>
-            {paginated.map((s) => (
-              <tr key={s.id} className="border-t hover:bg-green-50">
-                <td className="py-3 px-4">{s.name}</td>
-                <td className="px-4">{s.parent}</td>
-                <td className="px-4">{s.parent1}</td>
-                <td className="px-4">{s.dateOfBirth}</td>
-                <td className="px-4">{s.createdAt}</td>
-                <td className="px-4">{s.createdBy}</td>
-                <td className="px-4 flex gap-2 mt-2">
-                  <button
-                    type="button"
-                    className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
-                    onClick={() => void navigate(`/seedlings/${s.id}`)}
-                  >
-                    Chi tiết
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {paginated.length === 0 && (
+            {loading ? (
+              Array.from({ length: PAGE_SIZE }).map((_, idx) => (
+                // eslint-disable-next-line react-x/no-array-index-key
+                <tr key={idx} className="border-t animate-pulse">
+                  <td className="py-3 px-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  </td>
+                  <td className="px-4">
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </td>
+                  <td className="px-4">
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </td>
+                  <td className="px-4">
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </td>
+                  <td className="px-4">
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </td>
+                  <td className="px-4">
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </td>
+                  <td className="px-4">
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                  </td>
+                </tr>
+              ))
+            ) : data.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-gray-400">
+                <td colSpan={9} className="text-center py-8 text-gray-400">
                   Không tìm thấy cây giống.
                 </td>
               </tr>
+            ) : (
+              data.map((s) => (
+                <tr key={s.id} className="border-t hover:bg-green-50">
+                  <td className="py-3 px-4">{s.name}</td>
+                  <td className="px-4">{s.father}</td>
+                  <td className="px-4">{s.mother}</td>
+                  <td className="px-4">{s.doB}</td>
+                  <td className="px-4">
+                    {s.create_date
+                      ? new Date(s.create_date).toLocaleString()
+                      : ""}
+                  </td>
+                  <td className="px-4">{s.create_by}</td>
+                  <td className="px-4 flex gap-2 mt-2">
+                    <button
+                      type="button"
+                      className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
+                      onClick={() => void navigate(`/seedlings/${s.id}`)}
+                    >
+                      Chi tiết
+                    </button>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
       </div>
+
       {/* Summary cards */}
       <div className="flex gap-4 mt-6 mb-2">
         <div className="bg-green-100 rounded p-4 w-1/4">
           <div className="font-semibold text-green-800">Tổng số cây giống</div>
-          <div className="text-2xl font-bold text-green-800">6</div>
+          <div className="text-2xl font-bold text-green-800">{total}</div>
         </div>
       </div>
       {/* Pagination */}

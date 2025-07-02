@@ -1,37 +1,77 @@
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import type { Seedling } from "../../types/Seedling";
 
 export default function SeedlingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [seedling, setSeedling] = useState<Seedling | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  // In a real app, fetch data by id
-  const seedling = {
-    name: "Dendrobium Mix",
-    parent: "Dendrobium Nobile",
-    parent1: "Dendrobium Biggibum",
-    description:
-      "A beautiful hybrid orchid seedling with promising characteristics inherited from both parent species. Shows excellent growth potential with vibrant coloration and strong root development.",
-    dateOfBirth: "January 15, 2024",
-    createdAt: "January 16, 2024 - 10:30 AM",
-    createdBy: "John Smith",
-    status: "ACTIVE & HEALTHY",
-    growth: {
-      stage: "Juvenile",
-      height: "8.5 cm",
-      leafCount: "6 leaves",
-      root: "Excellent",
-      bloom: "2-3 years",
-      lastWatered: "May 28, 2024",
-      nextCare: "June 1, 2024",
-    },
+  useEffect(() => {
+    if (!id) return;
+    const fetchDetail = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `https://net-api.orchid-lab.systems/api/seedling/${id}`
+        );
+        const data = (await res.json()) as { value: Seedling };
+        setSeedling(data.value || null);
+      } catch {
+        setSeedling(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetchDetail();
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (!id) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(
+        `https://net-api.orchid-lab.systems/api/seedling/${id}`,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+        setShowConfirm(false);
+        void navigate("/seedlings");
+      } else {
+        alert("Xóa không thành công!");
+      }
+    } catch {
+      alert("Có lỗi xảy ra khi xóa!");
+    } finally {
+      setDeleting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-500">Đang tải dữ liệu...</div>
+      </main>
+    );
+  }
+
+  if (!seedling) {
+    return (
+      <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 flex items-center justify-center">
+        <div className="text-red-500">Không tìm thấy cây giống!</div>
+      </main>
+    );
+  }
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
       <button
         type="button"
         className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-4 hover:bg-green-800 hover:text-white transition"
-        onClick={() => navigate("/seedlings")}
+        onClick={() => void navigate("/seedlings")}
       >
         &larr; Trở về
       </button>
@@ -45,48 +85,89 @@ export default function SeedlingDetail() {
             <span className="font-semibold">Tên:</span> {seedling.name}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Cây bố:</span> {seedling.parent}
+            <span className="font-semibold">Cây bố:</span> {seedling.father}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Cây mẹ:</span> {seedling.parent1}
+            <span className="font-semibold">Cây mẹ:</span> {seedling.mother}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Miêu tả:</span>{" "}
             {seedling.description}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Ngày sinh:</span>{" "}
-            {seedling.dateOfBirth}
+            <span className="font-semibold">Ngày sinh:</span> {seedling.doB}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Ngày tạo:</span>{" "}
-            {seedling.createdAt}
+            {seedling.create_date
+              ? new Date(seedling.create_date).toLocaleString()
+              : ""}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Tạo bởi:</span> {seedling.createdBy}
+            <span className="font-semibold">Tạo bởi:</span> {seedling.create_by}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Trạng thái:</span>{" "}
-            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold">
-              {seedling.status}
-            </span>
+            <span className="font-semibold">Đặc điểm:</span>
+            {seedling.characteristics && seedling.characteristics.length > 0 ? (
+              <ul className="list-disc ml-4">
+                {seedling.characteristics.map((c, idx) => (
+                  // eslint-disable-next-line react-x/no-array-index-key
+                  <li key={idx}>
+                    <b>{c.seedlingAttribute.name}:</b> {c.value}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <span className="text-gray-400"> Không có</span>
+            )}
           </div>
         </div>
       </div>
       <div className="flex gap-4 mt-8">
-        <button
+        {/* <button
           type="button"
           className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"
         >
           Sửa
-        </button>
+        </button> */}
         <button
           type="button"
           className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"
+          onClick={() => setShowConfirm(true)}
         >
           Xóa
         </button>
       </div>
+      {/* Popup xác nhận xóa */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white rounded shadow-lg p-8 min-w-[320px]">
+            <div className="text-lg font-semibold mb-4 text-red-700">
+              Xác nhận xóa cây giống này?
+            </div>
+            <div className="flex justify-end gap-4">
+              <button
+                type="button"
+                className="px-4 py-2 rounded bg-gray-200 text-gray-800 font-semibold hover:bg-gray-300"
+                onClick={() => setShowConfirm(false)}
+                disabled={deleting}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700"
+                onClick={() => {
+                  void handleDelete();
+                }}
+                disabled={deleting}
+              >
+                {deleting ? "Đang xóa..." : "Đồng ý"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
