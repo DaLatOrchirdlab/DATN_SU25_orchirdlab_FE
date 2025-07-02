@@ -1,17 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Filter, X } from 'lucide-react';
 
 type ExperimentStatus = 'Đang thực hiện' | 'Hoàn thành' | 'Thất bại';
 
+interface StageDTO {
+  name: string;
+  description?: string;
+  dateOfProcessing?: number | string;
+}
+
+interface Sample {
+  id: string;
+  name: string;
+  description?: string;
+  dob?: string;
+  status?: boolean;
+}
+
 interface ExperimentLogEntry {
   id: string;
-  method: string;
-  tissueCultureBatch: string;
-  createdDate: string;
-  status: ExperimentStatus;
-  samples: number;
-  stage: string;
+  methodName: string;
+  description?: string;
+  tissueCultureBatchName: string;
+  createdDate?: string;
+  status?: number | string;
+  samples?: Sample[];
+  stagesDTO?: StageDTO[];
+  // Thêm các trường khác nếu backend trả về
+}
+
+interface ExperimentLogApiResponse {
+  value: ExperimentLogEntry[];
+  totalCount?: number;
 }
 
 const ExperimentLog = () => {
@@ -19,60 +40,109 @@ const ExperimentLog = () => {
   const [statusFilter, setStatusFilter] = useState<ExperimentStatus | 'all'>('all');
   const [methodFilter, setMethodFilter] = useState<'all' | 'Cấy mô' | 'Lai ghép'>('all');
   const [stageFilter, setStageFilter] = useState<'all' | 'Giai đoạn 1' | 'Giai đoạn 2' | 'Giai đoạn 3'>('all');
-  const [logs] = useState<ExperimentLogEntry[]>([
-    {
-      id: 'EXP001',
-      method: 'Cấy mô',
-      tissueCultureBatch: 'TC_BATCH_001',
-      createdDate: '15/05/2025',
-      status: 'Đang thực hiện',
-      samples: 12,
-      stage: 'Giai đoạn 1',
-    },
-    {
-      id: 'EXP002',
-      method: 'Lai ghép',
-      tissueCultureBatch: 'TC_BATCH_002',
-      createdDate: '12/05/2025',
-      status: 'Hoàn thành',
-      samples: 8,
-      stage: 'Giai đoạn 3',
-    },
-    {
-      id: 'EXP003',
-      method: 'Growth Analysis',
-      tissueCultureBatch: 'TC_BATCH_003',
-      createdDate: '10/05/2025',
-      status: 'Đang thực hiện',
-      samples: 15,
-      stage: 'Giai đoạn 2',
-    },
-    {
-      id: 'EXP004',
-      method: 'Disease Analysis',
-      tissueCultureBatch: 'TC_BATCH_001',
-      createdDate: '08/05/2025',
-      status: 'Thất bại',
-      samples: 5,
-      stage: 'Giai đoạn 1',
-    },
-    {
-      id: 'EXP005',
-      method: 'Propagation',
-      tissueCultureBatch: 'TC_BATCH_004',
-      createdDate: '05/05/2025',
-      status: 'Hoàn thành',
-      samples: 3,
-      stage: 'Giai đoạn 3',
-    }
-  ]);
+  const [logs, setLogs] = useState<ExperimentLogEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
 
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ExperimentLogEntry | null>(null);
   const navigate = useNavigate();
 
-  const getStatusColor = (status: ExperimentStatus): string => {
-    switch (status) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const logsPerPage = 5;
+
+  function hasValueWithData<T>(obj: unknown, itemGuard: (item: unknown) => item is T): obj is { value: { data: T[] } } {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'value' in obj &&
+      typeof (obj as { value: unknown }).value === 'object' &&
+      (obj as { value: { data?: unknown[] } }).value !== null &&
+      'data' in (obj as { value: { data?: unknown[] } }).value &&
+      Array.isArray((obj as { value: { data?: unknown[] } }).value.data) &&
+      (obj as { value: { data: unknown[] } }).value.data.every(itemGuard)
+    );
+  }
+
+  function isExperimentLogEntry(obj: unknown): obj is ExperimentLogEntry {
+    if (typeof obj !== 'object' || obj === null) return false;
+    const o = obj as Record<string, unknown>;
+    return (
+      typeof o.id === 'string' &&
+      typeof o.methodName === 'string' &&
+      typeof o.tissueCultureBatchName === 'string'
+    );
+  }
+
+  // Gọi API phân trang/filter
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    const params = new URLSearchParams();
+    params.append('pageNumber', String(currentPage));
+    params.append('pageSize', String(logsPerPage));
+    if (searchTerm) params.append('searchTerm', searchTerm);
+    fetch(`https://net-api.orchid-lab.systems/api/experimentlog?${params.toString()}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Lỗi khi lấy dữ liệu từ API');
+        const data: unknown = await res.json();
+        let arr: ExperimentLogEntry[] = [];
+        let total = 0;
+        if (hasValueWithData<ExperimentLogEntry>(data, isExperimentLogEntry)) {
+          arr = data.value.data;
+          let totalCountValue = arr.length;
+          if (
+            typeof data === 'object' &&
+            data !== null &&
+            'value' in data &&
+            typeof (data as { value: unknown }).value === 'object' &&
+            (data as { value: { totalCount?: unknown } }).value.totalCount !== undefined
+          ) {
+            totalCountValue = Number((data as { value: { totalCount?: unknown } }).value.totalCount);
+          }
+          total = totalCountValue;
+        } else if (typeof data === 'object' && data !== null && 'value' in data) {
+          arr = ((data as ExperimentLogApiResponse).value ?? []).filter(isExperimentLogEntry);
+          total = (data as ExperimentLogApiResponse).totalCount ?? arr.length;
+        } else if (Array.isArray(data)) {
+          arr = data.filter(isExperimentLogEntry);
+          total = arr.length;
+        }
+        setLogs(arr);
+        setTotalCount(total);
+      })
+      .catch(() => {
+        setError('Không thể tải dữ liệu nhật ký thí nghiệm.');
+        setLogs([]);
+        setTotalCount(0);
+      })
+      .finally(() => setLoading(false));
+  }, [currentPage, logsPerPage, searchTerm]);
+
+  // Reset về trang 1 khi filter/search thay đổi
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, methodFilter, stageFilter]);
+
+  // Filter phía frontend cho status/method/stage nếu backend chưa hỗ trợ
+  const filteredLogs = logs.filter(log => {
+    const matchesStatus = statusFilter === 'all' || log.status === statusFilter;
+    const matchesMethod = methodFilter === 'all' || log.methodName === methodFilter;
+    // Nếu có stageDTO thì filter theo stage name
+    const matchesStage = stageFilter === 'all' || log.stagesDTO?.some(s => s.name === stageFilter);
+    return matchesStatus && matchesMethod && matchesStage;
+  });
+
+  const getStatusColor = (status?: number | string): string => {
+    const txt = status === 0 || status === '0' || status === 'Đang thực hiện'
+      ? 'Đang thực hiện'
+      : status === 1 || status === '1' || status === 'Hoàn thành'
+      ? 'Hoàn thành'
+      : status === 2 || status === '2' || status === 'Thất bại'
+      ? 'Thất bại'
+      : String(status ?? '');
+    switch (txt) {
       case 'Đang thực hiện': return 'bg-green-100 text-green-800';
       case 'Hoàn thành': return 'bg-purple-100 text-purple-800';
       case 'Thất bại': return 'bg-red-100 text-red-800';
@@ -83,16 +153,6 @@ const ExperimentLog = () => {
   const getStatusCount = (status: ExperimentStatus): number => {
     return logs.filter((log) => log.status === status).length;
   };
-
-  const filteredLogs = logs.filter(log => {
-    const matchesSearch = log.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.method.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.tissueCultureBatch.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || log.status === statusFilter;
-    const matchesMethod = methodFilter === 'all' || log.method === methodFilter;
-    const matchesStage = stageFilter === 'all' || log.stage === stageFilter;
-    return matchesSearch && matchesStatus && matchesMethod && matchesStage;
-  });
 
   const handleClosePopup = () => {
     setShowDetailPopup(false);
@@ -106,7 +166,7 @@ const ExperimentLog = () => {
         <div className="px-6 py-4">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Nhật ký thí nghiệm</h1>
-            <Link 
+            <Link
               to="/experiment-log/create/step-1"
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
@@ -118,7 +178,7 @@ const ExperimentLog = () => {
           <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-green-50 p-4 rounded-lg">
               <div className="text-green-600 text-sm font-medium">TỔNG THÍ NGHIỆM</div>
-              <div className="text-2xl font-bold text-green-700">{getStatusCount('Đang thực hiện') + getStatusCount('Hoàn thành') + getStatusCount('Thất bại')}</div>
+              <div className="text-2xl font-bold text-green-700">{totalCount}</div>
             </div>
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="text-blue-600 text-sm font-medium">ĐANG THỰC HIỆN</div>
@@ -143,7 +203,7 @@ const ExperimentLog = () => {
           <div className="p-6 border-b">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Danh sách nhật ký thí nghiệm</h2>
             <p className="text-gray-600 text-sm mb-4">Quản lý và theo dõi các thí nghiệm của bạn</p>
-            
+
             <div className="flex gap-4 flex-wrap mb-4 bg-white p-4 rounded-lg shadow-sm">
               <div className="flex-1 relative min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -212,38 +272,60 @@ const ExperimentLog = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredLogs.map((log) => (
-                  <tr
-                    key={log.id}
-                    className="hover:bg-green-50 cursor-pointer transition"
-                    onClick={() => void navigate(`/experiment-log/${log.id}`)}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {log.id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {log.method}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {log.tissueCultureBatch}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {log.createdDate}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                          log.status
-                        )}`}
-                      >
-                        {log.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {log.samples}
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-10">
+                      <div className="text-gray-500">Đang tải dữ liệu...</div>
                     </td>
                   </tr>
-                ))}
+                ) : error ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-10">
+                      <div className="text-red-500">{error}</div>
+                    </td>
+                  </tr>
+                ) : filteredLogs.length > 0 ? (
+                  filteredLogs.map((log) => (
+                    <tr
+                      key={log.id}
+                      className="hover:bg-green-50 cursor-pointer transition"
+                      onClick={() => void navigate(`/experiment-log/${log.id}`)}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {log.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {log.methodName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {log.tissueCultureBatchName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {log.createdDate ? new Date(log.createdDate).toLocaleDateString('vi-VN') : ''}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                            log.status
+                          )}`}
+                        >
+                          {typeof log.status === 'number'
+                            ? getStatusColor(log.status)
+                            : log.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {Array.isArray(log.samples) ? log.samples.length : 0}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="text-center py-10">
+                      <div className="text-gray-500">Không tìm thấy nhật ký nào.</div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -251,21 +333,40 @@ const ExperimentLog = () => {
           {/* Pagination */}
           <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
             <div className="text-sm text-gray-500">
-              Hiển thị 1-5 của 23 kết quả
+              Hiển thị {filteredLogs.length === 0 ? 0 : (currentPage - 1) * logsPerPage + 1}
+              -{Math.min(currentPage * logsPerPage, totalCount)} của {totalCount} kết quả
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Trang</span>
-              <button className="bg-green-600 text-white px-3 py-1 rounded text-sm">
-                1
-              </button>
-              <button className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm">
-                2
-              </button>
-              <button className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm">
-                3
-              </button>
-              <span className="text-sm text-gray-500">Sau</span>
-            </div>
+            {totalCount > logsPerPage && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Trước
+                </button>
+                {Array.from({ length: Math.ceil(totalCount / logsPerPage) }, (_, i) => i + 1).map(number => (
+                  <button
+                    key={number}
+                    onClick={() => setCurrentPage(number)}
+                    className={`$${
+                      currentPage === number
+                        ? 'bg-green-600 text-white'
+                        : 'text-gray-500 hover:text-gray-700'
+                    } px-3 py-1 rounded text-sm`}
+                  >
+                    {number}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === Math.ceil(totalCount / logsPerPage)}
+                  className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Sau
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -291,26 +392,28 @@ const ExperimentLog = () => {
                   Thông tin cơ bản
                 </h3>
                 <p className="text-sm text-gray-700">
-                  <strong>Phương pháp lai:</strong> {selectedLog.method}
+                  <strong>Phương pháp lai:</strong> {selectedLog.methodName}
                 </p>
                 <p className="text-sm text-gray-700">
-                  <strong>Lô nuôi cấy:</strong> {selectedLog.tissueCultureBatch}
+                  <strong>Lô nuôi cấy:</strong> {selectedLog.tissueCultureBatchName}
                 </p>
                 <p className="text-sm text-gray-700">
-                  <strong>Ngày tạo:</strong> {selectedLog.createdDate}
+                  <strong>Ngày tạo:</strong> {selectedLog.createdDate ? new Date(selectedLog.createdDate).toLocaleDateString('vi-VN') : ''}
                 </p>
                 <p className="text-sm text-gray-700">
-                  <strong>Trạng thái:</strong>{" "}
+                  <strong>Trạng thái:</strong>{' '}
                   <span
                     className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusColor(
                       selectedLog.status
                     )}`}
                   >
-                    {selectedLog.status}
+                    {typeof selectedLog.status === 'number'
+                      ? getStatusColor(selectedLog.status)
+                      : selectedLog.status}
                   </span>
                 </p>
                 <p className="text-sm text-gray-700">
-                  <strong>Mẫu:</strong> {selectedLog.samples}
+                  <strong>Mẫu:</strong> {Array.isArray(selectedLog.samples) ? selectedLog.samples.length : 0}
                 </p>
               </div>
               {/* Thêm các chi tiết khác nếu có */}
@@ -319,7 +422,9 @@ const ExperimentLog = () => {
                   Các giai đoạn
                 </h3>
                 <ul className="list-disc list-inside text-sm text-gray-700 ml-4">
-                  <li>{selectedLog.stage}</li>
+                  {selectedLog.stagesDTO?.map((stage, index) => (
+                    <li key={index}>{stage.name}</li>
+                  ))}
                 </ul>
               </div>
               {/* Sample Status section - for visual representation as in image */}

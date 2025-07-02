@@ -26,6 +26,7 @@ import EditTask from "./pages/CreateTask/EditTask";
 import CreateExperimentStep1 from "./pages/CreateExperimentLog/Form/CreateExperimentStep1";
 import CreateExperimentStep2 from "./pages/CreateExperimentLog/Form/CreateExperimentStep2";
 import CreateExperimentStep3 from "./pages/CreateExperimentLog/Form/CreateExperimentStep3";
+import { ExperimentLogFormProvider } from "./context/ExperimentLogFormContext";
 import ProfilePage from "./pages/ProfilePage";
 import MethodDetail from "./pages/method/MethodDetail";
 import MethodCreate from "./pages/method/MethodCreate";
@@ -143,23 +144,19 @@ function AppLayout() {
 
             {/* Experiment Log Creation Routes */}
             <Route
-              path="/experiment-log/create"
+              path="/experiment-log/create/*"
               element={
-                <Navigate to="/experiment-log/create/step-1" replace />
+                <ExperimentLogFormProvider>
+                  <Routes>
+                    <Route path="step-1" element={<CreateExperimentStep1 />} />
+                    <Route path="step-2" element={<CreateExperimentStep2 />} />
+                    <Route path="step-3" element={<CreateExperimentStep3 />} />
+                    <Route path="/" element={<Navigate to="step-1" replace />} />
+                  </Routes>
+                </ExperimentLogFormProvider>
               }
             />
-            <Route
-              path="/experiment-log/create/step-1"
-              element={<CreateExperimentStep1 />}
-            />
-            <Route
-              path="/experiment-log/create/step-2"
-              element={<CreateExperimentStep2 />}
-            />
-            <Route
-              path="/experiment-log/create/step-3"
-              element={<CreateExperimentStep3 />}
-            />
+
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/experiment-log/:id" element={<ExperimentLogDetail />} />
           </Routes>

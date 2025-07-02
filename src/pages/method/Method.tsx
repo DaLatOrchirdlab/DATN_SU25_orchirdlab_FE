@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const methodTypes = [
@@ -42,16 +42,48 @@ export default function Method() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
   const [page, setPage] = useState(1);
+  const [methods, setMethods] = useState<any[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
 
+  useEffect(() => {
+    // Gọi API lấy danh sách phương pháp
+    const params = new URLSearchParams({
+      pageNumber: String(page),
+      pageSize: String(PAGE_SIZE),
+    });
+    fetch(`https://net-api.orchid-lab.systems/api/method?${params.toString()}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Lỗi khi lấy danh sách phương pháp");
+        const data = await res.json();
+        if (
+          typeof data === "object" &&
+          data !== null &&
+          "value" in data &&
+          typeof data.value === "object" &&
+          data.value !== null &&
+          "data" in data.value &&
+          Array.isArray(data.value.data)
+        ) {
+          setMethods(data.value.data);
+          setTotalPages(data.value.pageCount || 1);
+        } else {
+          setMethods([]);
+          setTotalPages(1);
+        }
+      })
+      .catch(() => {
+        setMethods([]);
+        setTotalPages(1);
+      });
+  }, [page]);
+
+  // Filter + search trên client (nếu cần)
   const filtered = methods.filter(
     (m) =>
-      (filterType === "" ||
-        (filterType === "vo_tinh" && m.type === "Nhân giống vô tính") ||
-        (filterType === "huu_tinh" && m.type === "Nhân giống hữu tính")) &&
-      (m.name.toLowerCase().includes(search.toLowerCase()) ||
-        m.type.toLowerCase().includes(search.toLowerCase()))
+      (filterType === "" || m.type === filterType) &&
+      (m.name?.toLowerCase().includes(search.toLowerCase()) ||
+        m.type?.toLowerCase().includes(search.toLowerCase()))
   );
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
