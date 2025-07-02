@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface Task {
@@ -9,8 +9,27 @@ interface Task {
   deadline: string;
   status: "Đang thực hiện" | "Chưa bắt đầu" | "Hoàn thành" | "Tạm dừng";
   progress: number;
-  actions: string;
+  createdAt: string; // ISO date string
 }
+
+// Hàm đếm số task đang thực hiện
+const getOngoingTasksCount = (tasks: Task[]): number => {
+  return tasks.filter(task => task.status === "Đang thực hiện").length;
+};
+
+// Hàm đếm số task mới (đang thực hiện và được tạo trong tháng hiện tại)
+const getNewTasksCount = (tasks: Task[]): number => {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  return tasks.filter(task => {
+    const taskDate = new Date(task.createdAt);
+    return task.status === "Đang thực hiện" && 
+           taskDate.getMonth() === currentMonth && 
+           taskDate.getFullYear() === currentYear;
+  }).length;
+};
 
 export default function Tasks() {
   const navigate = useNavigate();
@@ -21,8 +40,8 @@ export default function Tasks() {
   const [timeFilter, setTimeFilter] = useState("Tất cả");
   const tasksPerPage = 4; // Số lượng task mỗi trang
 
-  // Sample data
-  const tasks: Task[] = [
+  // Sample data with createdAt dates
+  const sampleTasks: Task[] = [
     {
       id: "EXP001",
       name: "Nghiên cứu lai P. amabilis",
@@ -31,7 +50,7 @@ export default function Tasks() {
       deadline: "20/06/2025",
       status: "Đang thực hiện",
       progress: 80,
-      actions: "🔧📊",
+      createdAt: "2025-06-20T12:00:00", // Task mới trong tháng 6
     },
     {
       id: "EXP002",
@@ -41,7 +60,7 @@ export default function Tasks() {
       deadline: "15/07/2025",
       status: "Chưa bắt đầu",
       progress: 20,
-      actions: "🔧📊",
+      createdAt: "2025-06-21T12:00:00"
     },
     {
       id: "EXP003",
@@ -51,7 +70,7 @@ export default function Tasks() {
       deadline: "28/05/2025",
       status: "Hoàn thành",
       progress: 100,
-      actions: "🔧📊",
+      createdAt: "2025-06-22T12:00:00"
     },
     {
       id: "EXP004",
@@ -61,9 +80,12 @@ export default function Tasks() {
       deadline: "10/08/2025",
       status: "Tạm dừng",
       progress: 30,
-      actions: "🔧📊",
+      createdAt: "2025-06-23T12:00:00"
     },
   ];
+
+  // Initialize tasks state with sample data
+  const [tasks, setTasks] = useState<Task[]>(sampleTasks);
 
   // Lọc dữ liệu theo filter và search
   const filteredTasks = tasks.filter((task) => {
@@ -71,31 +93,10 @@ export default function Tasks() {
       statusFilter === "Tất cả" || task.status === statusFilter;
     const methodMatch =
       methodFilter === "Tất cả" || task.method === methodFilter;
-    const nameMatch =
-      searchTerm === "" ||
-      task.name.toLowerCase().includes(searchTerm.toLowerCase());
-
-    let timeMatch = true;
-    if (timeFilter !== "Tất cả") {
-      const [day, month, year] = task.deadline.split("/").map(Number);
-      const taskDeadline = new Date(year, month - 1, day);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (timeFilter === "Hôm nay") {
-        timeMatch = taskDeadline.toDateString() === today.toDateString();
-      } else if (timeFilter === "7 ngày qua") {
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(today.getDate() - 7);
-        timeMatch = taskDeadline >= sevenDaysAgo && taskDeadline <= today;
-      } else if (timeFilter === "30 ngày qua") {
-        const thirtyDaysAgo = new Date(today);
-        thirtyDaysAgo.setDate(today.getDate() - 30);
-        timeMatch = taskDeadline >= thirtyDaysAgo && taskDeadline <= today;
-      }
-    }
-
-    return statusMatch && methodMatch && nameMatch && timeMatch;
+    const searchMatch = task.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    return statusMatch && methodMatch && searchMatch;
   });
 
   // Logic phân trang
@@ -131,8 +132,12 @@ export default function Tasks() {
     return "bg-red-500";
   };
 
+  // Tính toán số liệu thống kê
+  const ongoingTasksCount = getOngoingTasksCount(tasks);
+  const newTasksCount = getNewTasksCount(tasks);
+
   return (
-    <main className="ml-64 mt-16 min-h-screen bg-gray-100 p-8">
+    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 p-8">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -158,14 +163,15 @@ export default function Tasks() {
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-4 gap-6">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Nhiệm vụ đang thực hiện */}
           <div className="rounded-lg border border-gray-200 bg-white px-6 py-4 flex flex-col justify-between min-w-[180px]">
-            <span className="text-sm text-gray-600 mb-1">
-              Nhiệm vụ đang thực hiện
-            </span>
-            <span className="text-2xl font-semibold text-green-700">12</span>
-            <span className="text-xs text-green-600 mt-1">+2 nhiệm vụ mới</span>
+            <span className="text-sm text-gray-600 mb-1">Nhiệm vụ đang thực hiện</span>
+            <span className="text-2xl font-semibold text-green-700">{ongoingTasksCount}</span>
+            {newTasksCount > 0 && (
+              <span className="text-xs text-green-600 mt-1">+{newTasksCount} nhiệm vụ mới</span>
+            )}
           </div>
           <div className="rounded-lg border border-gray-200 bg-white px-6 py-4 flex flex-col justify-between min-w-[180px]">
             <span className="text-sm text-gray-600 mb-1">
@@ -187,146 +193,110 @@ export default function Tasks() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm border p-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">
-                Trạng thái nhiệm vụ:
-              </span>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1 text-sm"
-              >
-                <option>Tất cả</option>
-                <option>Đang thực hiện</option>
-                <option>Chưa bắt đầu</option>
-                <option>Hoàn thành</option>
-                <option>Tạm dừng</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Thời gian:</span>
-              <select
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1 text-sm"
-              >
-                <option>Tất cả</option>
-                <option>Hôm nay</option>
-                <option>7 ngày qua</option>
-                <option>30 ngày qua</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Phương pháp:</span>
-              <select
-                value={methodFilter}
-                onChange={(e) => setMethodFilter(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1 text-sm"
-              >
-                <option>Tất cả</option>
-                <option>Nuôi cấy mô</option>
-                <option>Thử nghiệm</option>
-                <option>Phân tích ADN</option>
-                <option>Quan sát</option>
-              </select>
-            </div>
-
-            <div className="flex-1 ml-auto">
-              <input
-                type="text"
-                placeholder="Tìm kiếm nhiệm vụ..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-1 text-sm"
-              />
-            </div>
+        <div className="flex flex-wrap items-center gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-700">Trạng thái:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option>Tất cả</option>
+              <option>Đang thực hiện</option>
+              <option>Chưa bắt đầu</option>
+              <option>Hoàn thành</option>
+              <option>Tạm dừng</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-700">Thời gian:</span>
+            <select
+              value={timeFilter}
+              onChange={(e) => setTimeFilter(e.target.value)}
+              className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option>Tất cả</option>
+              <option>Hôm nay</option>
+              <option>7 ngày qua</option>
+              <option>30 ngày qua</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-700">Phương pháp:</span>
+            <select
+              value={methodFilter}
+              onChange={(e) => setMethodFilter(e.target.value)}
+              className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option>Tất cả</option>
+              <option>Nuôi cấy mô</option>
+              <option>Thử nghiệm</option>
+              <option>Phân tích ADN</option>
+              <option>Quan sát</option>
+            </select>
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <input
+              type="text"
+              placeholder="Tìm kiếm nhiệm vụ..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
           </div>
         </div>
 
         {/* Tasks Table */}
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left p-4 font-medium text-gray-900">
-                  Tên nhiệm vụ
-                </th>
-                <th className="text-left p-4 font-medium text-gray-900">
-                  Thí nghiệm
-                </th>
-                <th className="text-left p-4 font-medium text-gray-900">
-                  Phương pháp
-                </th>
-                <th className="text-left p-4 font-medium text-gray-900">
-                  Deadline
-                </th>
-                <th className="text-left p-4 font-medium text-gray-900">
-                  Trạng thái
-                </th>
-                <th className="text-left p-4 font-medium text-gray-900">
-                  Tiến độ
-                </th>
-                <th className="text-left p-4 font-medium text-gray-900">
-                  Thao tác
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentTasks.map((task) => (
-                <tr key={task.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4 text-gray-900">{task.name}</td>
-                  <td className="p-4 text-gray-600">{task.experiment}</td>
-                  <td className="p-4 text-gray-600">{task.method}</td>
-                  <td className="p-4 text-gray-600">{task.deadline}</td>
-                  <td className="p-4">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        task.status
-                      )}`}
-                    >
-                      {task.status}
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="text-left p-4 font-medium text-gray-900">Tên nhiệm vụ</th>
+              <th className="text-left p-4 font-medium text-gray-900">Thí nghiệm</th>
+              <th className="text-left p-4 font-medium text-gray-900">Phương pháp</th>
+              <th className="text-left p-4 font-medium text-gray-900">Deadline</th>
+              <th className="text-left p-4 font-medium text-gray-900">Trạng thái</th>
+              <th className="text-left p-4 font-medium text-gray-900">Tiến độ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentTasks.map((task) => (
+              <tr
+                key={task.id}
+                className="border-b hover:bg-green-50 cursor-pointer transition"
+                onClick={() => void navigate(`/tasks/${task.id}`)}
+              >
+                <td className="p-4 text-gray-900">{task.name}</td>
+                <td className="p-4 text-gray-600">{task.experiment}</td>
+                <td className="p-4 text-gray-600">{task.method}</td>
+                <td className="p-4 text-gray-600">{task.deadline}</td>
+                <td className="p-4">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                      task.status
+                    )}`}
+                  >
+                    {task.status}
+                  </span>
+                </td>
+                <td className="p-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${getProgressColor(
+                          task.progress
+                        )}`}
+                        style={{ width: `${task.progress}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-gray-600">
+                      {task.progress}%
                     </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full ${getProgressColor(
-                            task.progress
-                          )}`}
-                          style={{ width: `${task.progress}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-xs text-gray-600">
-                        {task.progress}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => void navigate(`/tasks/${task.id}`)}
-                        className="text-blue-600 hover:bg-blue-50 p-1 rounded"
-                      >
-                        👁️
-                      </button>
-                      <button
-                        onClick={() => void navigate(`/tasks/${task.id}/edit`)}
-                        className="text-green-600 hover:bg-green-50 p-1 rounded"
-                      >
-                        ✏️
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
         {/* Pagination */}
         <div className="flex justify-between items-center text-sm text-gray-600">

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import CreateTaskStepper from "../Step/CreateTaskStepper";
 
@@ -9,6 +9,12 @@ interface Task {
   unit: string;
   material: string;
 }
+
+const mockExperimentLogs = [
+  { id: "EXP001", name: "Nhật ký thí nghiệm 1" },
+  { id: "EXP002", name: "Nhật ký thí nghiệm 2" },
+  { id: "EXP003", name: "Nhật ký thí nghiệm 3" },
+];
 
 const CreateTaskContainer: React.FC = () => {
   // State cho các trường form
@@ -20,6 +26,10 @@ const CreateTaskContainer: React.FC = () => {
   ]);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const experimentLogIdFromQuery = params.get("experimentLogId");
+  const [experimentLogId, setExperimentLogId] = useState<string>(experimentLogIdFromQuery ?? "");
 
   const navigate = useNavigate();
 
@@ -54,6 +64,30 @@ const CreateTaskContainer: React.FC = () => {
       <form className="bg-white rounded-2xl px-8 pt-8 pb-6 shadow-lg max-w-4xl w-full mx-auto" onSubmit={handleSubmit}>
         <h2 className="text-xl font-semibold mb-6">Thông tin nhiệm vụ mới</h2>
         
+        <div className="flex flex-col mb-4 flex-1">
+          <label className="font-medium mb-1.5">Chọn nhật ký thí nghiệm *</label>
+          {experimentLogIdFromQuery ? (
+            <input
+              type="text"
+              value={experimentLogIdFromQuery}
+              disabled
+              className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-200 text-gray-500 cursor-not-allowed"
+            />
+          ) : (
+            <select
+              value={experimentLogId}
+              onChange={e => setExperimentLogId(e.target.value)}
+              required
+              className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="">Chọn nhật ký thí nghiệm...</option>
+              {mockExperimentLogs.map(log => (
+                <option key={log.id} value={log.id}>{log.name} ({log.id})</option>
+              ))}
+            </select>
+          )}
+        </div>
+
         <div className="flex gap-6">
           <div className="flex flex-col mb-4 flex-1">
             <label className="font-medium mb-1.5">Tên nhiệm vụ *</label>
