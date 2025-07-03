@@ -1,71 +1,40 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../api/axiosInstance";
+import { useAuth } from "../../context/AuthContext";
+import type { LoginResponse } from "../../types/Auth";
 
-interface UserProfile {
-  fullName: string;
-  username: string;
-  email: string;
-  role: 'Admin' | 'Researcher' | 'Technician';
-  department: string;
-  password: string;
-  phoneNumber: string;
-  joinDate: string;
-}
-
-const mockUsers: UserProfile[] = [
-  {
-    fullName: 'Nguyễn Văn Quản trị',
-    username: 'admin',
-    email: 'admin@dalatorchid.com',
-    role: 'Admin',
-    department: 'Quản trị hệ thống',
-    password: 'admin123',
-    phoneNumber: '+84 111 222 333',
-    joinDate: '2023-01-01',
-  },
-  {
-    fullName: 'Nguyễn Văn Nghiên cứu',
-    username: 'hai',
-    email: 'researcher@dalatorchid.com',
-    role: 'Researcher',
-    department: 'Research & Development',
-    password: '123456',
-    phoneNumber: '+84 123 456 789',
-    joinDate: '2024-01-15',
-  },
-  {
-    fullName: 'Nguyễn Văn Kỹ thuật',
-    username: 'technician',
-    email: 'technician@dalatorchid.com',
-    role: 'Technician',
-    department: 'Kỹ thuật',
-    password: 'tech123',
-    phoneNumber: '+84 987 654 321',
-    joinDate: '2023-06-10',
-  },
-];
-
-const Login: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const user = mockUsers.find(
-      (u) => u.username === username && u.password === password
-    );
-    if (user) {
-      localStorage.setItem('user_profile', JSON.stringify(user));
-      setError('');
-      if (user.role === 'Admin') {
-        void navigate('/dashboard');
-      } else {
-        void navigate('/method');
+    setError("");
+    try {
+      const res = await axiosInstance.post("/api/user/login", {
+        email,
+        password,
+      });
+      if (res.status !== 200) {
+        throw new Error("Login failed");
       }
-    } else {
-      setError('Sai tên đăng nhập hoặc mật khẩu!');
+      const data = res.data as LoginResponse;
+      login({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        user: data.user,
+      });
+      if (data.user.roleID === 1) {
+        void navigate("/dashboard");
+      } else {
+        void navigate("/method");
+      }
+    } catch {
+      setError("Sai email hoặc mật khẩu!");
     }
   };
 
@@ -75,21 +44,28 @@ const Login: React.FC = () => {
         {/* Left: Login Form */}
         <div className="w-1/2 bg-[#d8eddb] flex flex-col justify-center px-12 py-10">
           <h1 className="text-4xl font-bold text-green-800 mb-8 leading-tight">
-            DaLatOrchid<br />Lab
+            DaLatOrchid
+            <br />
+            Lab
           </h1>
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <form
+            onSubmit={(e) => {
+              void handleLogin(e);
+            }}
+            className="flex flex-col gap-4"
+          >
             <input
               type="text"
-              placeholder="Username"
-              className="rounded-lg border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-400"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Email"
+              className="rounded-lg border bg-gray-50 border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-400"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               autoFocus
             />
             <input
               type="password"
-              placeholder="Password"
-              className="rounded-lg border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-400"
+              placeholder="Mật khẩu"
+              className="rounded-lg border bg-gray-50 border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-400"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -105,18 +81,14 @@ const Login: React.FC = () => {
         {/* Right: Image */}
         <div className="w-1/2 h-full relative">
           <img
-            src="/login-lab.jpg"
+            src="/login-lab.png"
             alt="Lab Illustration"
             className="object-cover w-full h-full rounded-tr-[40px] rounded-br-[40px]"
           />
-          {/* Overlay for rounded shadow */}
           <div className="absolute inset-0 rounded-tr-[40px] rounded-br-[40px] shadow-xl pointer-events-none" />
         </div>
-        {/* Outer border radius shadow */}
         <div className="absolute -bottom-4 -right-4 w-[900px] h-[520px] bg-transparent rounded-[40px] shadow-lg -z-10" />
       </div>
     </div>
   );
-};
-
-export default Login;
+}

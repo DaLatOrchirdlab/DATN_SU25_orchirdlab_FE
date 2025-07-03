@@ -35,28 +35,21 @@ import SeedlingCharacteristicsForm from "./pages/seedling/SeedlingCharacteristic
 import SeedlingSummary from "./pages/seedling/SeedlingSummary";
 import ExperimentLogDetail from "./pages/ExperimentLogDetail";
 import SidebarAdmin from "./components/SidebarAdmin";
-import { useEffect, useState } from "react";
 import Login from "./pages/landing/Login";
-import DashboardAdmin from './pages/DashboardAdmin';
-
-function getUserRole() {
-  try {
-    const user = JSON.parse(localStorage.getItem("user_profile") ?? "null") as { role?: string } | null;
-    return user?.role ?? null;
-  } catch {
-    return null;
-  }
-}
+import DashboardAdmin from "./pages/DashboardAdmin";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function AppLayout() {
-  const [role, setRole] = useState<string | null>(null);
+  const { user, isAuthReady } = useAuth();
   const location = useLocation();
 
-  useEffect(() => {
-    setRole(getUserRole());
-  }, []);
-
   const isLoginPage = location.pathname === "/login";
+  const role = user?.roleID === 1 ? "admin" : user ? "User" : null;
+
+  if (!isAuthReady) {
+    return <div>Đang tải...</div>;
+  }
 
   if (isLoginPage) {
     return (
@@ -68,27 +61,25 @@ function AppLayout() {
 
   return (
     <div className="flex bg-gray-100 ">
-      {role === "Admin" ? <SidebarAdmin /> : <Sidebar />}
+      {role === "admin" ? <SidebarAdmin /> : <Sidebar />}
       <div className="flex-1 flex flex-col">
         <Topbar />
         <main className="flex-1 p-8">
           <Routes>
             <Route
-              path="/"
+              path="/dashboard"
               element={
-                role === "Admin"
-                  ? <Navigate to="/dashboard" replace />
-                  : role
-                    ? <Navigate to="/method" replace />
-                    : <Navigate to="/login" replace />
+                <ProtectedRoute requiredRole={1}>
+                  <DashboardAdmin />
+                </ProtectedRoute>
               }
             />
             <Route
-              path="/dashboard"
+              path="/method"
               element={
-                role === "Admin"
-                  ? <DashboardAdmin />
-                  : <Navigate to="/method" replace />
+                <ProtectedRoute requiredRole={2}>
+                  <Method />
+                </ProtectedRoute>
               }
             />
             <Route path="/method" element={<Method />} />
@@ -151,14 +142,20 @@ function AppLayout() {
                     <Route path="step-1" element={<CreateExperimentStep1 />} />
                     <Route path="step-2" element={<CreateExperimentStep2 />} />
                     <Route path="step-3" element={<CreateExperimentStep3 />} />
-                    <Route path="/" element={<Navigate to="step-1" replace />} />
+                    <Route
+                      path="/"
+                      element={<Navigate to="step-1" replace />}
+                    />
                   </Routes>
                 </ExperimentLogFormProvider>
               }
             />
 
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/experiment-log/:id" element={<ExperimentLogDetail />} />
+            <Route
+              path="/experiment-log/:id"
+              element={<ExperimentLogDetail />}
+            />
           </Routes>
         </main>
       </div>
@@ -168,9 +165,11 @@ function AppLayout() {
 
 function App() {
   return (
-    <Router>
-      <AppLayout />
-    </Router>
+    <AuthProvider>
+      <Router>
+        <AppLayout />
+      </Router>
+    </AuthProvider>
   );
 }
 
