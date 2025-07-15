@@ -74,7 +74,7 @@ export default function Login() {
               type="submit"
               className="mt-4 bg-green-800 hover:bg-green-900 text-white font-semibold rounded-lg py-3 text-base shadow transition-colors"
             >
-              Login
+              Đăng nhập
             </button>
           </form>
         </div>
