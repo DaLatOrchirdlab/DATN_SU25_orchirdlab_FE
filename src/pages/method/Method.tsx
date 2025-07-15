@@ -8,7 +8,7 @@ const methodTypes = [
   { label: "Nhân giống hữu tính", value: "huu_tinh" },
 ];
 
-const PAGE_SIZE = 2;
+const PAGE_SIZE = 5;
 
 export default function Method() {
   const navigate = useNavigate();

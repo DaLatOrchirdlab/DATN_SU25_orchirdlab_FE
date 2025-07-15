@@ -30,6 +30,7 @@ import { ExperimentLogFormProvider } from "./context/ExperimentLogFormContext";
 import ProfilePage from "./pages/ProfilePage";
 import MethodDetail from "./pages/method/MethodDetail";
 import MethodCreate from "./pages/method/MethodCreate";
+import Element from "./pages/element/Element";
 import SeedlingDetailsForm from "./pages/seedling/SeedlingDetailsForm";
 import SeedlingCharacteristicsForm from "./pages/seedling/SeedlingCharacteristicsForm";
 import SeedlingSummary from "./pages/seedling/SeedlingSummary";
@@ -39,12 +40,14 @@ import Login from "./pages/landing/Login";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Unauthorized from "./pages/Unauthorized";
 
 function AppLayout() {
   const { user, isAuthReady } = useAuth();
   const location = useLocation();
 
   const isLoginPage = location.pathname === "/login";
+  const isUnauthorizedPage = location.pathname === "/unauthorized";
   const role = user?.roleID === 1 ? "admin" : user ? "User" : null;
 
   if (!isAuthReady) {
@@ -57,6 +60,10 @@ function AppLayout() {
         <Route path="/login" element={<Login />} />
       </Routes>
     );
+  }
+
+  if (isUnauthorizedPage) {
+    return <Unauthorized />;
   }
 
   return (
@@ -82,33 +89,88 @@ function AppLayout() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/method" element={<Method />} />
-            <Route path="/method/:id" element={<MethodDetail />} />
-            <Route path="/method/new" element={<MethodCreate />} />
+            <Route
+              path="/method/:id"
+              element={
+                <ProtectedRoute requiredRole={2}>
+                  <MethodDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/method/new"
+              element={
+                <ProtectedRoute requiredRole={2}>
+                  <MethodCreate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/element"
+              element={
+                <ProtectedRoute requiredRole={2}>
+                  <Element />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/experiment-log" element={<ExperimentLog />} />
-            <Route path="/seedlings" element={<Seedlings />} />
-            <Route path="/seedlings/:id" element={<SeedlingDetail />} />
+            <Route
+              path="/seedlings"
+              element={
+                <ProtectedRoute requiredRole={2}>
+                  <Seedlings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seedlings/:id"
+              element={
+                <ProtectedRoute requiredRole={2}>
+                  <SeedlingDetail />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/seedlings/new/*"
               element={
-                <SeedlingFormProvider>
-                  <Routes>
-                    <Route path="" element={<SeedlingDetailsForm />} />
-                    <Route
-                      path="characteristics"
-                      element={<SeedlingCharacteristicsForm />}
-                    />
-                    <Route path="summary" element={<SeedlingSummary />} />
-                  </Routes>
-                </SeedlingFormProvider>
+                <ProtectedRoute requiredRole={2}>
+                  <SeedlingFormProvider>
+                    <Routes>
+                      <Route path="" element={<SeedlingDetailsForm />} />
+                      <Route
+                        path="characteristics"
+                        element={<SeedlingCharacteristicsForm />}
+                      />
+                      <Route path="summary" element={<SeedlingSummary />} />
+                    </Routes>
+                  </SeedlingFormProvider>
+                </ProtectedRoute>
               }
             />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/reports/:id" element={<ReportsDetails />} />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute requiredRole={2}>
+                  <Reports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports/:id"
+              element={
+                <ProtectedRoute requiredRole={2}>
+                  <ReportsDetails />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/reports/:id/follow-up"
-              element={<ReportsFollowUpDetails />}
+              element={
+                <ProtectedRoute requiredRole={2}>
+                  <ReportsFollowUpDetails />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/create-task"
@@ -167,7 +229,10 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <AppLayout />
+        <Routes>
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/*" element={<AppLayout />} />
+        </Routes>
       </Router>
     </AuthProvider>
   );

@@ -1,64 +1,221 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../api/axiosInstance";
+import type { Element } from "../../types/Element";
 
 const methodTypes = [
   { label: "Nhân giống vô tính", value: "vo_tinh" },
   { label: "Nhân giống hữu tính", value: "huu_tinh" },
 ];
 
+interface Referent {
+  name: string;
+  unit: number;
+  valueFrom: number;
+  valueTo: number;
+}
+
+interface StageForm {
+  title: string;
+  content: string;
+  elementInStages: string[];
+  referents: Referent[];
+}
+
 export default function MethodCreate() {
   const navigate = useNavigate();
+  const [elements, setElements] = useState<Element[]>([]);
   const [form, setForm] = useState({
     name: "",
     type: "",
     description: "",
-    steps: [{ title: "", content: "" }],
+    stages: [
+      {
+        title: "",
+        content: "",
+        elementInStages: [],
+        referents: [{ name: "", unit: 1, valueFrom: 0, valueTo: 0 }],
+      } as StageForm,
+    ],
   });
+  const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchElements = async () => {
+      try {
+        const res = await axiosInstance.get<{
+          value?: { data?: Element[] };
+        }>(
+          "https://net-api.orchid-lab.systems/api/element?pageNumber=1&pageSize=12"
+        );
+        setElements(res.data?.value?.data ?? []);
+      } catch {
+        setElements([]);
+      }
+    };
+    void fetchElements();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleStepChange = (
+  const handleStageChange = (
     idx: number,
-    field: "title" | "content",
-    value: string
+    field: keyof StageForm,
+    value: string | string[] | Referent[]
   ) => {
-    const steps = [...form.steps];
-    steps[idx][field] = value;
-    setForm({ ...form, steps });
+    setForm((prev) => {
+      const stages = [...prev.stages];
+      stages[idx] = { ...stages[idx], [field]: value };
+      return { ...prev, stages };
+    });
   };
 
-  const handleAddStep = () => {
-    setForm({ ...form, steps: [...form.steps, { title: "", content: "" }] });
+  const handleElementChange = (stageIdx: number, selectedIds: string[]) => {
+    handleStageChange(stageIdx, "elementInStages", selectedIds);
   };
 
-  const handleRemoveStep = (idx: number) => {
-    const steps = form.steps.filter((_, i) => i !== idx);
-    setForm({ ...form, steps });
+  const handleReferentChange = (
+    stageIdx: number,
+    referentIdx: number,
+    field: keyof Referent,
+    value: string | number
+  ) => {
+    setForm((prev) => {
+      const stages = [...prev.stages];
+      const referents = [...stages[stageIdx].referents];
+      referents[referentIdx] = { ...referents[referentIdx], [field]: value };
+      stages[stageIdx].referents = referents;
+      return { ...prev, stages };
+    });
+  };
+
+  const handleAddReferent = (stageIdx: number) => {
+    setForm((prev) => {
+      const stages = prev.stages.map((stage, idx) =>
+        idx === stageIdx
+          ? {
+              ...stage,
+              referents: [
+                ...stage.referents,
+                { name: "", unit: 1, valueFrom: 0, valueTo: 0 },
+              ],
+            }
+          : stage
+      );
+      return { ...prev, stages };
+    });
+  };
+
+  const handleRemoveReferent = (stageIdx: number, referentIdx: number) => {
+    setForm((prev) => {
+      const stages = prev.stages.map((stage, idx) =>
+        idx === stageIdx
+          ? {
+              ...stage,
+              referents: stage.referents.filter((_, i) => i !== referentIdx),
+            }
+          : stage
+      );
+      return { ...prev, stages };
+    });
+  };
+
+  const handleAddStage = () => {
+    setForm((prev) => ({
+      ...prev,
+      stages: [
+        ...prev.stages,
+        {
+          title: "",
+          content: "",
+          elementInStages: [],
+          referents: [{ name: "", unit: 1, valueFrom: 0, valueTo: 0 }],
+        },
+      ],
+    }));
+  };
+
+  const handleRemoveStage = (idx: number) => {
+    setForm((prev) => ({
+      ...prev,
+      stages: prev.stages.filter((_, i) => i !== idx),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // TODO: Gọi API tạo mới phương pháp ở đây
-    // await api.createMethod(form);
-    setTimeout(() => {
+
+    if (!form.name) {
       setLoading(false);
-      navigate("/method");
-    }, 1000);
+      setError("Tên phương pháp không được trống");
+      return;
+    } else if (!form.type) {
+      setLoading(false);
+      setError("Loại phương pháp không được trống");
+      return;
+    } else if (!form.description) {
+      setLoading(false);
+      setError("Mô tả không được trống");
+      return;
+    }
+
+    for (const stage of form.stages) {
+      for (const ref of stage.referents) {
+        if (ref.valueTo <= ref.valueFrom) {
+          setLoading(false);
+          setError(
+            "Giá trị 'Đến' (valueTo) phải lớn hơn 'Từ' (valueFrom) ở tất cả các referent!"
+          );
+          return;
+        }
+      }
+    }
+    const payload = {
+      name: form.name,
+      description: form.description,
+      type: form.type,
+      stages: form.stages.map((stage, idx) => ({
+        name: stage.title,
+        description: stage.content,
+        dateOfProcessing: 1,
+        step: idx + 1,
+        elementInStages: stage.elementInStages,
+        referents: stage.referents,
+      })),
+    };
+
+    try {
+      await axiosInstance.post(
+        "https://net-api.orchid-lab.systems/api/method",
+        payload
+      );
+      setLoading(false);
+      void navigate("/method");
+    } catch (error) {
+      setLoading(false);
+      alert("Có lỗi xảy ra khi tạo phương pháp!");
+      console.error("Error creating method:", error);
+    }
   };
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50">
       <button
+        type="button"
         className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-4 hover:bg-green-800 hover:text-white transition"
-        onClick={() => navigate(-1)}
+        onClick={() => void navigate(-1)}
       >
         ← Trở về
       </button>
@@ -66,7 +223,12 @@ export default function MethodCreate() {
         Thêm phương pháp mới
       </h2>
       <div className="max-w-4xl mx-auto bg-white rounded shadow p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+          className="space-y-4"
+        >
           <div>
             <label className="block font-medium mb-1">Tên phương pháp</label>
             <input
@@ -78,6 +240,7 @@ export default function MethodCreate() {
               onChange={handleChange}
               placeholder="VD: Nhân giống từ lá, Thụ phấn chéo..."
             />
+            {error && <p className="text-red-500">{error}</p>}
           </div>
           <div>
             <label className="block font-medium mb-1">Loại phương pháp</label>
@@ -95,6 +258,7 @@ export default function MethodCreate() {
                 </option>
               ))}
             </select>
+            {error && <p className="text-red-500">{error}</p>}
           </div>
           <div>
             <label className="block font-medium mb-1">Mô tả</label>
@@ -106,59 +270,161 @@ export default function MethodCreate() {
               onChange={handleChange}
               placeholder="Mô tả ngắn về phương pháp..."
             />
+            {error && <p className="text-red-500">{error}</p>}
           </div>
           {/* Quy trình chi tiết */}
           <div>
             <label className="block font-medium mb-2">Quy trình chi tiết</label>
-            {form.steps.map((step, idx) => (
+            {form.stages.map((stage, stageIdx) => (
               <div
-                key={idx}
-                className="mb-4 border rounded p-3 relative bg-gray-50"
+                key={stageIdx}
+                className="mb-6 border p-4 rounded bg-gray-50"
               >
-                <div className="mb-2">
-                  <label className="block text-sm font-medium mb-1">
-                    Tiêu đề bước
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full border rounded px-3 py-2"
-                    value={step.title}
-                    onChange={(e) =>
-                      handleStepChange(idx, "title", e.target.value)
-                    }
-                    placeholder={`Bước ${idx + 1}: ...`}
-                    required
-                  />
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-semibold">Bước {stageIdx + 1}</span>
+                  {form.stages.length > 1 && (
+                    <button
+                      type="button"
+                      className="text-red-600 hover:underline"
+                      onClick={() => handleRemoveStage(stageIdx)}
+                    >
+                      Xóa bước
+                    </button>
+                  )}
                 </div>
+                <input
+                  value={stage.title}
+                  onChange={(e) =>
+                    handleStageChange(stageIdx, "title", e.target.value)
+                  }
+                  placeholder="Tên bước"
+                  required
+                  className="mb-2 w-full border px-3 py-2 rounded"
+                />
+                {error && <p className="text-red-500">{error}</p>}
+                <textarea
+                  value={stage.content}
+                  onChange={(e) =>
+                    handleStageChange(stageIdx, "content", e.target.value)
+                  }
+                  placeholder="Mô tả bước"
+                  required
+                  className="mb-2 w-full border px-3 py-2 rounded"
+                />
+                {error && <p className="text-red-500">{error}</p>}
+                <label className="block font-semibold mb-1">
+                  Chọn element cho bước này
+                </label>
+                <select
+                  multiple
+                  value={stage.elementInStages}
+                  onChange={(e) =>
+                    handleElementChange(
+                      stageIdx,
+                      Array.from(e.target.selectedOptions, (opt) => opt.value)
+                    )
+                  }
+                  className="mb-2 w-full border px-3 py-2 rounded"
+                >
+                  {elements.map((el) => (
+                    <option key={el.id} value={el.id}>
+                      {el.name}
+                    </option>
+                  ))}
+                </select>
+                {error && <p className="text-red-500">{error}</p>}
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Nội dung
-                  </label>
-                  <textarea
-                    className="w-full border rounded px-3 py-2"
-                    value={step.content}
-                    onChange={(e) =>
-                      handleStepChange(idx, "content", e.target.value)
-                    }
-                    placeholder="Mô tả chi tiết bước này..."
-                    required
-                  />
-                </div>
-                {form.steps.length > 1 && (
+                  <label className="block font-semibold mb-1">Referents</label>
+                  {stage.referents.map((ref, refIdx) => (
+                    <div key={refIdx} className="flex gap-2 mb-2 items-center">
+                      <input
+                        value={ref.name}
+                        onChange={(e) =>
+                          handleReferentChange(
+                            stageIdx,
+                            refIdx,
+                            "name",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Tên"
+                        required
+                        className="border px-2 py-1 rounded"
+                      />
+                      {error && <p className="text-red-500">{error}</p>}
+                      <input
+                        type="number"
+                        value={ref.unit}
+                        onChange={(e) =>
+                          handleReferentChange(
+                            stageIdx,
+                            refIdx,
+                            "unit",
+                            Number(e.target.value)
+                          )
+                        }
+                        placeholder="Đơn vị"
+                        required
+                        className="border px-2 py-1 rounded w-20"
+                      />
+                      {error && <p className="text-red-500">{error}</p>}
+                      <input
+                        type="number"
+                        value={ref.valueFrom}
+                        onChange={(e) =>
+                          handleReferentChange(
+                            stageIdx,
+                            refIdx,
+                            "valueFrom",
+                            Number(e.target.value)
+                          )
+                        }
+                        placeholder="Từ"
+                        required
+                        className="border px-2 py-1 rounded w-20"
+                      />
+                      {error && <p className="text-red-500">{error}</p>}
+                      <input
+                        type="number"
+                        value={ref.valueTo}
+                        onChange={(e) =>
+                          handleReferentChange(
+                            stageIdx,
+                            refIdx,
+                            "valueTo",
+                            Number(e.target.value)
+                          )
+                        }
+                        placeholder="Đến"
+                        required
+                        className="border px-2 py-1 rounded w-20"
+                      />
+                      {error && <p className="text-red-500">{error}</p>}
+                      {stage.referents.length > 1 && (
+                        <button
+                          type="button"
+                          className="text-red-600 hover:underline"
+                          onClick={() => handleRemoveReferent(stageIdx, refIdx)}
+                        >
+                          Xóa
+                        </button>
+                      )}
+                    </div>
+                  ))}
                   <button
                     type="button"
-                    className="absolute cursor-pointer top-2 right-2 text-red-600 hover:underline text-sm"
-                    onClick={() => handleRemoveStep(idx)}
+                    className="text-green-700 hover:underline"
+                    onClick={() => handleAddReferent(stageIdx)}
                   >
-                    Xóa
+                    Thêm referent
                   </button>
-                )}
+                </div>
               </div>
             ))}
             <button
               type="button"
               className="bg-green-100 cursor-pointer text-green-800 px-4 py-1 rounded font-semibold hover:bg-green-200 transition"
-              onClick={handleAddStep}
+              onClick={handleAddStage}
             >
               + Thêm bước
             </button>

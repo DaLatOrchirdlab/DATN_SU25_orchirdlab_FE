@@ -2,6 +2,15 @@ interface MethodStage {
   name: string;
   description: string;
   dateOfProcessing: number;
+  step: number;
+  status: boolean;
+  elementDTO: ElementDTO[];
+}
+interface ElementDTO {
+  id: string;
+  name: string;
+  description: string;
+  status: boolean;
 }
 export interface Method {
   id: string;

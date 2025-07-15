@@ -12,6 +12,7 @@ const tabs = [
   { name: "Nhiệm vụ", path: "/tasks", icon: <FaTasks /> },
   { name: "Kế hoạch lai tạo", path: "/experiment-log", icon: <FaBook /> },
   { name: "Cây giống", path: "/seedlings", icon: <FaSeedling /> },
+  { name: "Nguyên vật liệu", path: "/element", icon: <FaFlask /> },
   { name: "Báo cáo", path: "/reports", icon: <FaChartBar /> },
 ];
 
