@@ -1,90 +1,106 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { ArrowRight, ArrowLeft, Info, Check } from "lucide-react";
-import ExperimentSteps from "../Step/ExperimentSteps";
-import { useExperimentLogForm } from "../../../context/ExperimentLogFormContext";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ArrowRight, ArrowLeft, Info, Check, Plus } from 'lucide-react';
+import ExperimentSteps from '../Step/ExperimentSteps';
+import { useExperimentLogForm } from '../../../context/ExperimentLogFormContext';
+import axios from 'axios';
 
-// Mock Data
-interface Plant {
+interface Seedling {
   id: string;
   name: string;
-  type: "cha" | "mẹ";
+  description: string;
+  doB: string;
 }
 
-const mockPlants: Plant[] = [
-  {
-    id: "015ac088-432e-429c-9714-ae47e599cd2c",
-    name: "Seedling-4",
-    type: "mẹ",
-  },
-  { id: "051b7baf-8b01-4e7d-a43f-ae27dcbd006c", name: "TEST 3", type: "mẹ" },
-  {
-    id: "0bcfc802-d32c-47be-876d-5c24b48cc0c5",
-    name: "Seedling-1",
-    type: "mẹ",
-  },
-  {
-    id: "0ca0f52d-bcfe-4771-90ca-247b1c911e74",
-    name: "Seedling-9",
-    type: "cha",
-  },
-  {
-    id: "0e5ccf9f-6b54-4f82-812f-d5829b13276b",
-    name: "Seedling-8",
-    type: "cha",
-  },
-  {
-    id: "13936d9e-87e1-4ef4-8718-dd33a15d0214",
-    name: "Seedling-2",
-    type: "cha",
-  },
-];
+interface ApiSeedling {
+  id: string;
+  name: string;
+  description: string;
+  doB: string;
+}
 
 const CreateExperimentStep2 = () => {
   const navigate = useNavigate();
   const { form, setForm } = useExperimentLogForm();
   const { methodName } = form;
 
-  // State cho chọn cây mẹ/cha
-  const [selectedMother, setSelectedMother] = useState<Plant | null>(null);
-  const [selectedFather, setSelectedFather] = useState<Plant | null>(null);
+  // State for fetched seedlings
+  const [seedlings, setSeedlings] = useState<Seedling[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Khi methodName thay đổi, reset chọn
+  // State for selection
+  const [selected, setSelected] = useState<Seedling[]>([]);
+
+  // Fetch seedlings on mount
   useEffect(() => {
-    setSelectedMother(null);
-    setSelectedFather(null);
+    setLoading(true);
+    axios.get('https://net-api.orchid-lab.systems/api/seedling?pageNumber=1&pageSize=100')
+      .then(res => {
+        const raw = res.data as { value?: { data?: ApiSeedling[] } };
+        const data: Seedling[] = Array.isArray(raw.value?.data)
+          ? raw.value.data.map((item) => ({
+              id: item.id,
+              name: item.name,
+              description: item.description,
+              doB: item.doB,
+            }))
+          : [];
+        setSeedlings(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Không thể tải danh sách cây giống');
+        setLoading(false);
+      });
+  }, []);
+
+  // Reset selection when method changes
+  useEffect(() => {
+    setSelected([]);
   }, [methodName]);
 
-  // Cập nhật context khi chọn cây
+  // Update context when selection changes
   useEffect(() => {
-    if (methodName === "Subculturing") {
-      if (selectedMother) {
-        setForm((prev) => ({
+    if (methodName === 'Subculturing') {
+      if (selected[0]) {
+        setForm(prev => ({
           ...prev,
-          motherID: selectedMother.id,
-          motherName: selectedMother.name,
-          hybridization: [selectedMother.id],
-          hybridizationNames: [selectedMother.name],
+          motherID: selected[0].id,
+          motherName: selected[0].name,
+          hybridization: [selected[0].id],
+          hybridizationNames: [selected[0].name],
         }));
       }
-    } else if (methodName === "Sterilization") {
-      if (selectedMother && selectedFather) {
-        setForm((prev) => ({
+    } else if (methodName === 'Sterilization') {
+      if (selected.length === 2) {
+        setForm(prev => ({
           ...prev,
-          motherID: selectedMother.id,
-          motherName: selectedMother.name,
-          hybridization: [selectedFather.id, selectedMother.id],
-          hybridizationNames: [selectedFather.name, selectedMother.name],
+          motherID: selected[0].id,
+          motherName: selected[0].name,
+          hybridization: [selected[1].id, selected[0].id],
+          hybridizationNames: [selected[1].name, selected[0].name],
         }));
       }
     }
-  }, [selectedMother, selectedFather, methodName, setForm]);
+  }, [selected, methodName, setForm]);
 
-  // Điều kiện next
+  // Select logic
+  const handleSelect = (seedling: Seedling) => {
+    if (methodName === 'Subculturing') {
+      setSelected([seedling]);
+    } else if (methodName === 'Sterilization') {
+      if (selected.find(s => s.id === seedling.id)) {
+        setSelected(selected.filter(s => s.id !== seedling.id));
+      } else if (selected.length < 2) {
+        setSelected([...selected, seedling]);
+      }
+    }
+  };
+
   const isNextDisabled =
-    methodName === "Subculturing"
-      ? !selectedMother
-      : !(selectedMother && selectedFather);
+    (methodName === 'Subculturing' && selected.length !== 1) ||
+    (methodName === 'Sterilization' && selected.length !== 2);
 
   const handleNext = () => {
     if (!isNextDisabled) {
@@ -99,127 +115,79 @@ const CreateExperimentStep2 = () => {
       <ExperimentSteps currentStep={2} />
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Tạo Experiment Log Mới
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Bước 2: Chọn cây giống cho phương pháp "{methodName}"
-            </p>
+          <div className="p-6 border-b flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Tạo Experiment Log Mới</h1>
+              <p className="text-gray-600 mt-1">Bước 2: Chọn cây giống cho phương pháp "{methodName}"</p>
+            </div>
+            <Link
+              to="/seedlings/new"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition-colors font-medium"
+            >
+              <Plus className="w-5 h-5" /> Tạo cây giống mới
+            </Link>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main Form */}
               <div className="lg:col-span-2 space-y-6">
-                {methodName === "Subculturing" && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                      Chọn 1 cây mẹ
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {mockPlants
-                        .filter((p) => p.type === "mẹ")
-                        .map((plant) => (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                    {methodName === 'Subculturing' ? 'Chọn 1 cây giống (mẹ)' : 'Chọn 2 cây giống (đầu tiên là mẹ, thứ hai là cha)'}
+                  </h3>
+                  {loading ? (
+                    <div>Đang tải...</div>
+                  ) : error ? (
+                    <div className="text-red-500">{error}</div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {seedlings.map((plant) => {
+                        const isSelected = selected.find(s => s.id === plant.id);
+                        return (
                           <div
                             key={plant.id}
-                            className={`border-2 rounded-lg p-4 cursor-pointer flex items-center gap-4 transition-all ${
-                              selectedMother?.id === plant.id
-                                ? "border-green-600 bg-green-50"
-                                : "border-gray-200 hover:border-gray-300"
-                            }`}
-                            onClick={() => setSelectedMother(plant)}
+                            className={`border-2 rounded-lg p-4 cursor-pointer flex items-center gap-4 transition-all ${isSelected ? 'border-green-600 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
+                            onClick={() => handleSelect(plant)}
                           >
-                            <div
-                              className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center ${
-                                selectedMother?.id === plant.id
-                                  ? "bg-green-600 border-green-600"
-                                  : "border-gray-300"
-                              }`}
-                            >
-                              {selectedMother?.id === plant.id && (
-                                <Check className="w-4 h-4 text-white" />
-                              )}
+                            <div className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center ${isSelected ? 'bg-green-600 border-green-600' : 'border-gray-300'}`}>
+                              {isSelected && <Check className="w-4 h-4 text-white" />}
                             </div>
                             <div>
                               <div className="font-medium">{plant.name}</div>
                             </div>
                           </div>
-                        ))}
+                        );
+                      })}
                     </div>
+                  )}
+                </div>
+                {/* Detail of selected seedlings */}
+                {methodName === 'Subculturing' && selected[0] && (
+                  <div className="mt-6 p-4 border rounded-lg bg-gray-50">
+                    <h4 className="font-semibold mb-2">Thông tin cây mẹ đã chọn</h4>
+                    <div><strong>Tên:</strong> {selected[0].name}</div>
+                    <div><strong>Mô tả:</strong> {selected[0].description}</div>
+                    <div><strong>Ngày sinh:</strong> {selected[0].doB}</div>
                   </div>
                 )}
-                {methodName === "Sterilization" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                        Chọn 1 cây cha
-                      </h3>
-                      <div className="grid grid-cols-1 gap-4">
-                        {mockPlants
-                          .filter((p) => p.type === "cha")
-                          .map((plant) => (
-                            <div
-                              key={plant.id}
-                              className={`border-2 rounded-lg p-4 cursor-pointer flex items-center gap-4 transition-all ${
-                                selectedFather?.id === plant.id
-                                  ? "border-green-600 bg-green-50"
-                                  : "border-gray-200 hover:border-gray-300"
-                              }`}
-                              onClick={() => setSelectedFather(plant)}
-                            >
-                              <div
-                                className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center ${
-                                  selectedFather?.id === plant.id
-                                    ? "bg-green-600 border-green-600"
-                                    : "border-gray-300"
-                                }`}
-                              >
-                                {selectedFather?.id === plant.id && (
-                                  <Check className="w-4 h-4 text-white" />
-                                )}
-                              </div>
-                              <div>
-                                <div className="font-medium">{plant.name}</div>
-                              </div>
-                            </div>
-                          ))}
+                {methodName === 'Sterilization' && selected.length > 0 && (
+                  <div className="mt-6 space-y-4">
+                    {selected[0] && (
+                      <div className="p-4 border rounded-lg bg-gray-50">
+                        <h4 className="font-semibold mb-2">Cây mẹ</h4>
+                        <div><strong>Tên:</strong> {selected[0].name}</div>
+                        <div><strong>Mô tả:</strong> {selected[0].description}</div>
+                        <div><strong>Ngày sinh:</strong> {selected[0].doB}</div>
                       </div>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                        Chọn 1 cây mẹ
-                      </h3>
-                      <div className="grid grid-cols-1 gap-4">
-                        {mockPlants
-                          .filter((p) => p.type === "mẹ")
-                          .map((plant) => (
-                            <div
-                              key={plant.id}
-                              className={`border-2 rounded-lg p-4 cursor-pointer flex items-center gap-4 transition-all ${
-                                selectedMother?.id === plant.id
-                                  ? "border-green-600 bg-green-50"
-                                  : "border-gray-200 hover:border-gray-300"
-                              }`}
-                              onClick={() => setSelectedMother(plant)}
-                            >
-                              <div
-                                className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center ${
-                                  selectedMother?.id === plant.id
-                                    ? "bg-green-600 border-green-600"
-                                    : "border-gray-300"
-                                }`}
-                              >
-                                {selectedMother?.id === plant.id && (
-                                  <Check className="w-4 h-4 text-white" />
-                                )}
-                              </div>
-                              <div>
-                                <div className="font-medium">{plant.name}</div>
-                              </div>
-                            </div>
-                          ))}
+                    )}
+                    {selected[1] && (
+                      <div className="p-4 border rounded-lg bg-gray-50">
+                        <h4 className="font-semibold mb-2">Cây cha</h4>
+                        <div><strong>Tên:</strong> {selected[1].name}</div>
+                        <div><strong>Mô tả:</strong> {selected[1].description}</div>
+                        <div><strong>Ngày sinh:</strong> {selected[1].doB}</div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -245,22 +213,15 @@ const CreateExperimentStep2 = () => {
                     Cây đã chọn
                   </h3>
                   <div className="text-sm text-orange-700 space-y-1">
-                    {methodName === "Subculturing" &&
-                      (selectedMother ? (
-                        <div>• {selectedMother.name}</div>
-                      ) : (
-                        "Chưa chọn cây mẹ."
-                      ))}
-                    {methodName === "Sterilization" && (
+                    {methodName === 'Subculturing' && (
+                      selected[0]
+                        ? <div>• {selected[0].name}</div>
+                        : "Chưa chọn cây mẹ."
+                    )}
+                    {methodName === 'Sterilization' && (
                       <>
-                        <div>
-                          <strong>Cha:</strong>{" "}
-                          {selectedFather?.name ?? "Chưa chọn"}
-                        </div>
-                        <div>
-                          <strong>Mẹ:</strong>{" "}
-                          {selectedMother?.name ?? "Chưa chọn"}
-                        </div>
+                        <div><strong>Mẹ:</strong> {selected[0]?.name ?? 'Chưa chọn'}</div>
+                        <div><strong>Cha:</strong> {selected[1]?.name ?? 'Chưa chọn'}</div>
                       </>
                     )}
                   </div>
