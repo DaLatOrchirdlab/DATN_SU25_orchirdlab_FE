@@ -104,7 +104,7 @@ const CreateExperimentStep2 = () => {
 
   const handleNext = () => {
     if (!isNextDisabled) {
-      void navigate('/experiment-log/create/step-3');
+      void navigate("/experiment-log/create/step-3");
     }
   };
 
@@ -194,14 +194,24 @@ const CreateExperimentStep2 = () => {
               {/* Sidebar */}
               <div className="space-y-4">
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <h3 className="font-medium text-green-800 mb-2 flex items-center gap-2"><Info size={16} />Tóm tắt lựa chọn</h3>
+                  <h3 className="font-medium text-green-800 mb-2 flex items-center gap-2">
+                    <Info size={16} />
+                    Tóm tắt lựa chọn
+                  </h3>
                   <div className="text-sm text-green-700 space-y-2">
-                    <div><strong>Lô cấy:</strong> {form.batchName ?? 'Chưa chọn'}</div>
-                    <div><strong>Phương pháp:</strong> {form.methodName ?? 'Chưa chọn'}</div>
+                    <div>
+                      <strong>Lô cấy:</strong> {form.batchName ?? "Chưa chọn"}
+                    </div>
+                    <div>
+                      <strong>Phương pháp:</strong>{" "}
+                      {form.methodName ?? "Chưa chọn"}
+                    </div>
                   </div>
                 </div>
                 <div className="bg-orange-50 p-4 rounded-lg">
-                  <h3 className="font-medium text-orange-800 mb-2">Cây đã chọn</h3>
+                  <h3 className="font-medium text-orange-800 mb-2">
+                    Cây đã chọn
+                  </h3>
                   <div className="text-sm text-orange-700 space-y-1">
                     {methodName === 'Subculturing' && (
                       selected[0]
@@ -232,8 +242,8 @@ const CreateExperimentStep2 = () => {
               disabled={isNextDisabled}
               className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
                 isNextDisabled
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-600 text-white hover:bg-green-700'
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-green-600 text-white hover:bg-green-700"
               }`}
             >
               Tiếp tục <ArrowRight className="w-4 h-4" />
@@ -245,4 +255,4 @@ const CreateExperimentStep2 = () => {
   );
 };
 
-export default CreateExperimentStep2; 
+export default CreateExperimentStep2;

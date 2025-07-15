@@ -1,17 +1,17 @@
 import React, { createContext, useContext, useState } from "react";
-import type { Seedling } from "../types/Seedling";
+import type { SeedlingFormInput } from "../types/Seedling";
 
 interface SeedlingFormContextType {
-  form: Seedling;
-  setForm: React.Dispatch<React.SetStateAction<Seedling>>;
+  form: SeedlingFormInput;
+  setForm: React.Dispatch<React.SetStateAction<SeedlingFormInput>>;
 }
 
-const defaultForm: Seedling = {
+const defaultForm: SeedlingFormInput = {
   name: "",
-  parent: "",
-  parent1: "",
+  motherID: "",
+  fatherID: "",
   description: "",
-  dateOfBirth: "",
+  doB: "",
   characteristics: [],
 };
 
@@ -34,7 +34,7 @@ export function SeedlingFormProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [form, setForm] = useState<Seedling>(defaultForm);
+  const [form, setForm] = useState<SeedlingFormInput>(defaultForm);
 
   return (
     <SeedlingFormContext.Provider value={{ form, setForm }}>
