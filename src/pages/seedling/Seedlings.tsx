@@ -106,8 +106,8 @@ export default function Seedlings() {
           <thead>
             <tr className="bg-green-50 text-green-800 font-semibold">
               <th className="py-3 px-4">Tên</th>
-              <th className="px-4">Cây bố</th>
-              <th className="px-4">Cây mẹ</th>
+              <th className="px-4">Cây giống 1</th>
+              <th className="px-4">Cây giống 2</th>
               <th className="px-4">Ngày sinh</th>
               <th className="px-4">Ngày tạo</th>
               <th className="px-4">Tạo bởi</th>

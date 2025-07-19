@@ -78,14 +78,14 @@ export default function SeedlingDetailsForm() {
           </div>
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block font-medium mb-1">Cây bố *</label>
+              <label className="block font-medium mb-1">Cây giống 1 *</label>
               <select
                 name="fatherID"
                 value={form.fatherID}
                 onChange={handleChange}
                 className="w-full border rounded px-4 py-2"
               >
-                <option value="">Chọn cây bố</option>
+                <option value="">Chọn cây giống 1</option>
                 {seedlings.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -97,14 +97,14 @@ export default function SeedlingDetailsForm() {
               )}
             </div>
             <div className="flex-1">
-              <label className="block font-medium mb-1">Cây mẹ *</label>
+              <label className="block font-medium mb-1">Cây giống 2 *</label>
               <select
                 name="motherID"
                 value={form.motherID}
                 onChange={handleChange}
                 className="w-full border rounded px-4 py-2"
               >
-                <option value="">Chọn cây mẹ</option>
+                <option value="">Chọn cây giống 2</option>
                 {seedlings.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}

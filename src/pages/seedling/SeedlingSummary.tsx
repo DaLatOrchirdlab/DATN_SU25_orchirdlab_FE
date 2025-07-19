@@ -90,11 +90,11 @@ export default function SeedlingSummary() {
             <span className="font-semibold">Tên:</span> {form.name}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Cây bố:</span>{" "}
+            <span className="font-semibold">Cây giống 1:</span>{" "}
             {father ? father.name : form.fatherID}
           </div>
           <div className="mb-2">
-            <span className="font-semibold">Cây mẹ:</span>{" "}
+            <span className="font-semibold">Cây giống 2:</span>{" "}
             {mother ? mother.name : form.motherID}
           </div>
           <div className="mb-2">
