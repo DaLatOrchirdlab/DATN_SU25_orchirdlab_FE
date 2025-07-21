@@ -4,8 +4,8 @@ import type { Method, MethodApiResponse } from "../../types/Method";
 
 const methodTypes = [
   { label: "Tất cả", value: "" },
-  { label: "Nhân giống vô tính", value: "vo_tinh" },
-  { label: "Nhân giống hữu tính", value: "huu_tinh" },
+  { label: "Nhân giống vô tính", value: "Clonal" },
+  { label: "Nhân giống hữu tính", value: "Sexual" },
 ];
 
 const PAGE_SIZE = 5;
@@ -45,8 +45,8 @@ export default function Method() {
   const filtered = data.filter(
     (m) =>
       (filterType === "" ||
-        (filterType === "vo_tinh" && m.name === "Subculturing") ||
-        (filterType === "huu_tinh" && m.name === "Sterilization")) &&
+        (filterType === "Clonal" && m.type === "Clonal") ||
+        (filterType === "Sexual" && m.type === "Sexual")) &&
       (m.name.toLowerCase().includes(search.toLowerCase()) ||
         m.type.toLowerCase().includes(search.toLowerCase()))
   );
