@@ -7,7 +7,8 @@ interface SeedlingFormContextType {
 }
 
 const defaultForm: SeedlingFormInput = {
-  name: "",
+  localName: "",
+  scientificName: "",
   motherID: "",
   fatherID: "",
   description: "",

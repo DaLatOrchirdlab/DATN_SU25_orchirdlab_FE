@@ -11,8 +11,8 @@ export interface Seedling {
   localName: string;
   scientificName: string;
   description: string;
-  mother: string;
-  father: string;
+  parent1: string;
+  parent2: string;
   doB: string;
   characteristics: SeedlingCharacteristic[];
   create_by: string;
@@ -24,7 +24,8 @@ export interface Seedling {
 }
 
 export interface SeedlingFormInput {
-  name: string;
+  localName: string;
+  scientificName: string;
   description: string;
   motherID: string;
   fatherID: string;

@@ -8,6 +8,7 @@ import type {
 } from "../../types/Seedling";
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
+import axiosInstance from "../../api/axiosInstance";
 export default function SeedlingSummary() {
   const navigate = useNavigate();
   const { form } = useSeedlingForm();
@@ -20,10 +21,10 @@ export default function SeedlingSummary() {
     const fetchSeedlings = async () => {
       setLoading(true);
       try {
-        const res = await fetch(
-          "https://net-api.orchid-lab.systems/api/seedling?pageNumber=1&pageSize=100"
+        const res = await axiosInstance.get(
+          "/api/seedling?pageNumber=1&pageSize=100"
         );
-        const data = (await res.json()) as SeedlingApiResponse;
+        const data = res.data as SeedlingApiResponse;
         setSeedlings(data.value.data || []);
       } catch {
         setSeedlings([]);
@@ -37,15 +38,19 @@ export default function SeedlingSummary() {
   const father = seedlings.find((s) => String(s.id) === String(form.fatherID));
   const mother = seedlings.find((s) => String(s.id) === String(form.motherID));
 
+  console.log("Father ID:", father?.id);
+  console.log("Mother ID:", mother?.id);
+
   async function handleCreate() {
     setLoading(true);
     setError("");
 
     const payload = {
-      name: form.name,
+      localName: form.localName,
+      scientificName: form.scientificName,
       description: form.description,
-      motherID: mother?.localName,
-      fatherID: father?.localName,
+      motherID: mother?.id,
+      fatherID: father?.id,
       doB: form.doB,
       characteristics: (form.characteristics || []).map(
         (c: SeedlingCharacteristic) => ({
@@ -58,15 +63,8 @@ export default function SeedlingSummary() {
       ),
     };
     try {
-      const res = await fetch(
-        "https://net-api.orchid-lab.systems/api/seedling",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-      if (!res.ok) throw new Error("Tạo cây giống thất bại");
+      const res = await axiosInstance.post("/api/seedling", payload);
+      if (!res.data) throw new Error("Tạo cây giống thất bại");
       setShowSuccess(true);
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : "Có lỗi xảy ra";
@@ -87,7 +85,11 @@ export default function SeedlingSummary() {
         </h3>
         <div className="mb-6">
           <div className="mb-2">
-            <span className="font-semibold">Tên:</span> {form.name}
+            <span className="font-semibold">Tên:</span> {form.localName}
+          </div>
+          <div className="mb-2">
+            <span className="font-semibold">Tên khoa học:</span>{" "}
+            {form.scientificName}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Cây giống 1:</span>{" "}

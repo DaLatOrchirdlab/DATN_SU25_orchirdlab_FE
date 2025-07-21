@@ -91,11 +91,11 @@ export default function SeedlingDetail() {
           </div>
           <div className="mb-2">
             <span className="font-semibold">Cây giống 1:</span>{" "}
-            {seedling.father}
+            {seedling.parent1}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Cây giống 2:</span>{" "}
-            {seedling.mother}
+            {seedling.parent2}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Miêu tả:</span>{" "}

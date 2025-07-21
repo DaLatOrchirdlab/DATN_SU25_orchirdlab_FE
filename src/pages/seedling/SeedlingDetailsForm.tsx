@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useSeedlingForm } from "../../context/SeedlingFormContext";
 import type { Seedling, SeedlingApiResponse } from "../../types/Seedling";
+import axiosInstance from "../../api/axiosInstance";
 
 export default function SeedlingDetailsForm() {
   const navigate = useNavigate();
@@ -15,10 +16,10 @@ export default function SeedlingDetailsForm() {
     const fetchSeedlings = async () => {
       setLoading(true);
       try {
-        const res = await fetch(
-          "https://net-api.orchid-lab.systems/api/seedling?pageNumber=1&pageSize=100"
+        const res = await axiosInstance.get(
+          "/api/seedling?pageNumber=1&pageSize=100"
         );
-        const data = (await res.json()) as SeedlingApiResponse;
+        const data = res.data as SeedlingApiResponse;
         setSeedlings(data.value.data || []);
       } catch {
         setSeedlings([]);
@@ -30,7 +31,12 @@ export default function SeedlingDetailsForm() {
   }, []);
 
   const isValid =
-    form.name && form.fatherID && form.motherID && form.description && form.doB;
+    form.localName &&
+    form.scientificName &&
+    form.fatherID &&
+    form.motherID &&
+    form.description &&
+    form.doB;
 
   function handleChange(
     e: React.ChangeEvent<
@@ -66,13 +72,26 @@ export default function SeedlingDetailsForm() {
           <div>
             <label className="block font-medium mb-1">Tên *</label>
             <input
-              name="name"
-              value={form.name}
+              name="localName"
+              value={form.localName}
               onChange={handleChange}
               className="w-full border rounded px-4 py-2"
               placeholder="Nhập tên cây giống"
             />
-            {touched && !form.name && (
+            {touched && !form.localName && (
+              <div className="text-red-500 text-sm">Bắt buộc</div>
+            )}
+          </div>
+          <div>
+            <label className="block font-medium mb-1">Tên khoa học *</label>
+            <input
+              name="scientificName"
+              value={form.scientificName}
+              onChange={handleChange}
+              className="w-full border rounded px-4 py-2"
+              placeholder="Nhập tên cây giống"
+            />
+            {touched && !form.scientificName && (
               <div className="text-red-500 text-sm">Bắt buộc</div>
             )}
           </div>
@@ -88,7 +107,7 @@ export default function SeedlingDetailsForm() {
                 <option value="">Chọn cây giống 1</option>
                 {seedlings.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name}
+                    {p.localName}
                   </option>
                 ))}
               </select>
@@ -107,7 +126,7 @@ export default function SeedlingDetailsForm() {
                 <option value="">Chọn cây giống 2</option>
                 {seedlings.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name}
+                    {p.localName}
                   </option>
                 ))}
               </select>
