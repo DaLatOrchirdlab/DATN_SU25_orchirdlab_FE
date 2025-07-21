@@ -151,7 +151,7 @@ export default function Seedlings() {
             ) : (
               data.map((s) => (
                 <tr key={s.id} className="border-t hover:bg-green-50">
-                  <td className="py-3 px-4">{s.name}</td>
+                  <td className="py-3 px-4">{s.localName}</td>
                   <td className="px-4">{s.father}</td>
                   <td className="px-4">{s.mother}</td>
                   <td className="px-4">{s.doB}</td>

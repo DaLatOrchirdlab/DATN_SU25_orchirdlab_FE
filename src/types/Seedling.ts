@@ -8,7 +8,8 @@ export interface SeedlingCharacteristic {
 
 export interface Seedling {
   id: string;
-  name: string;
+  localName: string;
+  scientificName: string;
   description: string;
   mother: string;
   father: string;

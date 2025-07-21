@@ -76,13 +76,18 @@ export default function SeedlingDetail() {
         &larr; Trở về
       </button>
       <h1 className="text-3xl font-bold text-green-800 mb-1">
-        {seedling.name}
+        {seedling.localName || seedling.scientificName} -{" "}
+        {seedling.scientificName || seedling.localName}
       </h1>
       <div className="text-gray-500 mb-4">Thông tin chi tiết</div>
       <div className="bg-white rounded shadow p-6 flex gap-8">
         <div className="flex-1">
           <div className="mb-2">
-            <span className="font-semibold">Tên:</span> {seedling.name}
+            <span className="font-semibold">Tên:</span> {seedling.localName}
+          </div>
+          <div className="mb-2">
+            <span className="font-semibold">Tên khoa học:</span>{" "}
+            {seedling.scientificName}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Cây giống 1:</span>{" "}
