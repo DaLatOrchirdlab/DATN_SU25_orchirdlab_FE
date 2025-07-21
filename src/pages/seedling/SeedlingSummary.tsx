@@ -44,8 +44,8 @@ export default function SeedlingSummary() {
     const payload = {
       name: form.name,
       description: form.description,
-      motherID: mother?.name,
-      fatherID: father?.name,
+      motherID: mother?.localName,
+      fatherID: father?.localName,
       doB: form.doB,
       characteristics: (form.characteristics || []).map(
         (c: SeedlingCharacteristic) => ({
@@ -91,11 +91,11 @@ export default function SeedlingSummary() {
           </div>
           <div className="mb-2">
             <span className="font-semibold">Cây giống 1:</span>{" "}
-            {father ? father.name : form.fatherID}
+            {father ? father.localName : form.fatherID}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Cây giống 2:</span>{" "}
-            {mother ? mother.name : form.motherID}
+            {mother ? mother.localName : form.motherID}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Mô tả:</span> {form.description}

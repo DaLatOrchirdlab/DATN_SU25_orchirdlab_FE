@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Seedling, SeedlingApiResponse } from "../../types/Seedling";
+import axiosInstance from "../../api/axiosInstance";
 
 const PAGE_SIZE = 5;
 
@@ -26,10 +27,10 @@ export default function Seedlings() {
           ...(byMother ? { byMother } : {}),
           ...(byFather ? { byFather } : {}),
         });
-        const res = await fetch(
+        const res = await axiosInstance.get(
           `https://net-api.orchid-lab.systems/api/seedling?${params}`
         );
-        const json = (await res.json()) as SeedlingApiResponse;
+        const json = res.data as SeedlingApiResponse;
         setData(json.value.data || []);
         setTotal(json.value.totalCount || 0);
         setTotalPages(json.value.pageCount || 1);

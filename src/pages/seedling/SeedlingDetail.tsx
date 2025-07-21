@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { Seedling } from "../../types/Seedling";
+import axiosInstance from "../../api/axiosInstance";
 
 export default function SeedlingDetail() {
   const { id } = useParams();
@@ -15,10 +16,10 @@ export default function SeedlingDetail() {
     const fetchDetail = async () => {
       setLoading(true);
       try {
-        const res = await fetch(
+        const res = await axiosInstance.get(
           `https://net-api.orchid-lab.systems/api/seedling/${id}`
         );
-        const data = (await res.json()) as { value: Seedling };
+        const data = res.data as { value: Seedling };
         setSeedling(data.value || null);
       } catch {
         setSeedling(null);
@@ -33,11 +34,10 @@ export default function SeedlingDetail() {
     if (!id) return;
     setDeleting(true);
     try {
-      const res = await fetch(
-        `https://net-api.orchid-lab.systems/api/seedling/${id}`,
-        { method: "DELETE" }
+      const res = await axiosInstance.delete(
+        `https://net-api.orchid-lab.systems/api/seedling/${id}`
       );
-      if (res.ok) {
+      if (res.status >= 200 && res.status < 300) {
         setShowConfirm(false);
         void navigate("/seedlings");
       } else {

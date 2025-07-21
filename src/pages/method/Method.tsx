@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Method, MethodApiResponse } from "../../types/Method";
+import axiosInstance from "../../api/axiosInstance";
 
 const methodTypes = [
   { label: "Tất cả", value: "" },
@@ -24,10 +25,10 @@ export default function Method() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(
+        const res = await axiosInstance.get(
           `https://net-api.orchid-lab.systems/api/method?pageNumber=${page}&pageSize=${PAGE_SIZE}`
         );
-        const json = (await res.json()) as MethodApiResponse;
+        const json = res.data as MethodApiResponse;
         setData(json.value.data || []);
         setTotal(json.value.totalCount || 0);
         setTotalPages(json.value.pageCount || 1);
