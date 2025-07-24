@@ -1,65 +1,49 @@
-import React, { useState, useMemo } from "react";
-import dayjs from "dayjs";
-interface Report {
-  id: string;
-  taskName: string;
-  author: string;
-  date: string; // ISO date string
-}
-const reports: Report[] = [
-  {
-    id: "RPT001",
-    taskName: "Nghiên cứu lai P. amabilis",
-    author: "Trần Văn Hưng",
-    date: "2025-06-20",
-  },
-  {
-    id: "RPT002",
-    taskName: "Theo dõi cây giống",
-    author: "Nguyễn Thị Lan",
-    date: "2025-06-18",
-  },
-  {
-    id: "RPT003",
-    taskName: "Theo dõi cây giống",
-    author: "Nguyễn Thị Lan",
-    date: "2025-06-18",
-  },
-  {
-    id: "RPT004",
-    taskName: "Theo dõi cây giống",
-    author: "Nguyễn Thị Lan",
-    date: "2025-06-18",
-  },
-  {
-    id: "RPT005",
-    taskName: "Theo dõi cây giống",
-    author: "Nguyễn Thị Lan",
-    date: "2025-06-18",
-  },
-  {
-    id: "RPT006",
-    taskName: "Theo dõi cây giống",
-    author: "Nguyễn Thị Lan",
-    date: "2025-06-18",
-  },
-  // ...thêm dữ liệu mẫu
-];
+import { useState, useMemo, useEffect } from "react";
+import axiosInstance from "../../api/axiosInstance";
+import type { Report, ReportApiResponse } from "../../types/Report";
 
 const PAGE_SIZE = 5;
 
 export default function ReportList() {
   const [search, setSearch] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [data, setData] = useState<Report[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          pageNumber: String(page),
+          pageSize: String(PAGE_SIZE),
+        });
+        const res = await axiosInstance.get(
+          `https://net-api.orchid-lab.systems/api/report?${params}`
+        );
+        const json = res.data as ReportApiResponse;
+        setData(json.value.data || []);
+        setTotal(json.value.totalCount || 0);
+        setTotalPages(json.value.pageCount || 1);
+      } catch {
+        setData([]);
+        setTotal(0);
+        setTotalPages(1);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetchData();
+  }, [page]);
 
   // Lọc dữ liệu
   const filteredReports = useMemo(() => {
-    return reports.filter((r) => {
+    return data.filter((r) => {
       const matchSearch =
-        r.taskName.toLowerCase().includes(search.toLowerCase()) ||
-        r.author.toLowerCase().includes(search.toLowerCase());
+        r.name.toLowerCase().includes(search.toLowerCase()) ||
+        r.technician.toLowerCase().includes(search.toLowerCase());
       // const matchFrom = fromDate
       //   ? dayjs(String(r.date)).isAfter(
       //       dayjs(String(fromDate)).subtract(1, "day")
@@ -71,14 +55,7 @@ export default function ReportList() {
       // return matchSearch && matchFrom && matchTo;
       return matchSearch;
     });
-  }, [search, fromDate, toDate]);
-
-  // Phân trang
-  const totalPages = Math.ceil(filteredReports.length / PAGE_SIZE);
-  const pagedReports = filteredReports.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE
-  );
+  }, [data, search]);
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
@@ -120,26 +97,40 @@ export default function ReportList() {
                 <th className="py-3 px-4">ID</th>
                 <th className="px-4">Tên task</th>
                 <th className="px-4">Người viết</th>
-                <th className="px-4">Ngày viết</th>
                 <th className="px-4">Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {pagedReports.length === 0 ? (
+              {loading ? (
+                Array.from({ length: PAGE_SIZE }).map((_, idx) => (
+                  // eslint-disable-next-line react-x/no-array-index-key
+                  <tr key={idx} className="border-t animate-pulse">
+                    <td className="py-3 px-4">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    </td>
+                    <td className="px-4">
+                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                    </td>
+                    <td className="px-4">
+                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                    </td>
+                    <td className="px-4">
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </td>
+                  </tr>
+                ))
+              ) : filteredReports.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-6 text-gray-500">
                     Không có báo cáo phù hợp.
                   </td>
                 </tr>
               ) : (
-                pagedReports.map((r) => (
+                filteredReports.map((r) => (
                   <tr key={r.id} className="border-t">
                     <td className="py-3 px-4">{r.id}</td>
-                    <td className="px-4">{r.taskName}</td>
-                    <td className="px-4">{r.author}</td>
-                    <td className="px-4">
-                      {dayjs(r.date).format("DD/MM/YYYY")}
-                    </td>
+                    <td className="px-4">{r.name}</td>
+                    <td className="px-4">{r.technician}</td>
                     <td className="px-4">
                       <a
                         href={`/reports/${r.id}`}
@@ -153,6 +144,13 @@ export default function ReportList() {
               )}
             </tbody>
           </table>
+        </div>
+        {/* Summary cards */}
+        <div className="flex gap-4 mt-6 mb-2">
+          <div className="bg-green-100 rounded p-4 w-1/4">
+            <div className="font-semibold text-green-800">Tổng số báo cáo</div>
+            <div className="text-2xl font-bold text-green-800">{total}</div>
+          </div>
         </div>
         {/* Pagination */}
         <div className="flex justify-end mt-4 gap-2">
