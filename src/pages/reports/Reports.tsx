@@ -1,38 +1,13 @@
-<<<<<<< Updated upstream
 import { useState, useMemo, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import type { Report, ReportApiResponse } from "../../types/Report";
-=======
-import  { useState, useEffect } from "react";
 
-import axiosInstance from "../../api/axiosInstance";
-import { useNavigate } from "react-router-dom";
 
-interface Report {
-  id: string;
-  name: string;
-  description: string;
-  sample: string;
-  technician: string | null;
-  status: boolean;
-}
->>>>>>> Stashed changes
-
-interface ApiResponse {
-  value: {
-    totalCount: number;
-    pageCount: number;
-    pageSize: number;
-    pageNumber: number;
-    data: Report[];
-  };
-}
 
 const PAGE_SIZE = 10;
 
 export default function ReportList() {
   const [search, setSearch] = useState("");
-<<<<<<< Updated upstream
   const [data, setData] = useState<Report[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -83,46 +58,6 @@ export default function ReportList() {
       return matchSearch;
     });
   }, [data, search]);
-=======
-  const [page, setPage] = useState(1);
-  const [reports, setReports] = useState<Report[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    axiosInstance
-      .get<ApiResponse>("/api/report", {
-        params: {
-          pageNumber: page,
-          pageSize: PAGE_SIZE,
-        },
-      })
-      .then((res) => {
-        setReports(res.data.value.data);
-        setTotalCount(res.data.value.totalCount);
-      })
-      .catch(() => {
-        setError("Không thể tải dữ liệu báo cáo.");
-        setReports([]);
-        setTotalCount(0);
-      })
-      .finally(() => setLoading(false));
-  }, [page]);
-
-  // Lọc dữ liệu theo search
-  const filteredReports = reports.filter((r) => {
-    const matchSearch =
-      r.name.toLowerCase().includes(search.toLowerCase()) ||
-      (r.technician ? r.technician.toLowerCase().includes(search.toLowerCase()) : false);
-    return matchSearch;
-  });
-
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
->>>>>>> Stashed changes
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
@@ -160,21 +95,13 @@ export default function ReportList() {
             <thead>
               <tr className="bg-green-50 text-green-800 font-semibold">
                 <th className="py-3 px-4">ID</th>
-<<<<<<< Updated upstream
                 <th className="px-4">Tên task</th>
                 <th className="px-4">Người viết</th>
                 <th className="px-4">Hành động</th>
-=======
-                <th className="px-4">Tên báo cáo</th>
-                <th className="px-4">Mô tả</th>
-                <th className="px-4">Kỹ thuật viên</th>
-                <th className="px-4">Trạng thái</th>
->>>>>>> Stashed changes
               </tr>
             </thead>
             <tbody>
               {loading ? (
-<<<<<<< Updated upstream
                 Array.from({ length: PAGE_SIZE }).map((_, idx) => (
                   // eslint-disable-next-line react-x/no-array-index-key
                   <tr key={idx} className="border-t animate-pulse">
@@ -192,19 +119,6 @@ export default function ReportList() {
                     </td>
                   </tr>
                 ))
-=======
-                <tr>
-                  <td colSpan={5} className="text-center py-6 text-gray-500">
-                    Đang tải dữ liệu...
-                  </td>
-                </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan={5} className="text-center py-6 text-red-500">
-                    {error}
-                  </td>
-                </tr>
->>>>>>> Stashed changes
               ) : filteredReports.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-6 text-gray-500">
@@ -213,7 +127,6 @@ export default function ReportList() {
                 </tr>
               ) : (
                 filteredReports.map((r) => (
-<<<<<<< Updated upstream
                   <tr key={r.id} className="border-t">
                     <td className="py-3 px-4">{r.id}</td>
                     <td className="px-4">{r.name}</td>
@@ -226,18 +139,6 @@ export default function ReportList() {
                         Chi tiết
                       </a>
                     </td>
-=======
-                  <tr
-                    key={r.id}
-                    className="border-t hover:bg-green-50 cursor-pointer transition"
-                    onClick={() => { void navigate(`/reports/${r.id}`); }}
-                  >
-                    <td className="py-3 px-4">{r.id}</td>
-                    <td className="px-4">{r.name}</td>
-                    <td className="px-4">{r.description}</td>
-                    <td className="px-4">{r.technician ?? "-"}</td>
-                    <td className="px-4">{r.status ? "Hoạt động" : "Ẩn"}</td>
->>>>>>> Stashed changes
                   </tr>
                 ))
               )}

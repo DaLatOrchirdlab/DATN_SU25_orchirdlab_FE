@@ -39,16 +39,12 @@ import Login from "./pages/landing/Login";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-<<<<<<< Updated upstream
 import Unauthorized from "./pages/Unauthorized";
-=======
 import { CreateTaskProvider } from "./context/CreateTaskContext";
 import TaskTemplateList from "./pages/TaskTemplateList";
 import TaskTemplateCreate from "./pages/TaskTemplateCreate";
 import TaskTemplateDetail from "./pages/TaskTemplateDetail";
 import { SnackbarProvider } from 'notistack';
->>>>>>> Stashed changes
-
 function AppLayout() {
   const { user, isAuthReady } = useAuth();
   const location = useLocation();
@@ -231,21 +227,17 @@ function AppLayout() {
 function App() {
   return (
     <AuthProvider>
-<<<<<<< Updated upstream
+      <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        
       <Router>
         <Routes>
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/*" element={<AppLayout />} />
         </Routes>
       </Router>
-=======
-      <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-        <Router>
-          <AppLayout />
-        </Router>
       </SnackbarProvider>
->>>>>>> Stashed changes
     </AuthProvider>
+    
   );
 }
 
