@@ -1,25 +1,31 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Loader2, XCircle } from 'lucide-react';
 import ExperimentSteps from '../Step/ExperimentSteps';
 import { useExperimentLogForm } from '../../../context/ExperimentLogFormContext';
+import axiosInstance from '../../../api/axiosInstance';
+import { useSnackbar } from 'notistack';
 
 const CreateExperimentStep3 = () => {
   const navigate = useNavigate();
   const { form, setForm, resetForm } = useExperimentLogForm();
   const {
+    name,
+    numberOfSample,
     tissueCultureBatchID,
     batchName,
     methodID,
     methodName,
+    methodType,
     hybridization,
     hybridizationNames,
-    motherID,
     description,
+    technicianNames,
   } = form;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -27,28 +33,22 @@ const CreateExperimentStep3 = () => {
 
     // Construct the payload for the API
     const payload = {
+      name: name ?? '',
+      numberOfSample: numberOfSample ?? 1,
       methodID: methodID ?? '',
       description: description ?? '',
       tissueCultureBatchID: tissueCultureBatchID ?? '',
       hybridization: hybridization ?? [],
-      motherID: motherID ?? '',
+      technicianID: form.technicianID ?? [],
     };
-    console.log('Payload gửi lên:', payload);
+    console.log('Payload gửi lên API:', payload);
 
     try {
-      const response = await fetch('https://net-api.orchid-lab.systems/api/experimentlog', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
+      const response = await axiosInstance.post('/api/experimentlog', payload);
+      if (response.status !== 200 && response.status !== 201) {
         let errorData: { message?: string } | undefined;
         try {
-          const raw: unknown = await response.json();
-          errorData = raw as { message?: string };
+          errorData = response.data as { message?: string };
         } catch {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -57,8 +57,7 @@ const CreateExperimentStep3 = () => {
         }
         throw new Error('Có lỗi xảy ra khi tạo nhật ký thí nghiệm.');
       }
-
-      alert('Tạo nhật ký thí nghiệm thành công!');
+      enqueueSnackbar('Tạo nhật ký thí nghiệm thành công!', { variant: 'success' });
       resetForm();
       void navigate('/experiment-log');
     } catch (err) {
@@ -69,13 +68,15 @@ const CreateExperimentStep3 = () => {
     }
   };
 
+  const hybridizationNamesToShow = (methodType === 'Sexual' && hybridizationNames) ? [...hybridizationNames].reverse() : hybridizationNames;
+
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 p-8">
       <ExperimentSteps currentStep={3} />
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b">
-            <h1 className="text-2xl font-bold text-gray-900">Tạo Experiment Log Mới</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Tạo Kế Hoạch Lai Tạo Mới</h1>
             <p className="text-gray-600 mt-1">Bước 3: Xem lại thông tin và hoàn thành</p>
           </div>
           <div className="p-6 space-y-6">
@@ -84,29 +85,41 @@ const CreateExperimentStep3 = () => {
               {/* Left Column */}
               <div className="space-y-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-1">Tên nhật ký thí nghiệm</h3>
+                  <p className="text-gray-600">{name ?? 'Chưa nhập'}</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-1">Số lượng mẫu</h3>
+                  <p className="text-gray-600">{numberOfSample ?? 'Chưa nhập'}</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-gray-800 mb-1">Lô cấy mô</h3>
                   <p className="text-gray-600">{batchName ?? 'Chưa chọn'}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-gray-800 mb-1">Phương pháp</h3>
                   <p className="text-gray-600">{methodName ?? 'Chưa chọn'}</p>
+                  <div className="text-xs text-gray-500 mt-1">Loại: {methodType ?? '---'}</div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-1">Kỹ thuật viên</h3>
+                  <p className="text-gray-600">{technicianNames && technicianNames.length > 0 ? technicianNames.join(', ') : 'Chưa chọn'}</p>
                 </div>
               </div>
-
               {/* Right Column */}
               <div className="space-y-4">
                 <div className="bg-green-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-green-800 mb-1">Cây giống đã chọn</h3>
                   <div className="text-sm text-green-700 space-y-1">
-                    {methodName === 'Subculturing' && (
+                    {methodType === 'Clonal' && (
                       hybridizationNames && hybridizationNames.length > 0
                         ? <div>• {hybridizationNames[0]}</div>
                         : "Không có cây mẹ nào được chọn."
                     )}
-                    {methodName === 'Sterilization' && (
+                    {methodType === 'Sexual' && (
                       <>
-                        <div><strong>Cha:</strong> {hybridizationNames?.[0] ?? 'Chưa chọn'}</div>
-                        <div><strong>Mẹ:</strong> {hybridizationNames?.[1] ?? 'Chưa chọn'}</div>
+                        <div><strong>Mẹ:</strong> {hybridizationNamesToShow?.[0] ?? 'Chưa chọn'}</div>
+                        <div><strong>Cha:</strong> {hybridizationNamesToShow?.[1] ?? 'Chưa chọn'}</div>
                       </>
                     )}
                   </div>
@@ -117,7 +130,7 @@ const CreateExperimentStep3 = () => {
             {/* Description */}
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                Mô tả (tùy chọn)
+                Mô tả 
               </label>
               <textarea
                 id="description"

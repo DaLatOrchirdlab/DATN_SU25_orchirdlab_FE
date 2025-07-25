@@ -1,0 +1,77 @@
+import React, { createContext, useContext, useState } from "react";
+import type { ReactNode } from "react";
+
+// Định nghĩa kiểu dữ liệu cho từng trường của task
+export interface Attribute {
+  name: string;
+  measurementUnit: string;
+  value: number;
+  description: string;
+}
+
+export interface ExperimentLog {
+  id: string;
+  name: string;
+}
+
+export interface Stage {
+  id: string;
+  name: string;
+}
+
+export interface Sample {
+  id: string;
+  name: string;
+}
+
+export interface Technician {
+  id: string;
+  name: string;
+}
+
+export interface CreateTaskState {
+  name: string;
+  experimentLog: ExperimentLog | null;
+  stage: Stage | null;
+  sample: Sample | null;
+  description: string;
+  start_date: string;
+  end_date: string;
+  attribute: Attribute[];
+  technician: Technician | null;
+}
+
+const defaultState: CreateTaskState = {
+  name: "",
+  experimentLog: null,
+  stage: null,
+  sample: null,
+  description: "",
+  start_date: "",
+  end_date: "",
+  attribute: [],
+  technician: null,
+};
+
+export const CreateTaskContext = createContext<{
+  state: CreateTaskState;
+  setState: React.Dispatch<React.SetStateAction<CreateTaskState>>;
+}>(
+  {
+    state: defaultState,
+    setState: () => {
+      // no-op
+    },
+  }
+);
+
+export const useCreateTask = () => useContext(CreateTaskContext);
+
+export const CreateTaskProvider = ({ children }: { children: ReactNode }) => {
+  const [state, setState] = useState<CreateTaskState>(defaultState);
+  return (
+    <CreateTaskContext.Provider value={{ state, setState }}>
+      {children}
+    </CreateTaskContext.Provider>
+  );
+}; 

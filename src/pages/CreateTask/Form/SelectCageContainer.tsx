@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CreateTaskStepper from "../Step/CreateTaskStepper";
+import { useCreateTask } from "../../../context/CreateTaskContext";
 
 interface CageDetails {
   size: string;
@@ -81,6 +82,7 @@ const cagesData: Cage[] = [
 const SelectCageContainer: React.FC = () => {
   const [selectedCage, setSelectedCage] = useState<number | null>(null);
   const navigate = useNavigate();
+  const { setState } = useCreateTask();
 
   const handleSelectCage = (id: number): void => {
     setSelectedCage(id);
@@ -88,10 +90,11 @@ const SelectCageContainer: React.FC = () => {
 
   const handleNext = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
-    // Xử lý lưu dữ liệu nếu cần
-    // Sau đó chuyển sang bước tiếp theo (ví dụ bước 3)
-    void navigate("/create-task/step-3");
-    alert("Đã chọn lồng: " + selectedCage);
+    if (selectedCage !== null) {
+      const cageObj = cagesData.find(c => c.id === selectedCage);
+      setState(prev => ({ ...prev, cage: cageObj ? { id: cageObj.id, name: cageObj.name } : null }));
+      void navigate("/create-task/step-3");
+    }
   };
 
   const handleBack = (): void => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, ArrowLeft, Info, Check, Plus } from 'lucide-react';
 import ExperimentSteps from '../Step/ExperimentSteps';
@@ -7,14 +7,18 @@ import axios from 'axios';
 
 interface Seedling {
   id: string;
-  name: string;
+  localName?: string;
+  scientificName?: string;
+  name?: string; // fallback
   description: string;
   doB: string;
 }
 
 interface ApiSeedling {
   id: string;
-  name: string;
+  localName?: string;
+  scientificName?: string;
+  name?: string;
   description: string;
   doB: string;
 }
@@ -22,7 +26,7 @@ interface ApiSeedling {
 const CreateExperimentStep2 = () => {
   const navigate = useNavigate();
   const { form, setForm } = useExperimentLogForm();
-  const { methodName } = form;
+  const { methodType, methodName } = form;
 
   // State for fetched seedlings
   const [seedlings, setSeedlings] = useState<Seedling[]>([]);
@@ -41,6 +45,8 @@ const CreateExperimentStep2 = () => {
         const data: Seedling[] = Array.isArray(raw.value?.data)
           ? raw.value.data.map((item) => ({
               id: item.id,
+              localName: item.localName,
+              scientificName: item.scientificName,
               name: item.name,
               description: item.description,
               doB: item.doB,
@@ -55,41 +61,41 @@ const CreateExperimentStep2 = () => {
       });
   }, []);
 
-  // Reset selection when method changes
+  // Reset selection when methodType changes
   useEffect(() => {
     setSelected([]);
-  }, [methodName]);
+  }, [methodType]);
 
   // Update context when selection changes
   useEffect(() => {
-    if (methodName === 'Subculturing') {
+    if (methodType === 'Clonal') {
       if (selected[0]) {
         setForm(prev => ({
           ...prev,
           motherID: selected[0].id,
-          motherName: selected[0].name,
+          motherName: selected[0].localName ?? selected[0].name,
           hybridization: [selected[0].id],
-          hybridizationNames: [selected[0].name],
+          hybridizationNames: [selected[0].localName ?? selected[0].name].filter((n): n is string => !!n),
         }));
       }
-    } else if (methodName === 'Sterilization') {
+    } else if (methodType === 'Sexual') {
       if (selected.length === 2) {
         setForm(prev => ({
           ...prev,
           motherID: selected[0].id,
-          motherName: selected[0].name,
+          motherName: selected[0].localName ?? selected[0].name,
           hybridization: [selected[1].id, selected[0].id],
-          hybridizationNames: [selected[1].name, selected[0].name],
+          hybridizationNames: [selected[1].localName ?? selected[1].name, selected[0].localName ?? selected[0].name].filter((n): n is string => !!n),
         }));
       }
     }
-  }, [selected, methodName, setForm]);
+  }, [selected, methodType, setForm]);
 
   // Select logic
   const handleSelect = (seedling: Seedling) => {
-    if (methodName === 'Subculturing') {
+    if (methodType === 'Clonal') {
       setSelected([seedling]);
-    } else if (methodName === 'Sterilization') {
+    } else if (methodType === 'Sexual') {
       if (selected.find(s => s.id === seedling.id)) {
         setSelected(selected.filter(s => s.id !== seedling.id));
       } else if (selected.length < 2) {
@@ -99,8 +105,8 @@ const CreateExperimentStep2 = () => {
   };
 
   const isNextDisabled =
-    (methodName === 'Subculturing' && selected.length !== 1) ||
-    (methodName === 'Sterilization' && selected.length !== 2);
+    (methodType === 'Clonal' && selected.length !== 1) ||
+    (methodType === 'Sexual' && selected.length !== 2);
 
   const handleNext = () => {
     if (!isNextDisabled) {
@@ -108,7 +114,7 @@ const CreateExperimentStep2 = () => {
     }
   };
 
-  if (!methodName) return null;
+  if (!methodType) return null;
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 p-8">
@@ -117,7 +123,7 @@ const CreateExperimentStep2 = () => {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Tạo Experiment Log Mới</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Tạo Kế Hoạch Lai Tạo Mới</h1>
               <p className="text-gray-600 mt-1">Bước 2: Chọn cây giống cho phương pháp "{methodName}"</p>
             </div>
             <Link
@@ -133,7 +139,7 @@ const CreateExperimentStep2 = () => {
               <div className="lg:col-span-2 space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                    {methodName === 'Subculturing' ? 'Chọn 1 cây giống (mẹ)' : 'Chọn 2 cây giống (đầu tiên là mẹ, thứ hai là cha)'}
+                    {methodType === 'Clonal' ? 'Chọn 1 cây giống (mẹ)' : 'Chọn 2 cây giống (đầu tiên là mẹ, thứ hai là cha)'}
                   </h3>
                   {loading ? (
                     <div>Đang tải...</div>
@@ -143,6 +149,9 @@ const CreateExperimentStep2 = () => {
                     <div className="grid grid-cols-1 gap-4">
                       {seedlings.map((plant) => {
                         const isSelected = selected.find(s => s.id === plant.id);
+                        const displayName = plant.localName && plant.scientificName
+                          ? `${plant.localName} (${plant.scientificName})`
+                          : plant.localName ?? plant.scientificName ?? plant.name ?? plant.id;
                         return (
                           <div
                             key={plant.id}
@@ -153,7 +162,7 @@ const CreateExperimentStep2 = () => {
                               {isSelected && <Check className="w-4 h-4 text-white" />}
                             </div>
                             <div>
-                              <div className="font-medium">{plant.name}</div>
+                              <div className="font-medium">{displayName}</div>
                             </div>
                           </div>
                         );
@@ -162,7 +171,7 @@ const CreateExperimentStep2 = () => {
                   )}
                 </div>
                 {/* Detail of selected seedlings */}
-                {methodName === 'Subculturing' && selected[0] && (
+                {methodType === 'Clonal' && selected[0] && (
                   <div className="mt-6 p-4 border rounded-lg bg-gray-50">
                     <h4 className="font-semibold mb-2">Thông tin cây mẹ đã chọn</h4>
                     <div><strong>Tên:</strong> {selected[0].name}</div>
@@ -170,7 +179,7 @@ const CreateExperimentStep2 = () => {
                     <div><strong>Ngày sinh:</strong> {selected[0].doB}</div>
                   </div>
                 )}
-                {methodName === 'Sterilization' && selected.length > 0 && (
+                {methodType === 'Sexual' && selected.length > 0 && (
                   <div className="mt-6 space-y-4">
                     {selected[0] && (
                       <div className="p-4 border rounded-lg bg-gray-50">
@@ -213,12 +222,12 @@ const CreateExperimentStep2 = () => {
                     Cây đã chọn
                   </h3>
                   <div className="text-sm text-orange-700 space-y-1">
-                    {methodName === 'Subculturing' && (
+                    {methodType === 'Clonal' && (
                       selected[0]
                         ? <div>• {selected[0].name}</div>
                         : "Chưa chọn cây mẹ."
                     )}
-                    {methodName === 'Sterilization' && (
+                    {methodType === 'Sexual' && (
                       <>
                         <div><strong>Mẹ:</strong> {selected[0]?.name ?? 'Chưa chọn'}</div>
                         <div><strong>Cha:</strong> {selected[1]?.name ?? 'Chưa chọn'}</div>

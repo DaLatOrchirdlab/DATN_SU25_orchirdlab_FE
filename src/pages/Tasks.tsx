@@ -1,238 +1,247 @@
-import React, { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../api/axiosInstance";
+import { useSnackbar } from 'notistack';
 
 interface Task {
   id: string;
   name: string;
-  experiment: string;
-  method: string;
-  deadline: string;
-  status: "Đang thực hiện" | "Chưa bắt đầu" | "Hoàn thành" | "Tạm dừng";
-  progress: number;
-  createdAt: string; // ISO date string
+  researcher: string;
+  end_date: string;
+  status: StatusType;
 }
 
-// Hàm đếm số task đang thực hiện
-const getOngoingTasksCount = (tasks: Task[]): number => {
-  return tasks.filter(task => task.status === "Đang thực hiện").length;
+type StatusType =
+  | "Assigned"
+  | "Taken"
+  | "InProcess"
+  | "DoneInTime"
+  | "DoneInLate"
+  | "Cancel";
+
+interface ApiTaskResponse {
+  value?: {
+    data?: Task[];
+    totalCount?: number;
+  };
+}
+
+function isApiTaskResponse(obj: unknown): obj is ApiTaskResponse {
+  return (
+    typeof obj === 'object' && obj !== null &&
+    'value' in obj &&
+    typeof (obj as { value: unknown }).value === 'object'
+  );
+}
+
+const STATUS_LABELS: Record<StatusType, string> = {
+  Assigned: "Đã giao",
+  Taken: "Đã nhận",
+  InProcess: "Đang thực hiện",
+  DoneInTime: "Hoàn thành đúng hạn",
+  DoneInLate: "Hoàn thành trễ hạn",
+  Cancel: "Bị hủy",
 };
 
-// Hàm đếm số task mới (đang thực hiện và được tạo trong tháng hiện tại)
-const getNewTasksCount = (tasks: Task[]): number => {
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+const STATUS_SUMMARY_LABELS: Record<StatusType, string> = {
+  Assigned: "Nhiệm vụ đã giao",
+  Taken: "Nhiệm vụ đã nhận",
+  InProcess: "Nhiệm vụ đang thực hiện",
+  DoneInTime: "Nhiệm vụ hoàn thành đúng hạn",
+  DoneInLate: "Nhiệm vụ hoàn thành trễ hạn",
+  Cancel: "Nhiệm vụ bị hủy",
+};
 
-  return tasks.filter(task => {
-    const taskDate = new Date(task.createdAt);
-    return task.status === "Đang thực hiện" && 
-           taskDate.getMonth() === currentMonth && 
-           taskDate.getFullYear() === currentYear;
-  }).length;
+const STATUS_COLORS: Record<StatusType, string> = {
+  Assigned: "text-blue-700",
+  Taken: "text-purple-700",
+  InProcess: "text-yellow-700",
+  DoneInTime: "text-green-700",
+  DoneInLate: "text-orange-700",
+  Cancel: "text-red-700",
 };
 
 export default function Tasks() {
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
+  
+  // State cho pagination và data
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState("Tất cả");
-  const [methodFilter, setMethodFilter] = useState("Tất cả");
+  const [totalCount, setTotalCount] = useState(0);
+  
+  // State cho filters
+  const [statusFilter, setStatusFilter] = useState<StatusType | "Tất cả">("Tất cả");
+  const [researcherFilter, setResearcherFilter] = useState<string>("Tất cả");
   const [searchTerm, setSearchTerm] = useState("");
-  const [timeFilter, setTimeFilter] = useState("Tất cả");
-  const tasksPerPage = 4; // Số lượng task mỗi trang
-
-  // Sample data with createdAt dates
-  const sampleTasks: Task[] = [
-    {
-      id: "EXP001",
-      name: "Nghiên cứu lai P. amabilis",
-      experiment: "EXP001",
-      method: "Nuôi cấy mô",
-      deadline: "20/06/2025",
-      status: "Đang thực hiện",
-      progress: 80,
-      createdAt: "2025-06-20T12:00:00", // Task mới trong tháng 6
-    },
-    {
-      id: "EXP002",
-      name: "Phân tích mẫu lai F1",
-      experiment: "EXP002",
-      method: "Thử nghiệm",
-      deadline: "15/07/2025",
-      status: "Chưa bắt đầu",
-      progress: 20,
-      createdAt: "2025-06-21T12:00:00"
-    },
-    {
-      id: "EXP003",
-      name: "Báo cáo kết quả lai tạo",
-      experiment: "EXP003",
-      method: "Phân tích ADN",
-      deadline: "28/05/2025",
-      status: "Hoàn thành",
-      progress: 100,
-      createdAt: "2025-06-22T12:00:00"
-    },
-    {
-      id: "EXP004",
-      name: "Theo dõi phát triển mầu",
-      experiment: "EXP004",
-      method: "Quan sát",
-      deadline: "10/08/2025",
-      status: "Tạm dừng",
-      progress: 30,
-      createdAt: "2025-06-23T12:00:00"
-    },
-  ];
-
-  // Initialize tasks state with sample data
-  const [tasks, setTasks] = useState<Task[]>(sampleTasks);
-
-  // Lọc dữ liệu theo filter và search
-  const filteredTasks = tasks.filter((task) => {
-    const statusMatch =
-      statusFilter === "Tất cả" || task.status === statusFilter;
-    const methodMatch =
-      methodFilter === "Tất cả" || task.method === methodFilter;
-    const searchMatch = task.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    return statusMatch && methodMatch && searchMatch;
+  
+  // State cho summary data (chỉ load 1 lần)
+  const [statusCounts, setStatusCounts] = useState<Record<StatusType, number>>({
+    Assigned: 0,
+    Taken: 0,
+    InProcess: 0,
+    DoneInTime: 0,
+    DoneInLate: 0,
+    Cancel: 0,
   });
+  const [allResearchers, setAllResearchers] = useState<string[]>([]);
+  
+  const tasksPerPage = 20; // Tăng pageSize để giảm số lần gọi API
 
-  // Logic phân trang
-  const indexOfLastTask = currentPage * tasksPerPage;
-  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
-  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
-  const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
+  // Load summary data chỉ 1 lần khi component mount
+  useEffect(() => {
+    const loadSummaryData = async () => {
+      try {
+        // Lấy tất cả tasks để tính summary (có thể cache ở đây)
+        const response = await axiosInstance.get(`/api/tasks?pageNo=1&pageSize=1000`);
+        
+        if (isApiTaskResponse(response.data)) {
+          const allTasks = Array.isArray(response.data.value?.data) ? response.data.value.data : [];
+          
+          // Tính status counts
+          const counts: Record<StatusType, number> = {
+            Assigned: 0,
+            Taken: 0,
+            InProcess: 0,
+            DoneInTime: 0,
+            DoneInLate: 0,
+            Cancel: 0,
+          };
+          
+          // Lấy unique researchers
+          const researcherSet = new Set<string>();
+          
+          allTasks.forEach(task => {
+            counts[task.status] = (counts[task.status] || 0) + 1;
+            researcherSet.add(task.researcher);
+          });
+          
+          setStatusCounts(counts);
+          setAllResearchers(Array.from(researcherSet));
+        }
+      } catch (err) {
+        console.error('Error loading summary data:', err);
+      }
+    };
+
+    loadSummaryData();
+  }, []);
+
+  // Build query parameters cho API call chính
+  const buildApiQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    params.append('pageNo', currentPage.toString());
+    params.append('pageSize', tasksPerPage.toString());
+    
+    // Chỉ thêm filter params nếu không phải "Tất cả"
+    if (statusFilter !== "Tất cả") {
+      params.append('status', statusFilter);
+    }
+    if (researcherFilter !== "Tất cả") {
+      params.append('researcher', researcherFilter);
+    }
+    if (searchTerm.trim()) {
+      params.append('search', searchTerm.trim());
+    }
+    
+    return params.toString();
+  }, [currentPage, statusFilter, researcherFilter, searchTerm]);
+
+  // Load tasks với debounce cho search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setLoading(true);
+      setError(null);
+      
+      axiosInstance.get(`/api/tasks?${buildApiQuery}`)
+        .then(res => {
+          if (isApiTaskResponse(res.data)) {
+            const data = Array.isArray(res.data.value?.data) ? res.data.value.data : [];
+            const total = typeof res.data.value?.totalCount === 'number' ? res.data.value.totalCount : 0;
+            
+            setTasks(data);
+            setTotalCount(total);
+          }
+        })
+        .catch((err) => {
+          setError('Không thể tải danh sách nhiệm vụ');
+          enqueueSnackbar('Lỗi khi tải dữ liệu', { variant: 'error' });
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }, searchTerm ? 300 : 0); // Debounce 300ms cho search, ngay lập tức cho các filter khác
+
+    return () => clearTimeout(timeoutId);
+  }, [buildApiQuery, enqueueSnackbar]);
+
+  // Reset về trang 1 khi filter thay đổi
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, researcherFilter, searchTerm]);
+
+  const totalPages = Math.ceil(totalCount / tasksPerPage);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
-
-  const handleCreateTask = () => {
-    void navigate("/create-task");
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Đang thực hiện":
-        return "bg-green-100 text-green-800";
-      case "Chưa bắt đầu":
-        return "bg-orange-100 text-orange-800";
-      case "Hoàn thành":
-        return "bg-green-100 text-green-800";
-      case "Tạm dừng":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getProgressColor = (progress: number) => {
-    if (progress >= 80) return "bg-green-500";
-    if (progress >= 50) return "bg-yellow-500";
-    return "bg-red-500";
-  };
-
-  // Tính toán số liệu thống kê
-  const ongoingTasksCount = getOngoingTasksCount(tasks);
-  const newTasksCount = getNewTasksCount(tasks);
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 p-8">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
+        {/* Header + nút tạo task */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-2 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Quản lý nghiên cứu lai tạo
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Theo dõi và quản lý các nhiệm vụ nghiên cứu lai tạo và kết quả thí
-              nghiệm
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900">Quản lý nghiên cứu lai tạo</h1>
+            <p className="text-gray-600 mt-1">Theo dõi và quản lý các nhiệm vụ nghiên cứu lai tạo và kết quả thí nghiệm</p>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleCreateTask}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
-            >
-              + Tạo nhiệm vụ nghiên cứu
-            </button>
-            <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50">
-              Xuất báo cáo
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => { void navigate("/create-task/step-1"); }}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
+          >
+            + Tạo nhiệm vụ nghiên cứu
+          </button>
         </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Nhiệm vụ đang thực hiện */}
-          <div className="rounded-lg border border-gray-200 bg-white px-6 py-4 flex flex-col justify-between min-w-[180px]">
-            <span className="text-sm text-gray-600 mb-1">Nhiệm vụ đang thực hiện</span>
-            <span className="text-2xl font-semibold text-green-700">{ongoingTasksCount}</span>
-            {newTasksCount > 0 && (
-              <span className="text-xs text-green-600 mt-1">+{newTasksCount} nhiệm vụ mới</span>
-            )}
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white px-6 py-4 flex flex-col justify-between min-w-[180px]">
-            <span className="text-sm text-gray-600 mb-1">
-              Nhật ký thí nghiệm
-            </span>
-            <span className="text-2xl font-semibold text-blue-700">8</span>
-            <span className="text-xs text-blue-600 mt-1">Đang theo dõi</span>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white px-6 py-4 flex flex-col justify-between min-w-[180px]">
-            <span className="text-sm text-gray-600 mb-1">Mẫu được tạo</span>
-            <span className="text-2xl font-semibold text-green-700">24</span>
-            <span className="text-xs text-green-600 mt-1">Từ 8 thí nghiệm</span>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white px-6 py-4 flex flex-col justify-between min-w-[180px]">
-            <span className="text-sm text-gray-600 mb-1">Báo cáo</span>
-            <span className="text-2xl font-semibold text-purple-700">15</span>
-            <span className="text-xs text-gray-500 mt-1">Hoàn thành</span>
-          </div>
+        
+        {/* 6 ô tổng hợp */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+          {Object.entries(STATUS_SUMMARY_LABELS).map(([key, label]) => (
+            <div key={key} className="rounded-lg border border-gray-200 bg-white px-6 py-4 flex flex-col justify-between min-w-[150px] items-center">
+              <span className="text-sm text-gray-600 mb-1">{label}</span>
+              <span className={`text-2xl font-semibold ${STATUS_COLORS[key as StatusType]} bg-white`}>
+                {statusCounts[key as StatusType]}
+              </span>
+            </div>
+          ))}
         </div>
-
-        {/* Filters */}
+        
+        {/* Bộ lọc */}
         <div className="flex flex-wrap items-center gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-700">Trạng thái:</span>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={e => setStatusFilter(e.target.value as StatusType | "Tất cả")}
               className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
-              <option>Tất cả</option>
-              <option>Đang thực hiện</option>
-              <option>Chưa bắt đầu</option>
-              <option>Hoàn thành</option>
-              <option>Tạm dừng</option>
+              <option value="Tất cả">Tất cả</option>
+              {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Thời gian:</span>
+            <span className="text-sm text-gray-700">Người tạo:</span>
             <select
-              value={timeFilter}
-              onChange={(e) => setTimeFilter(e.target.value)}
+              value={researcherFilter}
+              onChange={e => setResearcherFilter(e.target.value)}
               className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
-              <option>Tất cả</option>
-              <option>Hôm nay</option>
-              <option>7 ngày qua</option>
-              <option>30 ngày qua</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Phương pháp:</span>
-            <select
-              value={methodFilter}
-              onChange={(e) => setMethodFilter(e.target.value)}
-              className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              <option>Tất cả</option>
-              <option>Nuôi cấy mô</option>
-              <option>Thử nghiệm</option>
-              <option>Phân tích ADN</option>
-              <option>Quan sát</option>
+              <option value="Tất cả">Tất cả</option>
+              {allResearchers.map(r => (
+                <option key={r} value={r}>{r}</option>
+              ))}
             </select>
           </div>
           <div className="flex-1 min-w-[200px]">
@@ -240,89 +249,123 @@ export default function Tasks() {
               type="text"
               placeholder="Tìm kiếm nhiệm vụ..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="w-full border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
         </div>
-
-        {/* Tasks Table */}
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="text-left p-4 font-medium text-gray-900">Tên nhiệm vụ</th>
-              <th className="text-left p-4 font-medium text-gray-900">Thí nghiệm</th>
-              <th className="text-left p-4 font-medium text-gray-900">Phương pháp</th>
-              <th className="text-left p-4 font-medium text-gray-900">Deadline</th>
-              <th className="text-left p-4 font-medium text-gray-900">Trạng thái</th>
-              <th className="text-left p-4 font-medium text-gray-900">Tiến độ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentTasks.map((task) => (
-              <tr
-                key={task.id}
-                className="border-b hover:bg-green-50 cursor-pointer transition"
-                onClick={() => void navigate(`/tasks/${task.id}`)}
-              >
-                <td className="p-4 text-gray-900">{task.name}</td>
-                <td className="p-4 text-gray-600">{task.experiment}</td>
-                <td className="p-4 text-gray-600">{task.method}</td>
-                <td className="p-4 text-gray-600">{task.deadline}</td>
-                <td className="p-4">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                      task.status
-                    )}`}
-                  >
-                    {task.status}
-                  </span>
-                </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${getProgressColor(
-                          task.progress
-                        )}`}
-                        style={{ width: `${task.progress}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs text-gray-600">
-                      {task.progress}%
-                    </span>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* Pagination */}
-        <div className="flex justify-between items-center text-sm text-gray-600">
-          <span>
-            Hiện thị {indexOfFirstTask + 1} -{" "}
-            {Math.min(indexOfLastTask, filteredTasks.length)} trong tổng số{" "}
-            {filteredTasks.length} task nghiên cứu
-          </span>
-          <div className="flex gap-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-              (number) => (
-                <button
-                  key={number}
-                  onClick={() => paginate(number)}
-                  className={`px-3 py-1 rounded-lg ${
-                    currentPage === number
-                      ? "bg-green-700 text-white"
-                      : "bg-gray-200 hover:bg-gray-300"
-                  }`}
-                >
-                  {number}
-                </button>
-              )
-            )}
+        
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-gray-500">Đang tải danh sách nhiệm vụ...</div>
           </div>
-        </div>
+        ) : error ? (
+          <div className="text-red-500 text-center py-8">{error}</div>
+        ) : (
+          <>
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="text-left p-4 font-medium text-gray-900">Tên nhiệm vụ</th>
+                    <th className="text-left p-4 font-medium text-gray-900">Người tạo nhiệm vụ</th>
+                    <th className="text-left p-4 font-medium text-gray-900">Thời hạn</th>
+                    <th className="text-left p-4 font-medium text-gray-900">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center text-gray-500">
+                        Không tìm thấy nhiệm vụ nào
+                      </td>
+                    </tr>
+                  ) : (
+                    tasks.map((task) => (
+                      <tr
+                        key={task.id}
+                        className="border-b hover:bg-green-50 cursor-pointer transition"
+                        onClick={() => { void navigate(`/tasks/${task.id}`); }}
+                      >
+                        <td className="p-4 text-gray-900">{task.name}</td>
+                        <td className="p-4 text-gray-600">{task.researcher}</td>
+                        <td className="p-4 text-gray-600">
+                          {task.end_date ? new Date(task.end_date).toLocaleDateString() : ''}
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[task.status]}`}>
+                            {STATUS_LABELS[task.status]}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center text-sm text-gray-600 mt-4">
+                <span>
+                  Hiển thị {tasks.length} nhiệm vụ trên tổng số {totalCount} nhiệm vụ
+                </span>
+                <div className="flex gap-2">
+                  {/* Previous button */}
+                  {currentPage > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => paginate(currentPage - 1)}
+                      className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300"
+                    >
+                      ←
+                    </button>
+                  )}
+                  
+                  {/* Page numbers */}
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => paginate(pageNum)}
+                        className={`px-3 py-1 rounded-lg ${
+                          currentPage === pageNum
+                            ? "bg-green-700 text-white"
+                            : "bg-gray-200 hover:bg-gray-300"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  
+                  {/* Next button */}
+                  {currentPage < totalPages && (
+                    <button
+                      type="button"
+                      onClick={() => paginate(currentPage + 1)}
+                      className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300"
+                    >
+                      →
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </main>
   );

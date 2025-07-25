@@ -1,11 +1,20 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronDown, ArrowRight } from "lucide-react";
 import ExperimentSteps from "../Step/ExperimentSteps";
 import { useExperimentLogForm } from '../../../context/ExperimentLogFormContext';
+import axios from 'axios';
 
 interface Batch {
   id: string;
+  name: string;
+}
+
+interface Technician {
+  id: string;
+  name: string;
+  email?: string;
+  roleID: string | number;
 }
 
 function hasValueWithData<T>(obj: unknown, itemGuard: (item: unknown) => item is T): obj is { value: { data: T[] } } {
@@ -25,12 +34,13 @@ function isBatch(item: unknown): item is Batch {
   return typeof item === 'object' && item !== null && 'id' in item && typeof (item as { id: unknown }).id === 'string';
 }
 
-function isMethod(item: unknown): item is { id: string; name: string; description: string } {
+function isMethod(item: unknown): item is { id: string; name: string; description: string; type?: string } {
   return (
     typeof item === 'object' && item !== null &&
     'id' in item && typeof (item as { id: unknown }).id === 'string' &&
     'name' in item && typeof (item as { name: unknown }).name === 'string' &&
     'description' in item && typeof (item as { description: unknown }).description === 'string'
+    // type là optional
   );
 }
 
@@ -41,12 +51,16 @@ const CreateExperimentStep1 = () => {
   // Local state initialized from context
   const [selectedBatch, setSelectedBatch] = useState(form.tissueCultureBatchID ?? "");
   const [selectedMethod, setSelectedMethod] = useState(form.methodID ?? "");
+  const [name, setName] = useState(form.name ?? "");
+  const [numberOfSample, setNumberOfSample] = useState(form.numberOfSample ?? 1);
 
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loadingBatch, setLoadingBatch] = useState(true);
   const [batchError, setBatchError] = useState<string | null>(null);
 
-  const [methods, setMethods] = useState<{ id: string; name: string; description: string }[]>([]);
+  const [methods, setMethods] = useState<{ id: string; name: string; description: string; type?: string }[]>([]);
+  const [technicians, setTechnicians] = useState<Technician[]>([]);
+  const [selectedTechnician, setSelectedTechnician] = useState<string>(typeof form.technicianID === 'string' ? form.technicianID : (Array.isArray(form.technicianID) && form.technicianID.length > 0 ? form.technicianID[0] : ''));
 
   // Fetch batches from API
   useEffect(() => {
@@ -84,18 +98,39 @@ const CreateExperimentStep1 = () => {
       .catch(() => setMethods([]));
   }, []);
 
+  // Fetch technicians from API
+  useEffect(() => {
+    axios.get('https://net-api.orchid-lab.systems/api/user?pageNumber=1&pageSize=100')
+      .then(res => {
+        const raw = res.data as { data?: Technician[] };
+        console.log('User API raw:', raw.data);
+        const data: Technician[] = Array.isArray(raw.data)
+          ? raw.data.filter(u => String(u.roleID) === '3')
+          : [];
+        console.log('Filtered technicians:', data);
+        setTechnicians(data);
+      })
+      .catch(() => setTechnicians([]));
+  }, []);
+
   // Update context when local state changes
   useEffect(() => {
     const methodObj = methods.find(m => m.id === selectedMethod);
     const batchObj = batches.find(b => b.id === selectedBatch);
+    const tech = technicians.find(t => t.id === selectedTechnician);
     setForm(prev => ({
       ...prev,
+      name,
+      numberOfSample,
       tissueCultureBatchID: selectedBatch,
-      batchName: batchObj?.id ?? '',
+      batchName: batchObj?.name ?? '',
       methodID: methodObj?.id ?? '',
       methodName: methodObj?.name ?? '',
+      methodType: methodObj?.type ?? '',
+      technicianID: selectedTechnician ? [selectedTechnician] : [],
+      technicianNames: tech ? [tech.name] : [],
     }));
-  }, [selectedBatch, selectedMethod, batches, setForm, methods]);
+  }, [selectedBatch, selectedMethod, batches, setForm, methods, name, numberOfSample, selectedTechnician, technicians]);
 
 
   const handleNext = () => {
@@ -111,17 +146,46 @@ const CreateExperimentStep1 = () => {
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow">
             <div className="p-6 border-b">
-              <h1 className="text-2xl font-bold text-gray-900">Tạo Experiment Log Mới</h1>
-              <p className="text-gray-600 mt-1">Bước 1: Chọn Tissue Culture Batch và Method</p>
+              <h1 className="text-2xl font-bold text-gray-900">Tạo Kế Hoạch Lai Tạo Mới</h1>
+              <p className="text-gray-600 mt-1">Bước 1: Chọn Lô Cấy Mô và Phương Pháp</p>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Form chính */}
                 <div className="lg:col-span-2 space-y-6">
-                  {/* Tissue Culture Batch */}
+                  {/* Tên EL */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tissue Culture Batch <span className="text-red-500">*</span>
+                      Tên nhật ký thí nghiệm <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                      placeholder="Nhập tên nhật ký thí nghiệm"
+                      required
+                    />
+                  </div>
+                  {/* Số lượng sample */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Số lượng mẫu <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={numberOfSample}
+                      onChange={e => setNumberOfSample(Number(e.target.value))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                      placeholder="Nhập số lượng mẫu"
+                      required
+                    />
+                  </div>
+                  {/* Lô Cấy Mô */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Lô Cấy Mô <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <select
@@ -130,10 +194,10 @@ const CreateExperimentStep1 = () => {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
                         disabled={loadingBatch}
                       >
-                        <option value="">Chọn tissue culture batch</option>
+                        <option value="">Chọn Lô Cấy Mô</option>
                         {batches.map((batch) => (
                           <option key={batch.id} value={batch.id}>
-                            {batch.id}
+                            {batch.name || batch.id}
                           </option>
                         ))}
                       </select>
@@ -166,7 +230,7 @@ const CreateExperimentStep1 = () => {
                   {/* Chi Tiết Method */}
                   {selectedMethod && (
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-gray-900 mb-2">Chi Tiết Method: {methods.find(m => String(m.id) === selectedMethod)?.name}</h3>
+                      <h3 className="font-medium text-gray-900 mb-2">Chi Tiết Phương Pháp: {methods.find(m => String(m.id) === selectedMethod)?.name}</h3>
                       <div className="space-y-2 text-sm text-gray-600">
                         <div>
                           <strong>Mô tả:</strong>
@@ -194,6 +258,22 @@ const CreateExperimentStep1 = () => {
                       </div>
                     </div>
                   )}
+                  {/* Chọn technician */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Kỹ thuật viên thực hiện <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={selectedTechnician}
+                      onChange={e => setSelectedTechnician(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                    >
+                      <option value="">Chọn kỹ thuật viên</option>
+                      {technicians.map(tech => (
+                        <option key={tech.id} value={tech.id}>{tech.name ?? tech.email ?? tech.id}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 {/* Sidebar thông tin */}
                 <div className="space-y-4">

@@ -21,7 +21,7 @@ export default function ProfilePage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
+    // const { name, value } = e.target;
   };
 
   const handleSave = () => {

@@ -18,7 +18,6 @@ import SeedlingDetail from "./pages/seedling/SeedlingDetail";
 
 import { SeedlingFormProvider } from "./context/SeedlingFormContext";
 import CreateTaskContainer from "./pages/CreateTask/Form/CreateTaskContainer";
-import SelectCageContainer from "./pages/CreateTask/Form/SelectCageContainer";
 import SelectTechnicianContainer from "./pages/CreateTask/Form/SelectTechnicianContainer";
 import ConfirmTaskContainer from "./pages/CreateTask/Form/ConfirmTaskContainer";
 import TaskDetailPage from "./pages/CreateTask/TaskDetailPage";
@@ -40,7 +39,15 @@ import Login from "./pages/landing/Login";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+<<<<<<< Updated upstream
 import Unauthorized from "./pages/Unauthorized";
+=======
+import { CreateTaskProvider } from "./context/CreateTaskContext";
+import TaskTemplateList from "./pages/TaskTemplateList";
+import TaskTemplateCreate from "./pages/TaskTemplateCreate";
+import TaskTemplateDetail from "./pages/TaskTemplateDetail";
+import { SnackbarProvider } from 'notistack';
+>>>>>>> Stashed changes
 
 function AppLayout() {
   const { user, isAuthReady } = useAuth();
@@ -173,28 +180,23 @@ function AppLayout() {
               }
             />
             <Route
-              path="/create-task"
-              element={<Navigate to="/create-task/step-1" replace />}
-            />
-            <Route
-              path="/create-task/step-1"
-              element={<CreateTaskContainer />}
-            />
-            <Route
-              path="/create-task/step-2"
-              element={<SelectCageContainer />}
-            />
-            <Route
-              path="/create-task/step-3"
-              element={<SelectTechnicianContainer />}
-            />
-            <Route
-              path="/create-task/step-4"
-              element={<ConfirmTaskContainer />}
+              path="/create-task/*"
+              element={
+                <CreateTaskProvider>
+                  <Routes>
+                    <Route path="" element={<Navigate to="step-1" replace />} />
+                    <Route path="step-1" element={<CreateTaskContainer />} />
+                    <Route path="step-2" element={<SelectTechnicianContainer />} />
+                    <Route path="step-3" element={<ConfirmTaskContainer />} />
+                  </Routes>
+                </CreateTaskProvider>
+              }
             />
             <Route path="/tasks/:id" element={<TaskDetailPage />} />
             <Route path="/tasks/:id/edit" element={<EditTask />} />
-
+            <Route path="/task-templates" element={<TaskTemplateList />} />
+            <Route path="/task-templates/new" element={<TaskTemplateCreate />} />
+            <Route path="/task-templates/:id" element={<TaskTemplateDetail />} />
             {/* Experiment Log Creation Routes */}
             <Route
               path="/experiment-log/create/*"
@@ -218,6 +220,7 @@ function AppLayout() {
               path="/experiment-log/:id"
               element={<ExperimentLogDetail />}
             />
+            
           </Routes>
         </main>
       </div>
@@ -228,12 +231,20 @@ function AppLayout() {
 function App() {
   return (
     <AuthProvider>
+<<<<<<< Updated upstream
       <Router>
         <Routes>
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/*" element={<AppLayout />} />
         </Routes>
       </Router>
+=======
+      <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Router>
+          <AppLayout />
+        </Router>
+      </SnackbarProvider>
+>>>>>>> Stashed changes
     </AuthProvider>
   );
 }

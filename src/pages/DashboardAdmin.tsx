@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { FaEdit, FaKey, FaTrash, FaSearch, FaPlus } from "react-icons/fa";
 import type { User, UserApiResponse } from "../types/Auth";
 import axiosInstance from "../api/axiosInstance";
@@ -73,27 +73,27 @@ export default function DashboardAdmin() {
   });
 
   // Stats
-  const active = users.length; // Nếu có status thực tế thì filter theo status
-  const inactive = 0; // Nếu có status thực tế thì filter theo status
+  // const active = users.length; // Nếu có status thực tế thì filter theo status
+  // const inactive = 0; // Nếu có status thực tế thì filter theo status
   const adminCount = users.filter((u) => u.roleID === 1).length;
   const researcherCount = users.filter((u) => u.roleID === 2).length;
   const technicianCount = users.filter((u) => u.roleID === 3).length;
 
   // Action handlers
-  const handleEdit = (userId: string) => {
-    alert(`Chỉnh sửa người dùng ${userId}`);
-  };
-  const handleDelete = (userId: string, fullName: string) => {
-    if (window.confirm(`Bạn có chắc muốn xóa người dùng ${fullName} không?`)) {
-      alert(`Xóa người dùng ${userId} thành công!`);
-      // Thực hiện xóa người dùng ở đây
-    }
-  };
-  const handleReset = () => {
-    alert(
-      "Chức năng reset mật khảu sẽ được triển khai trong phiên bản tiếp theo!"
-    );
-  };
+  // const handleEdit = (userId: string) => {
+  //   alert(`Chỉnh sửa người dùng ${userId}`);
+  // };
+  // const handleDelete = (userId: string, fullName: string) => {
+  //   if (window.confirm(`Bạn có chắc muốn xóa người dùng ${fullName} không?`)) {
+  //     alert(`Xóa người dùng ${userId} thành công!`);
+  //     // Thực hiện xóa người dùng ở đây
+  //   }
+  // };
+  // const handleReset = () => {
+  //   alert(
+  //     "Chức năng reset mật khảu sẽ được triển khai trong phiên bản tiếp theo!"
+  //   );
+  // };
   const handleAddUser = () => {
     alert(
       "Chức năng thêm người dùng sẽ được triển khai trong phiên bản tiếp theo!"

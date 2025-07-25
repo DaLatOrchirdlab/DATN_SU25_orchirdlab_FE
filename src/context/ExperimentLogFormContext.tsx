@@ -3,15 +3,20 @@ import React, { createContext, useContext, useState } from 'react';
 export type MethodType = 1 | 2; // 1: Cấy mô, 2: Lai ghép
 
 export interface ExperimentLogFormData {
+  name?: string; // tên EL
   methodID?: string; // chọn ở bước 1
   methodName?: string; // chỉ để hiển thị
+  methodType?: string; // type của method (Clonal/Sexual)
   tissueCultureBatchID?: string; // chọn ở bước 1
   batchName?: string; // chỉ để hiển thị
+  numberOfSample?: number; // số lượng sample
   hybridization?: string[]; // chọn ở bước 2
   hybridizationNames?: string[]; // chỉ để hiển thị
   motherID?: string; // chọn ở bước 2
   motherName?: string; // chỉ để hiển thị
   description?: string; // nhập ở bước 3
+  technicianID?: string[]; // chọn ở bước 1
+  technicianNames?: string[]; // chỉ để hiển thị
 }
 
 interface ExperimentLogFormContextType {
@@ -21,15 +26,20 @@ interface ExperimentLogFormContextType {
 }
 
 const defaultForm: ExperimentLogFormData = {
+  name: '',
   methodID: '',
   methodName: '',
+  methodType: '',
   tissueCultureBatchID: '',
   batchName: '',
+  numberOfSample: undefined,
   hybridization: [],
   hybridizationNames: [],
   motherID: '',
   motherName: '',
   description: '',
+  technicianID: [],
+  technicianNames: [],
 };
 
 const ExperimentLogFormContext = createContext<ExperimentLogFormContextType | undefined>(undefined);

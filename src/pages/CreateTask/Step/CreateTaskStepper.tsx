@@ -9,8 +9,7 @@ interface CreateTaskStepperProps {
 }
 
 const steps: Step[] = [
-  { label: "Thông tin cơ bản " },
-  { label: "Lô nuôi cấy" },
+  { label: "Thông tin cơ bản" },
   { label: "Technician" },
   { label: "Review" },
 ];

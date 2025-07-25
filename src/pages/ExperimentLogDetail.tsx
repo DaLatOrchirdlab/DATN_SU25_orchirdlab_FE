@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 interface Sample {
@@ -92,26 +92,17 @@ const ExperimentLogDetail = () => {
           <h2 className="font-semibold mb-2">Cây giống đã chọn</h2>
           <div className="text-green-800 text-base">
             {log.methodName === 'Subculturing' && (
-              Array.isArray(log.hybridizations)
-                ? (() => {
-                    const mother = log.hybridizations.find(h => h.isMother);
-                    return mother ? <>• {mother.seedling?.name}</> : 'Không có cây mẹ nào.';
-                  })()
-                : 'Không có cây mẹ nào.'
+              Array.isArray(log.hybridizations) && log.hybridizations.length > 0
+                ? <>• {log.hybridizations[0].seedling?.name ?? 'Chưa chọn'}</>
+                : 'Chưa chọn cây giống.'
             )}
             {log.methodName === 'Sterilization' && (
-              Array.isArray(log.hybridizations)
-                ? (() => {
-                    const mother = log.hybridizations.find(h => h.isMother);
-                    const father = log.hybridizations.find(h => !h.isMother);
-                    return (
-                      <>
-                        <div><b>Cha:</b> {father?.seedling?.name ?? 'Chưa chọn'}</div>
-                        <div><b>Mẹ:</b> {mother?.seedling?.name ?? 'Chưa chọn'}</div>
-                      </>
-                    );
-                  })()
-                : 'Không có cây cha/mẹ nào.'
+              Array.isArray(log.hybridizations) && log.hybridizations.length > 0 ? (
+                <>
+                  <div><b>Cây giống 1:</b> {log.hybridizations[0]?.seedling?.name ?? 'Chưa chọn'}</div>
+                  <div><b>Cây giống 2:</b> {log.hybridizations[1]?.seedling?.name ?? 'Chưa chọn'}</div>
+                </>
+              ) : 'Chưa chọn cây giống.'
             )}
           </div>
         </div>

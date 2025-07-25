@@ -1,4 +1,4 @@
-import React from "react";
+
 import { useNavigate, useParams } from "react-router-dom";
 
 const mockFollowUp = {
@@ -15,7 +15,7 @@ const mockFollowUp = {
 
 export default function ReportFollowUpDetails() {
   const navigate = useNavigate();
-  const { id } = useParams();
+  // const { id } = useParams();
 
   // Thực tế sẽ fetch theo id
   const followUp = mockFollowUp;
