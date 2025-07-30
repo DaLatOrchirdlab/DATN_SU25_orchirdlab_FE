@@ -11,7 +11,6 @@ import Method from "./pages/method/Method";
 import Tasks from "./pages/Tasks";
 import ExperimentLog from "./pages/ExperimentLog";
 import Seedlings from "./pages/seedling/Seedlings";
-import Reports from "./pages/reports/Reports";
 import ReportsDetails from "./pages/reports/ReportsDetails";
 import ReportsFollowUpDetails from "./pages/reports/ReportsFollowUpDetails";
 import SeedlingDetail from "./pages/seedling/SeedlingDetail";
@@ -45,13 +44,20 @@ import TaskTemplateList from "./pages/TaskTemplateList";
 import TaskTemplateCreate from "./pages/TaskTemplateCreate";
 import TaskTemplateDetail from "./pages/TaskTemplateDetail";
 import { SnackbarProvider } from "notistack";
+import ReportsCreate from "./pages/reports/technician/ReportsCreate";
+import ReportList from "./pages/reports/Reports";
+import ReportsTechnician from "./pages/reports/technician/Reports";
+import SidebarTechnician from "./components/SidebarTechinician";
 function AppLayout() {
   const { user, isAuthReady } = useAuth();
   const location = useLocation();
 
   const isLoginPage = location.pathname === "/login";
   const isUnauthorizedPage = location.pathname === "/unauthorized";
-  const role = user?.roleID === 1 ? "admin" : user ? "User" : null;
+  // const role = user?.roleID === 1 ? "admin" : user ? "User" : null;
+  let sidebar = <Sidebar />;
+  if (user?.roleID === 1) sidebar = <SidebarAdmin />;
+  else if (user?.roleID === 3) sidebar = <SidebarTechnician />;
 
   if (!isAuthReady) {
     return <div>Đang tải...</div>;
@@ -71,7 +77,7 @@ function AppLayout() {
 
   return (
     <div className="flex bg-gray-100 ">
-      {role === "admin" ? <SidebarAdmin /> : <Sidebar />}
+      {sidebar}
       <div className="flex-1 flex flex-col">
         <Topbar />
         <main className="flex-1 p-8">
@@ -155,7 +161,15 @@ function AppLayout() {
               path="/reports"
               element={
                 <ProtectedRoute requiredRole={2}>
-                  <Reports />
+                  <ReportList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/technician/reports"
+              element={
+                <ProtectedRoute requiredRole={3}>
+                  <ReportsTechnician />
                 </ProtectedRoute>
               }
             />
@@ -172,6 +186,14 @@ function AppLayout() {
               element={
                 <ProtectedRoute requiredRole={2}>
                   <ReportsFollowUpDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports/new"
+              element={
+                <ProtectedRoute requiredRole={3}>
+                  <ReportsCreate />
                 </ProtectedRoute>
               }
             />

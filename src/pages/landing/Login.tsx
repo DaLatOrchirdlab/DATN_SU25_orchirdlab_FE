@@ -30,8 +30,10 @@ export default function Login() {
       });
       if (data.user.roleID === 1) {
         void navigate("/dashboard");
-      } else {
+      } else if (data.user.roleID === 2) {
         void navigate("/method");
+      } else if (data.user.roleID === 3) {
+        void navigate("/technician/reports");
       }
     } catch {
       setError("Sai email hoặc mật khẩu!");
