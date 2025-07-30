@@ -49,8 +49,6 @@ export default function ReportsDetails() {
     void fetchDetail();
   }, [id]);
 
-  console.log("Report", report);
-
   if (loading) {
     return (
       <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 flex items-center justify-center">
@@ -94,10 +92,33 @@ export default function ReportsDetails() {
                 {report?.status}
               </span>
             </div>
-            {/* <div>
-              <div className="font-semibold text-gray-700 mb-1">Ngày tạo</div>
-              <div>{report?.createdAt ? new Date(report.createdAt).toLocaleString() : ""}</div>
-            </div> */}
+            <div>
+              <div className="font-semibold text-gray-700 mb-1">
+                Thông tin thuộc tính
+              </div>
+              {report?.reportAttributes.map((attr, idx) => (
+                <div key={idx} className="flex justify-between">
+                  <span className="font-normal">
+                    {attr.name}-({attr.measurementUnit}):
+                  </span>
+                  <span>
+                    Yêu cầu: {attr.valueFrom} - {attr.valueTo}
+                  </span>
+                  <span className="ml-2">
+                    Thu thập:{" "}
+                    <span
+                      className={
+                        attr.value < attr.valueFrom || attr.value > attr.valueTo
+                          ? "font-bold"
+                          : "font-normal"
+                      }
+                    >
+                      {attr.value}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="mb-6">
             <h3 className="font-semibold text-green-800 mb-2">
@@ -182,4 +203,3 @@ export default function ReportsDetails() {
     </main>
   );
 }
-

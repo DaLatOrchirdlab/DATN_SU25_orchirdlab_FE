@@ -2,9 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import type { Report, ReportApiResponse } from "../../types/Report";
 
-
-
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 export default function ReportList() {
   const [search, setSearch] = useState("");
@@ -62,7 +60,9 @@ export default function ReportList() {
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
       <div className="w-full">
-        <h1 className="text-2xl font-bold mb-4 text-green-800">Quản lý báo cáo</h1>
+        <h1 className="text-2xl font-bold mb-4 text-green-800">
+          Quản lý báo cáo
+        </h1>
         {/* Thanh tìm kiếm */}
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <div className="flex-1">

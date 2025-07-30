@@ -1,3 +1,11 @@
+interface reportAttributes {
+  name: string;
+  value: number;
+  status: number;
+  valueFrom: number;
+  valueTo: number;
+  measurementUnit: string;
+}
 export interface Report {
   id: string;
   name: string;
@@ -5,6 +13,7 @@ export interface Report {
   sample: string;
   technician: string;
   status: boolean;
+  reportAttributes: reportAttributes[];
 }
 export interface ReportApiResponse {
   value: {
