@@ -25,7 +25,13 @@ const ConfirmTaskContainer: React.FC = () => {
       description: state.description,
       start_date: state.start_date ? new Date(state.start_date).toISOString() : "",
       end_date: state.end_date ? new Date(state.end_date).toISOString() : "",
-      attribute: state.attribute,
+      attribute: state.attribute.map(attr => ({
+        elementId: attr.elementId,
+        name: attr.elementName, // Thêm field name cho API
+        measurementUnit: attr.measurementUnit,
+        value: attr.value,
+        description: attr.description
+      })),
       technicianID: state.technician ? [state.technician.id] : [],
     };
     try {
@@ -130,7 +136,7 @@ const ConfirmTaskContainer: React.FC = () => {
               <div key={idx} className="flex gap-2">
                 <input
                   type="text"
-                  value={mat.name}
+                  value={mat.elementName}
                   disabled
                   className="flex-1 py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-100 text-gray-500 cursor-not-allowed"
                 />

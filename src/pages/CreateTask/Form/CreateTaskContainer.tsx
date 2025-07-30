@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CreateTaskStepper from "../Step/CreateTaskStepper";
 import { useCreateTask } from "../../../context/CreateTaskContext";
-import type { Attribute, ExperimentLog, Stage, Sample } from "../../../context/CreateTaskContext";
+import type { Attribute, ExperimentLog, Stage, Sample, Element } from "../../../context/CreateTaskContext";
 import axiosInstance from "../../../api/axiosInstance";
 import { useSnackbar } from 'notistack';
 
@@ -17,8 +17,10 @@ const CreateTaskContainer: React.FC = () => {
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [elements, setElements] = useState<Element[]>([]);
   const [attributes, setAttributes] = useState<Attribute[]>([{
-    name: "",
+    elementId: "",
+    elementName: "",
     measurementUnit: "",
     value: 0,
     description: ""
@@ -26,9 +28,30 @@ const CreateTaskContainer: React.FC = () => {
   const [loadingEL, setLoadingEL] = useState(false);
   const [loadingStage, setLoadingStage] = useState(false);
   const [loadingSample, setLoadingSample] = useState(false);
+  const [loadingElements, setLoadingElements] = useState(false);
   const navigate = useNavigate();
   const { setState } = useCreateTask();
   const { enqueueSnackbar } = useSnackbar();
+
+  // Fetch elements
+  useEffect(() => {
+    setLoadingElements(true);
+    axiosInstance.get("/api/element?pageNumber=1&pageSize=100")
+      .then(res => {
+        interface ApiElement { id: string; name: string; description: string; }
+        const data = Array.isArray(res.data?.value?.data) ? res.data.value.data as ApiElement[] : [];
+        setElements(data.map((el) => ({ 
+          id: el.id, 
+          name: el.name, 
+          description: el.description 
+        })));
+      })
+      .catch(() => {
+        setElements([]);
+        enqueueSnackbar('Không thể tải danh sách nguyên vật liệu!', { variant: 'error' });
+      })
+      .finally(() => setLoadingElements(false));
+  }, [enqueueSnackbar]);
 
   // Fetch experiment logs (EL)
   useEffect(() => {
@@ -92,11 +115,34 @@ const CreateTaskContainer: React.FC = () => {
 
   // Attribute handlers
   const handleAttributeChange = (idx: number, field: keyof Attribute, value: string | number) => {
-    setAttributes(prev => prev.map((attr, i) => i === idx ? { ...attr, [field]: value } : attr));
+    setAttributes(prev => prev.map((attr, i) => {
+      if (i === idx) {
+        if (field === "elementId") {
+          // Khi chọn element, tự động cập nhật tên và đơn vị
+          const selectedElement = elements.find(el => el.id === value);
+          return {
+            ...attr,
+            elementId: value as string,
+            elementName: selectedElement?.name || "",
+            measurementUnit: selectedElement?.description || ""
+          };
+        }
+        return { ...attr, [field]: value };
+      }
+      return attr;
+    }));
   };
+
   const handleAddAttribute = () => {
-    setAttributes(prev => ([...prev, { name: "", measurementUnit: "", value: 0, description: "" }]));
+    setAttributes(prev => ([...prev, { 
+      elementId: "", 
+      elementName: "",
+      measurementUnit: "", 
+      value: 0, 
+      description: "" 
+    }]));
   };
+
   const handleRemoveAttribute = (idx: number) => {
     setAttributes(prev => prev.filter((_, i) => i !== idx));
   };
@@ -219,31 +265,34 @@ const CreateTaskContainer: React.FC = () => {
         </div>
         <div className="flex flex-col mb-4 flex-1">
           <label className="font-medium mb-1.5">Nguyên vật liệu</label>
+          {loadingElements && <span className="text-xs text-gray-400 mb-2">Đang tải danh sách nguyên vật liệu...</span>}
           <div className="space-y-2">
             {attributes.map((attr, idx) => (
               <div key={idx} className="flex gap-2 items-center">
-                <input
-                  type="text"
-                  placeholder="Tên vật liệu"
-                  value={attr.name}
-                  onChange={e => handleAttributeChange(idx, "name", e.target.value)}
-                  className="flex-1 py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50"
+                <select
+                  value={attr.elementId}
+                  onChange={e => handleAttributeChange(idx, "elementId", e.target.value)}
+                  className="flex-1 py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   required
-                />
+                >
+                  <option value="">Chọn nguyên vật liệu...</option>
+                  {elements.map(element => (
+                    <option key={element.id} value={element.id}>{element.name}</option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   placeholder="Đơn vị"
                   value={attr.measurementUnit}
-                  onChange={e => handleAttributeChange(idx, "measurementUnit", e.target.value)}
-                  className="w-24 py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50"
-                  required
+                  readOnly
+                  className="w-32 py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-200 cursor-not-allowed"
                 />
                 <input
                   type="number"
                   placeholder="Số lượng"
                   value={attr.value}
                   onChange={e => handleAttributeChange(idx, "value", Number(e.target.value))}
-                  className="w-24 py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50"
+                  className="w-24 py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   required
                 />
                 <input
@@ -251,12 +300,12 @@ const CreateTaskContainer: React.FC = () => {
                   placeholder="Mô tả"
                   value={attr.description}
                   onChange={e => handleAttributeChange(idx, "description", e.target.value)}
-                  className="flex-1 py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50"
+                  className="flex-1 py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
                 <button
                   type="button"
                   onClick={() => handleRemoveAttribute(idx)}
-                  className="text-red-500 px-2 text-lg font-bold"
+                  className="text-red-500 px-2 text-lg font-bold hover:text-red-700"
                   disabled={attributes.length === 1}
                 >
                   -
@@ -265,7 +314,7 @@ const CreateTaskContainer: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleAddAttribute}
-                    className="text-green-600 px-2 text-lg font-bold"
+                    className="text-green-600 px-2 text-lg font-bold hover:text-green-800"
                   >
                     +
                   </button>
@@ -277,9 +326,16 @@ const CreateTaskContainer: React.FC = () => {
         <div className="flex justify-end mt-6">
           <button
             type="submit"
-            className="bg-green-700 text-white border-none py-2.5 px-8 rounded-lg text-base cursor-pointer hover:bg-green-800 transition-colors"
+            className="bg-green-700 text-white border-none py-2.5 px-8 rounded-lg text-base cursor-pointer hover:bg-green-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             disabled={
-              !name || !selectedEL || !selectedStage || !selectedSample || !startDate || !endDate || attributes.some(a => !a.name || !a.measurementUnit || !a.value)
+              !name || 
+              !selectedEL || 
+              !selectedStage || 
+              !selectedSample || 
+              !startDate || 
+              !endDate || 
+              attributes.some(a => !a.elementId || !a.value) ||
+              loadingElements
             }
           >
             Next

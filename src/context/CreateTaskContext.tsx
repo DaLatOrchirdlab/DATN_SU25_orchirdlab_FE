@@ -3,9 +3,16 @@ import type { ReactNode } from "react";
 
 // Định nghĩa kiểu dữ liệu cho từng trường của task
 export interface Attribute {
-  name: string;
+  elementId: string; // Thay đổi từ name thành elementId
+  elementName: string; // Thêm elementName để lưu tên hiển thị
   measurementUnit: string;
   value: number;
+  description: string;
+}
+
+export interface Element {
+  id: string;
+  name: string;
   description: string;
 }
 
@@ -74,4 +81,4 @@ export const CreateTaskProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </CreateTaskContext.Provider>
   );
-}; 
+};

@@ -48,6 +48,8 @@ import ReportsCreate from "./pages/reports/technician/ReportsCreate";
 import ReportList from "./pages/reports/Reports";
 import ReportsTechnician from "./pages/reports/technician/Reports";
 import SidebarTechnician from "./components/SidebarTechinician";
+import ListTask from "./pages/technician/task/listTask";
+import TechDetailTask from "./pages/technician/task/TechDetailTask";
 function AppLayout() {
   const { user, isAuthReady } = useAuth();
   const location = useLocation();
@@ -166,6 +168,14 @@ function AppLayout() {
               }
             />
             <Route
+              path="/technician/tasks"
+              element={
+                <ProtectedRoute requiredRole={3}>
+                  <ListTask />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/technician/reports"
               element={
                 <ProtectedRoute requiredRole={3}>
@@ -214,6 +224,14 @@ function AppLayout() {
               }
             />
             <Route path="/tasks/:id" element={<TaskDetailPage />} />
+            <Route 
+              path="/technician/tasks/:id" 
+              element={
+                <ProtectedRoute requiredRole={3}>
+                  <TechDetailTask />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/tasks/:id/edit" element={<EditTask />} />
             <Route path="/task-templates" element={<TaskTemplateList />} />
             <Route

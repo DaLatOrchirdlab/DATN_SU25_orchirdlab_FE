@@ -20,6 +20,7 @@ interface Sample {
 
 interface ExperimentLogEntry {
   id: string;
+  name: string;
   methodName: string;
   description?: string;
   tissueCultureBatchName: string;
@@ -44,6 +45,7 @@ const ExperimentLog = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
+  const [sampleCounts, setSampleCounts] = useState<Record<string, number>>({});
 
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ExperimentLogEntry | null>(null);
@@ -51,6 +53,43 @@ const ExperimentLog = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const logsPerPage = 5;
+
+  // Hàm fetch sample count cho từng experiment log
+  const fetchSampleCount = async (experimentLogId: string): Promise<number> => {
+    try {
+      const response = await fetch(
+        `https://net-api.orchid-lab.systems/api/sample?pageNo=1&pageSize=1000&experimentLogId=${experimentLogId}`
+      );
+      if (!response.ok) return 0;
+      const data = await response.json();
+      
+      // Parse response tương tự như experiment log
+      if (data && typeof data === 'object' && 'value' in data) {
+        if (Array.isArray(data.value)) {
+          return data.value.length;
+        } else if (data.value && typeof data.value === 'object' && 'data' in data.value) {
+          return Array.isArray(data.value.data) ? data.value.data.length : 0;
+        }
+      }
+      return Array.isArray(data) ? data.length : 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  // Fetch sample counts cho tất cả experiment logs
+  const fetchAllSampleCounts = async (experimentLogs: ExperimentLogEntry[]) => {
+    const counts: Record<string, number> = {};
+    
+    // Fetch song song để tăng tốc độ
+    const promises = experimentLogs.map(async (log) => {
+      const count = await fetchSampleCount(log.id);
+      counts[log.id] = count;
+    });
+    
+    await Promise.all(promises);
+    setSampleCounts(counts);
+  };
 
   function hasValueWithData<T>(obj: unknown, itemGuard: (item: unknown) => item is T): obj is { value: { data: T[] } } {
     return (
@@ -70,6 +109,7 @@ const ExperimentLog = () => {
     const o = obj as Record<string, unknown>;
     return (
       typeof o.id === 'string' &&
+      typeof o.name === 'string' &&
       typeof o.methodName === 'string' &&
       typeof o.tissueCultureBatchName === 'string'
     );
@@ -77,14 +117,16 @@ const ExperimentLog = () => {
 
   // Gọi API phân trang/filter
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    const params = new URLSearchParams();
-    params.append('pageNumber', String(currentPage));
-    params.append('pageSize', String(logsPerPage));
-    if (searchTerm) params.append('searchTerm', searchTerm);
-    fetch(`https://net-api.orchid-lab.systems/api/experimentlog?${params.toString()}`)
-      .then(async (res) => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      const params = new URLSearchParams();
+      params.append('pageNumber', String(currentPage));
+      params.append('pageSize', String(logsPerPage));
+      if (searchTerm) params.append('searchTerm', searchTerm);
+      
+      try {
+        const res = await fetch(`https://net-api.orchid-lab.systems/api/experimentlog?${params.toString()}`);
         if (!res.ok) throw new Error('Lỗi khi lấy dữ liệu từ API');
         const data: unknown = await res.json();
         let arr: ExperimentLogEntry[] = [];
@@ -111,13 +153,21 @@ const ExperimentLog = () => {
         }
         setLogs(arr);
         setTotalCount(total);
-      })
-      .catch(() => {
+        
+        // Fetch sample counts sau khi có data experiment logs
+        if (arr.length > 0) {
+          await fetchAllSampleCounts(arr);
+        }
+      } catch {
         setError('Không thể tải dữ liệu nhật ký thí nghiệm.');
         setLogs([]);
         setTotalCount(0);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [currentPage, logsPerPage, searchTerm]);
 
   // Reset về trang 1 khi filter/search thay đổi
@@ -263,7 +313,7 @@ const ExperimentLog = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên thí nghiệm</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phương pháp</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lô thí nghiệm</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
@@ -275,7 +325,9 @@ const ExperimentLog = () => {
                 {loading ? (
                   <tr>
                     <td colSpan={6} className="text-center py-10">
-                      <div className="text-gray-500">Đang tải dữ liệu...</div>
+                      <div className="text-gray-500">
+                        Đang tải dữ liệu experiment logs và samples...
+                      </div>
                     </td>
                   </tr>
                 ) : error ? (
@@ -292,7 +344,7 @@ const ExperimentLog = () => {
                       onClick={() => void navigate(`/experiment-log/${log.id}`)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {log.id}
+                        {log.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {log.methodName}
@@ -315,7 +367,12 @@ const ExperimentLog = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {Array.isArray(log.samples) ? log.samples.length : 0}
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-blue-600">
+                            {sampleCounts[log.id] ?? 0}
+                          </span>
+                          <span className="text-xs text-gray-400">mẫu</span>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -388,7 +445,7 @@ const ExperimentLog = () => {
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <h3 className="font-medium text-gray-900 mb-1">
+                <h3 className="font-medium text-gray-900 mb-1"> 
                   Thông tin cơ bản
                 </h3>
                 <p className="text-sm text-gray-700">
@@ -413,7 +470,10 @@ const ExperimentLog = () => {
                   </span>
                 </p>
                 <p className="text-sm text-gray-700">
-                  <strong>Mẫu:</strong> {Array.isArray(selectedLog.samples) ? selectedLog.samples.length : 0}
+                  <strong>Số lượng mẫu:</strong> 
+                  <span className="ml-1 font-semibold text-blue-600">
+                    {sampleCounts[selectedLog.id] ?? 0} mẫu
+                  </span>
                 </p>
               </div>
               {/* Thêm các chi tiết khác nếu có */}
