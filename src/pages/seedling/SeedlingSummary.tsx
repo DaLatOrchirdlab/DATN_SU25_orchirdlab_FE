@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-
+import { useSnackbar } from "notistack";
 import { useSeedlingForm } from "../../context/SeedlingFormContext";
 import type {
   Seedling,
@@ -16,6 +16,7 @@ export default function SeedlingSummary() {
   const [error, setError] = useState("");
   const [seedlings, setSeedlings] = useState<Seedling[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     const fetchSeedlings = async () => {
@@ -66,21 +67,23 @@ export default function SeedlingSummary() {
       const res = await axiosInstance.post("/api/seedling", payload);
       if (!res.data) throw new Error("Tạo cây giống thất bại");
       setShowSuccess(true);
+      enqueueSnackbar("Tạo cây giống thành công!", { variant: "success" });
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : "Có lỗi xảy ra";
       setError(errMsg ?? "Có lỗi xảy ra");
+      enqueueSnackbar(errMsg, { variant: "error" });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
-      <h2 className="text-2xl font-bold text-green-800 mb-4">
+    <main className="ml-0 sm:ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 px-2 sm:px-4 md:px-8">
+      <h2 className="text-xl sm:text-2xl font-bold text-green-800 mb-4">
         Thêm cây giống mới
       </h2>
-      <div className="bg-white rounded-xl shadow p-8 max-w-4xl mx-auto">
-        <h3 className="text-xl font-semibold text-green-800 mb-6">
+      <div className="bg-white rounded-xl shadow p-4 sm:p-8 max-w-full sm:max-w-2xl md:max-w-4xl mx-auto">
+        <h3 className="text-lg sm:text-xl font-semibold text-green-800 mb-6">
           Chi tiết cây giống
         </h3>
         <div className="mb-6">
@@ -108,7 +111,7 @@ export default function SeedlingSummary() {
         </div>
         <h3 className="text-lg font-semibold text-green-800 mb-2">Đặc trưng</h3>
         <div className="overflow-x-auto">
-          <table className="w-full border rounded">
+          <table className="w-full border rounded min-w-[400px]">
             <thead>
               <tr className="bg-green-50 text-green-800 font-semibold">
                 <th className="py-2">Thuộc tính</th>
@@ -132,7 +135,7 @@ export default function SeedlingSummary() {
           </table>
         </div>
         {error && <div className="text-red-500 mt-4">{error}</div>}
-        <div className="flex gap-4 mt-8">
+        <div className="flex flex-col sm:flex-row gap-4 mt-8">
           <button
             type="button"
             className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"

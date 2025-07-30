@@ -60,12 +60,12 @@ export default function SeedlingDetailsForm() {
   }
 
   return (
-    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
-      <h2 className="text-2xl font-bold text-green-800 mb-4">
+    <main className="ml-0 sm:ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 px-2 sm:px-4 md:px-8">
+      <h2 className="text-xl sm:text-2xl font-bold text-green-800 mb-4">
         Thêm cây giống mới
       </h2>
-      <div className="bg-white rounded-xl shadow p-8 max-w-4xl mx-auto">
-        <h3 className="text-xl font-semibold text-green-800 mb-6">
+      <div className="bg-white rounded-xl shadow p-4 sm:p-8 max-w-full sm:max-w-2xl md:max-w-4xl mx-auto">
+        <h3 className="text-lg sm:text-xl font-semibold text-green-800 mb-6">
           Chi tiết cây giống
         </h3>
         <div className="space-y-4">
@@ -95,7 +95,7 @@ export default function SeedlingDetailsForm() {
               <div className="text-red-500 text-sm">Bắt buộc</div>
             )}
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="block font-medium mb-1">Cây giống 1 *</label>
               <select
@@ -164,7 +164,7 @@ export default function SeedlingDetailsForm() {
             )}
           </div>
         </div>
-        <div className="flex gap-4 mt-8">
+        <div className="flex flex-col sm:flex-row gap-4 mt-8">
           <button
             type="button"
             className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"

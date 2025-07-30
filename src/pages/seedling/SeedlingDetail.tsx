@@ -67,7 +67,7 @@ export default function SeedlingDetail() {
   }
 
   return (
-    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
+    <main className="ml-0 sm:ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 px-2 sm:px-4 md:px-8">
       <button
         type="button"
         className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-4 hover:bg-green-800 hover:text-white transition"
@@ -75,12 +75,12 @@ export default function SeedlingDetail() {
       >
         &larr; Trở về
       </button>
-      <h1 className="text-3xl font-bold text-green-800 mb-1">
+      <h1 className="text-3xl sm:text-3xl font-bold text-green-800 mb-1">
         {seedling.localName || seedling.scientificName} -{" "}
         {seedling.scientificName || seedling.localName}
       </h1>
       <div className="text-gray-500 mb-4">Thông tin chi tiết</div>
-      <div className="bg-white rounded shadow p-6 flex gap-8">
+      <div className="bg-white rounded shadow p-4 sm:p-6 flex flex-col md:flex-row gap-4 md:gap-8">
         <div className="flex-1">
           <div className="mb-2">
             <span className="font-semibold">Tên:</span> {seedling.localName}
@@ -130,7 +130,7 @@ export default function SeedlingDetail() {
           </div>
         </div>
       </div>
-      <div className="flex gap-4 mt-8">
+      <div className="flex flex-col sm:flex-row gap-4 mt-8">
         {/* <button
           type="button"
           className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"

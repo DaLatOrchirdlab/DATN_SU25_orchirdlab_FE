@@ -46,9 +46,11 @@ export default function Seedlings() {
   }, [page, searchTerm, byMother, byFather]);
 
   return (
-    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-green-800">Cây giống hoa lan</h1>
+    <main className="ml-0 sm:ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 px-2 sm:px-4 md:px-8">
+      <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-green-800">
+          Cây giống hoa lan
+        </h1>
         <button
           type="button"
           onClick={() => void navigate("/seedlings/new")}
@@ -57,7 +59,7 @@ export default function Seedlings() {
           + Thêm cây giống
         </button>
       </div>
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-col md:flex-row flex-wrap items-center gap-3 mb-4">
         <div className="flex-1">
           <div className="relative">
             <input
@@ -103,7 +105,7 @@ export default function Seedlings() {
         />
       </div>
       <div className="bg-white rounded shadow p-0 overflow-x-auto">
-        <table className="w-full text-left table-fixed">
+        <table className="w-full text-left table-fixed min-w-[600px]">
           <thead>
             <tr className="bg-green-50 text-green-800 font-semibold">
               <th className="py-3 px-4">Tên</th>
@@ -183,14 +185,14 @@ export default function Seedlings() {
       </div>
 
       {/* Summary cards */}
-      <div className="flex gap-4 mt-6 mb-2">
+      <div className="flex flex-col sm:flex-row gap-4 mt-6 mb-2">
         <div className="bg-green-100 rounded p-4 w-1/4">
           <div className="font-semibold text-green-800">Tổng số cây giống</div>
           <div className="text-2xl font-bold text-green-800">{total}</div>
         </div>
       </div>
       {/* Pagination */}
-      <div className="flex justify-end mt-4 gap-2">
+      <div className="flex flex-wrap justify-end mt-4 gap-2">
         {Array.from({ length: totalPages }, (_, i) => (
           <button
             type="button"

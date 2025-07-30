@@ -44,7 +44,7 @@ import { CreateTaskProvider } from "./context/CreateTaskContext";
 import TaskTemplateList from "./pages/TaskTemplateList";
 import TaskTemplateCreate from "./pages/TaskTemplateCreate";
 import TaskTemplateDetail from "./pages/TaskTemplateDetail";
-import { SnackbarProvider } from 'notistack';
+import { SnackbarProvider } from "notistack";
 function AppLayout() {
   const { user, isAuthReady } = useAuth();
   const location = useLocation();
@@ -182,7 +182,10 @@ function AppLayout() {
                   <Routes>
                     <Route path="" element={<Navigate to="step-1" replace />} />
                     <Route path="step-1" element={<CreateTaskContainer />} />
-                    <Route path="step-2" element={<SelectTechnicianContainer />} />
+                    <Route
+                      path="step-2"
+                      element={<SelectTechnicianContainer />}
+                    />
                     <Route path="step-3" element={<ConfirmTaskContainer />} />
                   </Routes>
                 </CreateTaskProvider>
@@ -191,8 +194,14 @@ function AppLayout() {
             <Route path="/tasks/:id" element={<TaskDetailPage />} />
             <Route path="/tasks/:id/edit" element={<EditTask />} />
             <Route path="/task-templates" element={<TaskTemplateList />} />
-            <Route path="/task-templates/new" element={<TaskTemplateCreate />} />
-            <Route path="/task-templates/:id" element={<TaskTemplateDetail />} />
+            <Route
+              path="/task-templates/new"
+              element={<TaskTemplateCreate />}
+            />
+            <Route
+              path="/task-templates/:id"
+              element={<TaskTemplateDetail />}
+            />
             {/* Experiment Log Creation Routes */}
             <Route
               path="/experiment-log/create/*"
@@ -216,7 +225,6 @@ function AppLayout() {
               path="/experiment-log/:id"
               element={<ExperimentLogDetail />}
             />
-            
           </Routes>
         </main>
       </div>
@@ -227,17 +235,18 @@ function AppLayout() {
 function App() {
   return (
     <AuthProvider>
-      <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-        
-      <Router>
-        <Routes>
-          <Route path="/unauthorized" element={<Unauthorized />} />
-          <Route path="/*" element={<AppLayout />} />
-        </Routes>
-      </Router>
+      <SnackbarProvider
+        maxSnack={3}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Router>
+          <Routes>
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/*" element={<AppLayout />} />
+          </Routes>
+        </Router>
       </SnackbarProvider>
     </AuthProvider>
-    
   );
 }
 

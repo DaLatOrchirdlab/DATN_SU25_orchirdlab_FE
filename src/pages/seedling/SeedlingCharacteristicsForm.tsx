@@ -73,14 +73,14 @@ export default function SeedlingCharacteristicsForm() {
   }
 
   return (
-    <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
+    <main className="ml-0 sm:ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 px-2 sm:px-4 md:px-8">
       <div>
-        <h2 className="text-2xl font-bold text-green-800 mb-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-green-800 mb-4">
           Thêm cây giống
         </h2>
-        <div className="bg-white rounded-xl shadow p-8 max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-semibold text-green-800">
+        <div className="bg-white rounded-xl shadow p-4 sm:p-8 max-w-full sm:max-w-2xl md:max-w-4xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-2">
+            <h3 className="text-lg sm:text-xl font-semibold text-green-800">
               Đặc điểm cây giống
             </h3>
             <button
@@ -164,7 +164,7 @@ export default function SeedlingCharacteristicsForm() {
               </div>
             )}
           </div>
-          <div className="flex gap-4 mt-8">
+          <div className="flex flex-col sm:flex-row gap-4 mt-8">
             <button
               type="button"
               className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"
