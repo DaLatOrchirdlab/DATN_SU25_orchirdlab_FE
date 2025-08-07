@@ -186,7 +186,7 @@ function AppLayout() {
             <Route
               path="/reports/:id"
               element={
-                <ProtectedRoute requiredRole={2}>
+                <ProtectedRoute requiredRole={[2, 3]}>
                   <ReportsDetails />
                 </ProtectedRoute>
               }
@@ -224,13 +224,13 @@ function AppLayout() {
               }
             />
             <Route path="/tasks/:id" element={<TaskDetailPage />} />
-            <Route 
-              path="/technician/tasks/:id" 
+            <Route
+              path="/technician/tasks/:id"
               element={
                 <ProtectedRoute requiredRole={3}>
                   <TechDetailTask />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route path="/tasks/:id/edit" element={<EditTask />} />
             <Route path="/task-templates" element={<TaskTemplateList />} />

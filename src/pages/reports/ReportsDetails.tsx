@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Report } from "../../types/Report";
 import axiosInstance from "../../api/axiosInstance";
+import { useAuth } from "../../context/AuthContext";
 
 interface Sample {
   id: string;
@@ -12,6 +13,7 @@ interface Sample {
 }
 
 export default function ReportsDetails() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
   const [report, setReport] = useState<Report | null>(null);
@@ -63,7 +65,11 @@ export default function ReportsDetails() {
         <button
           type="button"
           className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-6 hover:bg-green-800 hover:text-white transition"
-          onClick={() => void navigate("/reports")}
+          onClick={() =>
+            void navigate(
+              user?.roleID === 3 ? "/technician/reports" : "/reports"
+            )
+          }
         >
           &larr; Trở về
         </button>
