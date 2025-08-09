@@ -8,7 +8,6 @@ import type { SeedlingCharacteristic } from "../../types/Seedling";
 
 const attributeOptions = [
   { name: "Chiều cao", description: "cm" },
-  { name: "Màu hoa", description: "" },
   { name: "Số lá", description: "lá" },
   { name: "Số rễ", description: "rễ" },
 ];
@@ -59,7 +58,7 @@ export default function SeedlingCharacteristicsForm() {
   }
 
   const isValid =
-    characteristics.length > 0 &&
+    characteristics.length === 0 ||
     characteristics.every(
       (c) =>
         c.seedlingAttribute.name &&

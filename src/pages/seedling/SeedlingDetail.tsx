@@ -10,6 +10,7 @@ export default function SeedlingDetail() {
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [allSeedlings, setAllSeedlings] = useState<Seedling[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -27,8 +28,24 @@ export default function SeedlingDetail() {
         setLoading(false);
       }
     };
+    const fetchAllSeedlings = async () => {
+      try {
+        const res = await axiosInstance.get(
+          "https://net-api.orchid-lab.systems/api/seedling?pageNumber=1&pageSize=1000"
+        );
+        const data = res.data as { value: { data: Seedling[] } };
+        setAllSeedlings(data.value.data || []);
+      } catch {
+        setAllSeedlings([]);
+      }
+    };
+    void fetchAllSeedlings();
     void fetchDetail();
   }, [id]);
+
+  const idToName = Object.fromEntries(
+    allSeedlings.map((s) => [s.id, s.localName])
+  );
 
   const handleDelete = async () => {
     if (!id) return;
@@ -91,11 +108,11 @@ export default function SeedlingDetail() {
           </div>
           <div className="mb-2">
             <span className="font-semibold">Cây giống 1:</span>{" "}
-            {seedling.parent1}
+            {idToName[seedling.parent1] || ""}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Cây giống 2:</span>{" "}
-            {seedling.parent2}
+            {idToName[seedling.parent2] || ""}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Miêu tả:</span>{" "}
@@ -131,12 +148,6 @@ export default function SeedlingDetail() {
         </div>
       </div>
       <div className="flex flex-col sm:flex-row gap-4 mt-8">
-        {/* <button
-          type="button"
-          className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"
-        >
-          Sửa
-        </button> */}
         <button
           type="button"
           className="border cursor-pointer border-green-800 text-green-800 px-8 py-2 rounded font-semibold hover:bg-green-800 hover:text-white transition"

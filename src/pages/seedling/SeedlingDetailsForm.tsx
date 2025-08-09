@@ -33,8 +33,7 @@ export default function SeedlingDetailsForm() {
   const isValid =
     form.localName &&
     form.scientificName &&
-    form.fatherID &&
-    form.motherID &&
+    (form.fatherID || form.motherID) &&
     form.description &&
     form.doB;
 
@@ -111,8 +110,10 @@ export default function SeedlingDetailsForm() {
                   </option>
                 ))}
               </select>
-              {touched && !form.fatherID && (
-                <div className="text-red-500 text-sm">Bắt buộc</div>
+              {touched && !form.fatherID && !form.motherID && (
+                <div className="text-red-500 text-sm mt-1">
+                  Cần chọn ít nhất 1 cây giống
+                </div>
               )}
             </div>
             <div className="flex-1">
@@ -130,9 +131,6 @@ export default function SeedlingDetailsForm() {
                   </option>
                 ))}
               </select>
-              {touched && !form.motherID && (
-                <div className="text-red-500 text-sm">Bắt buộc</div>
-              )}
             </div>
           </div>
           <div>

@@ -15,6 +15,7 @@ export default function Seedlings() {
   const [byMother, setByMother] = useState("");
   const [byFather, setByFather] = useState("");
   const [loading, setLoading] = useState(false);
+  const [allSeedlings, setAllSeedlings] = useState<Seedling[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,6 +35,11 @@ export default function Seedlings() {
         setData(json.value.data || []);
         setTotal(json.value.totalCount || 0);
         setTotalPages(json.value.pageCount || 1);
+        const allRes = await axiosInstance.get(
+          "https://net-api.orchid-lab.systems/api/seedling?pageNumber=1&pageSize=1000"
+        );
+        const allJson = allRes.data as SeedlingApiResponse;
+        setAllSeedlings(allJson.value.data || []);
       } catch {
         setData([]);
         setTotal(0);
@@ -44,6 +50,10 @@ export default function Seedlings() {
     };
     void fetchData();
   }, [page, searchTerm, byMother, byFather]);
+
+  const idToName = Object.fromEntries(
+    allSeedlings.map((s) => [s.id, s.localName])
+  );
 
   return (
     <main className="ml-0 sm:ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 px-2 sm:px-4 md:px-8">
@@ -85,7 +95,7 @@ export default function Seedlings() {
         </div>
         <input
           type="text"
-          placeholder="Lọc theo mẹ"
+          placeholder="Lọc theo cây giống 1"
           className="border rounded px-3 py-2"
           value={byMother}
           onChange={(e) => {
@@ -95,7 +105,7 @@ export default function Seedlings() {
         />
         <input
           type="text"
-          placeholder="Lọc theo bố"
+          placeholder="Lọc theo cây giống 2"
           className="border rounded px-3 py-2"
           value={byFather}
           onChange={(e) => {
@@ -154,12 +164,14 @@ export default function Seedlings() {
             ) : (
               data.map((s) => (
                 <tr key={s.id} className="border-t hover:bg-green-50">
-                  <td className="py-3 px-4">{s.localName}</td>
-                  <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                    {s.parent1}
+                  <td className="py-3 px-4 whitespace-nowrap overflow-hidden text-ellipsis">
+                    {s.localName}
                   </td>
                   <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                    {s.parent2}
+                    {idToName[s.parent1] || ""}
+                  </td>
+                  <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
+                    {idToName[s.parent2] || ""}
                   </td>
                   <td className="px-4">{s.doB}</td>
                   <td className="px-4">
