@@ -1,5 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { FaTachometerAlt, FaTasks, FaClipboardList } from "react-icons/fa";
+import {
+  FaTachometerAlt,
+  FaTasks,
+  FaClipboardList,
+  FaChartBar,
+  FaFlask,
+  FaSeedling,
+} from "react-icons/fa";
 import { GiMicroscope } from "react-icons/gi";
 
 export default function SidebarAdmin() {
@@ -17,7 +24,9 @@ export default function SidebarAdmin() {
             }`
           }
         >
-          <span className="text-lg"><FaTachometerAlt /></span>
+          <span className="text-lg">
+            <FaTachometerAlt />
+          </span>
           <span>Dashboard</span>
         </NavLink>
         <NavLink
@@ -28,7 +37,9 @@ export default function SidebarAdmin() {
             }`
           }
         >
-          <span className="text-lg"><FaTasks /></span>
+          <span className="text-lg">
+            <FaTasks />
+          </span>
           <span>Nhiệm vụ</span>
         </NavLink>
         <NavLink
@@ -39,7 +50,9 @@ export default function SidebarAdmin() {
             }`
           }
         >
-          <span className="text-lg"><FaClipboardList /></span>
+          <span className="text-lg">
+            <FaClipboardList />
+          </span>
           <span>Nhật ký thí nghiệm</span>
         </NavLink>
         <NavLink
@@ -50,10 +63,64 @@ export default function SidebarAdmin() {
             }`
           }
         >
-          <span className="text-lg"><GiMicroscope /></span>
+          <span className="text-lg">
+            <GiMicroscope />
+          </span>
           <span>Lab room</span>
+        </NavLink>
+        <NavLink
+          to="/admin/report"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-6 py-3 hover:bg-white/10 transition ${
+              isActive ? "bg-white/20 font-semibold" : ""
+            }`
+          }
+        >
+          <span className="text-lg">
+            <FaChartBar />
+          </span>
+          <span>Báo cáo</span>
+        </NavLink>
+        <NavLink
+          to="/admin/method"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-6 py-3 hover:bg-white/10 transition ${
+              isActive ? "bg-white/20 font-semibold" : ""
+            }`
+          }
+        >
+          <span className="text-lg">
+            <FaFlask />
+          </span>
+          <span>Phương pháp lai</span>
+        </NavLink>
+        <NavLink
+          to="/admin/seedling"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-6 py-3 hover:bg-white/10 transition ${
+              isActive ? "bg-white/20 font-semibold" : ""
+            }`
+          }
+        >
+          <span className="text-lg">
+            <FaSeedling />
+          </span>
+          <span>Cây giống</span>
+        </NavLink>
+        <NavLink
+          to="/admin/element"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-6 py-3 hover:bg-white/10 transition ${
+              isActive ? "bg-white/20 font-semibold" : ""
+            }`
+          }
+        >
+          <span className="text-lg">
+            <FaFlask />
+          </span>
+          <span>Nguyên vật liệu</span>
         </NavLink>
       </nav>
     </aside>
   );
-} 
+}
