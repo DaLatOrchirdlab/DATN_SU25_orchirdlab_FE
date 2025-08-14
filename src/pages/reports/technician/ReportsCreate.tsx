@@ -23,6 +23,7 @@ export default function ReportsCreate() {
   });
   const [referents, setReferents] = useState<Referent[]>([]);
   const [samples, setSamples] = useState<Sample[]>([]);
+  const [images, setImages] = useState<File[]>([]);
   const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(true);
 
@@ -55,6 +56,10 @@ export default function ReportsCreate() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImages(Array.from(e.target.files ?? []));
+  };
+
   const handleAttrChange = <K extends keyof AttributeCommand>(
     idx: number,
     field: K,
@@ -83,7 +88,24 @@ export default function ReportsCreate() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axiosInstance.post("/api/report", form);
+      // 1. Tạo report
+      const reportRes = await axiosInstance.post<{
+        value?: string;
+      }>("/api/report", form);
+      console.log("Report API response:", reportRes.data);
+      const reportId = reportRes.data?.value;
+      if (!reportId) throw new Error("Không lấy được reportId");
+
+      // 2. Nếu có ảnh thì upload ảnh
+      if (images.length > 0) {
+        const formData = new FormData();
+        images.forEach((file) => formData.append("images", file));
+        formData.append("reportId", reportId);
+        await axiosInstance.post("/api/images", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
       enqueueSnackbar("Tạo báo cáo thành công!", {
         variant: "success",
         preventDuplicate: true,
@@ -210,6 +232,16 @@ export default function ReportsCreate() {
           >
             + Thêm thuộc tính
           </button>
+        </div>
+        <div>
+          <label className="block font-semibold">Ảnh (có thể chọn nhiều)</label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleImageChange}
+            className="border rounded px-3 py-2 w-full mb-2"
+          />
         </div>
         <div className="flex justify-end">
           <button
