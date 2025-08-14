@@ -179,7 +179,7 @@ export default function ReportsCreate() {
         </div>
         <div>
           <label className="block font-semibold">
-            Thuộc tính (Attribute Commands)
+            Thuộc tính thu thập được của mẫu
           </label>
           {form.attributeCommands.map((attr, idx) => (
             <div key={idx} className="flex gap-2 mb-2">
@@ -191,7 +191,7 @@ export default function ReportsCreate() {
                 className="border rounded px-2 py-1"
                 required
               >
-                <option value="">Chọn referent</option>
+                <option value="">Chọn thuộc tính</option>
                 {referents.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
