@@ -108,11 +108,11 @@ export default function SeedlingDetail() {
           </div>
           <div className="mb-2">
             <span className="font-semibold">Cây giống 1:</span>{" "}
-            {idToName[seedling.parent1] || ""}
+            {idToName[seedling.parent1] || seedling.parent1}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Cây giống 2:</span>{" "}
-            {idToName[seedling.parent2] || ""}
+            {idToName[seedling.parent2] || seedling.parent2}
           </div>
           <div className="mb-2">
             <span className="font-semibold">Miêu tả:</span>{" "}
