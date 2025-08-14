@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import axiosInstance from "../api/axiosInstance";
 import type { User } from "../types/Auth";
+import { useSnackbar } from "notistack";
 
 function getRoleName(roleID: number) {
   switch (roleID) {
@@ -27,6 +28,7 @@ export default function ProfilePage() {
     roleId: user?.roleID ?? 0,
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const { enqueueSnackbar } = useSnackbar();
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       setAvatarFile(e.target.files[0]);
@@ -60,7 +62,7 @@ export default function ProfilePage() {
         const formData = new FormData();
         formData.append("userId", editUser.id);
         formData.append("image", avatarFile);
-        await axiosInstance.post("/api/user/images", formData, {
+        await axiosInstance.put("/api/user/images", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
@@ -72,10 +74,18 @@ export default function ProfilePage() {
 
       setIsEditing(false);
       setAvatarFile(null);
-      alert("Thông tin hồ sơ đã được cập nhật!");
+      enqueueSnackbar("Thông tin hồ sơ đã được cập nhật", {
+        variant: "success",
+        preventDuplicate: true,
+        autoHideDuration: 2000,
+      });
     } catch (err) {
       console.error(err);
-      alert("Cập nhật thất bại!");
+      enqueueSnackbar("Cập nhật thất bại!", {
+        variant: "error",
+        preventDuplicate: true,
+        autoHideDuration: 2000,
+      });
     }
   };
 
@@ -161,7 +171,7 @@ export default function ProfilePage() {
                 type="text"
                 id="name"
                 name="name"
-                value={user?.name ?? ""}
+                value={editUser?.name ?? ""}
                 onChange={handleChange}
                 readOnly={!isEditing}
                 className={`w-full border ${
@@ -171,7 +181,7 @@ export default function ProfilePage() {
                 } rounded-lg px-3 py-2 transition-colors`}
               />
             </div>
-            <div>
+            {/* <div>
               <label
                 htmlFor="username"
                 className="block text-sm font-medium text-gray-700 mb-1"
@@ -186,7 +196,7 @@ export default function ProfilePage() {
                 readOnly
                 className="w-full border border-transparent bg-gray-100 rounded-lg px-3 py-2 text-gray-500"
               />
-            </div>
+            </div> */}
             <div>
               <label
                 htmlFor="email"
@@ -198,14 +208,10 @@ export default function ProfilePage() {
                 type="email"
                 id="email"
                 name="email"
-                value={user?.email ?? ""}
+                value={editUser?.email ?? ""}
                 onChange={handleChange}
-                readOnly={!isEditing}
-                className={`w-full border ${
-                  isEditing
-                    ? "border-gray-300 focus:ring-green-500 focus:border-green-500"
-                    : "border-transparent bg-gray-100"
-                } rounded-lg px-3 py-2 transition-colors`}
+                readOnly
+                className="w-full border border-transparent bg-gray-100 rounded-lg px-3 py-2 text-gray-500"
               />
             </div>
             <div>
@@ -219,7 +225,7 @@ export default function ProfilePage() {
                 type="text"
                 id="phoneNumber"
                 name="phoneNumber"
-                value={user?.phoneNumber ?? ""}
+                value={editUser?.phoneNumber ?? ""}
                 onChange={handleChange}
                 readOnly={!isEditing}
                 className={`w-full border ${
