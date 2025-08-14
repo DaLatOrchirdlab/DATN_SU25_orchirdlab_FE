@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
-import { FaTachometerAlt } from "react-icons/fa";
+import { FaTachometerAlt, FaTasks, FaClipboardList } from "react-icons/fa";
+import { GiMicroscope } from "react-icons/gi";
 
 export default function SidebarAdmin() {
   return (
@@ -18,6 +19,39 @@ export default function SidebarAdmin() {
         >
           <span className="text-lg"><FaTachometerAlt /></span>
           <span>Dashboard</span>
+        </NavLink>
+        <NavLink
+          to="/admin/tasks"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-6 py-3 hover:bg-white/10 transition ${
+              isActive ? "bg-white/20 font-semibold" : ""
+            }`
+          }
+        >
+          <span className="text-lg"><FaTasks /></span>
+          <span>Nhiệm vụ</span>
+        </NavLink>
+        <NavLink
+          to="/admin/experiment-log"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-6 py-3 hover:bg-white/10 transition ${
+              isActive ? "bg-white/20 font-semibold" : ""
+            }`
+          }
+        >
+          <span className="text-lg"><FaClipboardList /></span>
+          <span>Nhật ký thí nghiệm</span>
+        </NavLink>
+        <NavLink
+          to="/admin/labroom"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-6 py-3 hover:bg-white/10 transition ${
+              isActive ? "bg-white/20 font-semibold" : ""
+            }`
+          }
+        >
+          <span className="text-lg"><GiMicroscope /></span>
+          <span>Lab room</span>
         </NavLink>
       </nav>
     </aside>

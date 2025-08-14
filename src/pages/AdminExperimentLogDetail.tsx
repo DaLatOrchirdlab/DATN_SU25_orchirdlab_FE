@@ -10,7 +10,6 @@ interface Sample {
 }
 
 interface StageDTO {
-  id: string;
   name: string;
   description?: string;
   dateOfProcessing?: number | string;
@@ -55,7 +54,7 @@ function isExperimentLogDetail(obj: unknown): obj is ExperimentLogDetailType {
   );
 }
 
-const ExperimentLogDetail = () => {
+const AdminExperimentLogDetail = () => {
   const { id } = useParams();
   const [log, setLog] = useState<ExperimentLogDetailType | null>(null);
   const [samples, setSamples] = useState<Sample[]>([]);
@@ -89,13 +88,11 @@ const ExperimentLogDetail = () => {
     if (!id || !log) return;
     
     setSamplesLoading(true);
-    // API call to get samples by experiment log ID
     fetch(`https://net-api.orchid-lab.systems/api/sample?pageNo=1&pageSize=100&experimentLogId=${id}`)
       .then(async (res) => {
         if (!res.ok) throw new Error('Lỗi khi lấy dữ liệu samples');
         const data: SamplesResponse = await res.json();
         
-        // Handle different response structures
         let samplesData: Sample[] = [];
         if (data.value?.data) {
           samplesData = data.value.data;
@@ -109,7 +106,7 @@ const ExperimentLogDetail = () => {
       })
       .catch((err) => {
         console.error('Error fetching samples:', err);
-        setSamples([]); // Set empty array on error
+        setSamples([]);
       })
       .finally(() => setSamplesLoading(false));
   }, [id, log]);
@@ -192,28 +189,6 @@ const ExperimentLogDetail = () => {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <h2 className="font-semibold">Tiến trình các giai đoạn</h2>
-            <button
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              onClick={() => {
-                const currentStage = log.stages?.[selectedStage - 1];
-                console.log('Current stage:', currentStage);
-                console.log('Selected stage index:', selectedStage);
-                console.log('Log stages:', log.stages);
-                
-                if (currentStage?.id) {
-                  const url = `/create-task?experimentLogId=${log.id}&stageId=${currentStage.id}&autoCreate=true`;
-                  console.log('Navigating to auto-create URL:', url);
-                  window.location.href = url;
-                } else {
-                  // Fallback to manual creation if no stage ID
-                  const url = `/create-task?experimentLogId=${log.id}`;
-                  console.log('Navigating to manual URL:', url);
-                  window.location.href = url;
-                }
-              }}
-            >
-              Tạo Task mới
-            </button>
           </div>
           
           <div className="flex flex-col gap-0 relative ml-6">
@@ -294,4 +269,4 @@ const ExperimentLogDetail = () => {
   );
 };
 
-export default ExperimentLogDetail;
+export default AdminExperimentLogDetail;

@@ -44,6 +44,7 @@ export interface CreateTaskState {
   description: string;
   start_date: string;
   end_date: string;
+  isDaily: boolean;
   attribute: Attribute[];
   technician: Technician | null;
 }
@@ -56,6 +57,7 @@ const defaultState: CreateTaskState = {
   description: "",
   start_date: "",
   end_date: "",
+  isDaily: false,
   attribute: [],
   technician: null,
 };

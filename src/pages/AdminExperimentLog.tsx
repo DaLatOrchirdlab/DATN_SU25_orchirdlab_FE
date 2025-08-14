@@ -1,18 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import  { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Filter } from 'lucide-react';
-import axiosInstance from '../api/axiosInstance';
+import { Search, Filter, X } from 'lucide-react';
 
-type ExperimentStatus = 'Created' | 'InProcess' | 'Done' | 'Cancel';
+type ExperimentStatus = 'Đang thực hiện' | 'Hoàn thành' | 'Thất bại';
 
-interface Stage {
-  id: string;
+interface StageDTO {
   name: string;
   description?: string;
-  dateOfProcessing?: number;
-  step: number;
-  status: boolean;
-  elementDTO?: unknown[];
+  dateOfProcessing?: number | string;
 }
 
 interface Sample {
@@ -32,8 +27,7 @@ interface ExperimentLogEntry {
   createdDate?: string;
   status?: number | string;
   samples?: Sample[];
-  stages?: Stage[];
-  currentStageName?: string;
+  stagesDTO?: StageDTO[];
 }
 
 interface ExperimentLogApiResponse {
@@ -41,75 +35,38 @@ interface ExperimentLogApiResponse {
   totalCount?: number;
 }
 
-interface MethodOption {
-  id: string;
-  name: string;
-}
-
-const ExperimentLog = () => {
+const AdminExperimentLog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ExperimentStatus | 'all'>('all');
-  const [methodFilter, setMethodFilter] = useState<string>('');
-  const [stageFilter, setStageFilter] = useState<'all' | 'Giai đoạn 1' | 'Giai đoạn 2' | 'Giai đoạn 3' | 'Giai đoạn 4'>('all');
+  const [methodFilter, setMethodFilter] = useState<'all' | 'Cấy mô' | 'Lai ghép'>('all');
+  const [stageFilter, setStageFilter] = useState<'all' | 'Giai đoạn 1' | 'Giai đoạn 2' | 'Giai đoạn 3'>('all');
   const [logs, setLogs] = useState<ExperimentLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [sampleCounts, setSampleCounts] = useState<Record<string, number>>({});
-  const [methods, setMethods] = useState<MethodOption[]>([]);
-  const [stats, setStats] = useState<{ total: number; Created: number; InProcess: number; Done: number; Cancel: number }>({
-    total: 0,
-    Created: 0,
-    InProcess: 0,
-    Done: 0,
-    Cancel: 0
-  });
 
+  const [showDetailPopup, setShowDetailPopup] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<ExperimentLogEntry | null>(null);
   const navigate = useNavigate();
 
   const [currentPage, setCurrentPage] = useState(1);
   const logsPerPage = 5;
 
-  // chuẩn hóa status từ API sang frontend
-  const normalizeStatus = (status?: number | string) => {
-    const statusStr = String(status ?? "");
-    switch (statusStr) {
-      case "1": return "Created";
-      case "2": return "InProcess";
-      case "3": return "Done";
-      case "4": return "Cancel";
-      default: return statusStr;
-    }
-  };
-
-  // dịch status sang tiếng Việt
-  const statusToVietnamese = (status?: number | string) => {
-    switch (normalizeStatus(status)) {
-      case "Created": return "Đã tạo";
-      case "InProcess": return "Đang thực hiện";
-      case "Done": return "Hoàn thành";
-      case "Cancel": return "Đã hủy";
-      default: return "Không xác định";
-    }
-  };
-
-  // Fetch sample count
+  // Hàm fetch sample count cho từng experiment log
   const fetchSampleCount = async (experimentLogId: string): Promise<number> => {
     try {
       const response = await fetch(
         `https://net-api.orchid-lab.systems/api/sample?pageNo=1&pageSize=1000&experimentLogId=${experimentLogId}`
       );
       if (!response.ok) return 0;
-      const data: unknown = await response.json();
-
-      if (typeof data === 'object' && data !== null && 'value' in data) {
-        const value = (data as { value?: unknown }).value;
-        if (Array.isArray(value)) {
-          return value.length;
-        }
-        if (value && typeof value === 'object' && 'data' in (value as { data?: unknown[] })) {
-          const inner = (value as { data?: unknown[] }).data;
-          return Array.isArray(inner) ? inner.length : 0;
+      const data = await response.json();
+      
+      if (data && typeof data === 'object' && 'value' in data) {
+        if (Array.isArray(data.value)) {
+          return data.value.length;
+        } else if (data.value && typeof data.value === 'object' && 'data' in data.value) {
+          return Array.isArray(data.value.data) ? data.value.data.length : 0;
         }
       }
       return Array.isArray(data) ? data.length : 0;
@@ -118,15 +75,18 @@ const ExperimentLog = () => {
     }
   };
 
-  const fetchAllSampleCounts = useCallback(async (experimentLogs: ExperimentLogEntry[]) => {
+  // Fetch sample counts cho tất cả experiment logs
+  const fetchAllSampleCounts = async (experimentLogs: ExperimentLogEntry[]) => {
     const counts: Record<string, number> = {};
+    
     const promises = experimentLogs.map(async (log) => {
       const count = await fetchSampleCount(log.id);
       counts[log.id] = count;
     });
+    
     await Promise.all(promises);
     setSampleCounts(counts);
-  }, []);
+  };
 
   function hasValueWithData<T>(obj: unknown, itemGuard: (item: unknown) => item is T): obj is { value: { data: T[] } } {
     return (
@@ -152,75 +112,7 @@ const ExperimentLog = () => {
     );
   }
 
-  // Fetch methods
-  useEffect(() => {
-    const fetchMethods = async () => {
-      try {
-        const res = await axiosInstance.get('/api/method?pageNumber=1&pageSize=100');
-        const raw = res.data as { value?: { data?: { id: string; name: string }[] } };
-        const arr = Array.isArray(raw?.value?.data) ? raw.value.data : [];
-        setMethods(arr.map(m => ({ id: m.id, name: m.name })));
-      } catch {
-        setMethods([]);
-      }
-    };
-    void fetchMethods();
-  }, []);
-
-  // Fetch thống kê nhanh
-  const fetchStatsOnly = useCallback(async () => {
-    try {
-      // Fetch tất cả dữ liệu để đếm thống kê
-      const param = new URLSearchParams();
-      param.append("pageNumber", "1");
-      param.append("pageSize", "1000"); // Lấy tất cả để đếm
-      const res = await fetch(`https://net-api.orchid-lab.systems/api/experimentlog?${param.toString()}`);
-      if (!res.ok) throw new Error('Lỗi khi lấy thống kê');
-      const data: unknown = await res.json();
-      
-      let allLogs: ExperimentLogEntry[] = [];
-      if (hasValueWithData<ExperimentLogEntry>(data, isExperimentLogEntry)) {
-        allLogs = data.value.data;
-      } else if (typeof data === 'object' && data !== null && 'value' in data) {
-        allLogs = ((data as ExperimentLogApiResponse).value ?? []).filter(isExperimentLogEntry);
-      } else if (Array.isArray(data)) {
-        allLogs = data.filter(isExperimentLogEntry);
-      }
-
-      // Đếm theo status
-      const counts = {
-        Created: 0,
-        InProcess: 0,
-        Done: 0,
-        Cancel: 0
-      };
-
-      allLogs.forEach(log => {
-        const status = normalizeStatus(log.status);
-        switch (status) {
-          case "Created": counts.Created++; break;
-          case "InProcess": counts.InProcess++; break;
-          case "Done": counts.Done++; break;
-          case "Cancel": counts.Cancel++; break;
-        }
-      });
-
-      const total = counts.Created + counts.InProcess + counts.Done + counts.Cancel;
-
-      setStats({
-        total,
-        Created: counts.Created,
-        InProcess: counts.InProcess,
-        Done: counts.Done,
-        Cancel: counts.Cancel
-      });
-    } catch (err) {
-      console.error("Không thể lấy thống kê:", err);
-      setStats({ total: 0, Created: 0, InProcess: 0, Done: 0, Cancel: 0 });
-    }
-  }, []);
-
-  // Fetch dữ liệu phân trang
+  // Gọi API phân trang/filter
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -228,20 +120,27 @@ const ExperimentLog = () => {
       const params = new URLSearchParams();
       params.append('pageNumber', String(currentPage));
       params.append('pageSize', String(logsPerPage));
-      if (methodFilter) {
-        params.append('filter', methodFilter);
-      }
-
+      if (searchTerm) params.append('searchTerm', searchTerm);
+      
       try {
         const res = await fetch(`https://net-api.orchid-lab.systems/api/experimentlog?${params.toString()}`);
-        if (!res.ok) throw new Error('Lỗi khi lấy dữ liệu');
+        if (!res.ok) throw new Error('Lỗi khi lấy dữ liệu từ API');
         const data: unknown = await res.json();
         let arr: ExperimentLogEntry[] = [];
         let total = 0;
-
         if (hasValueWithData<ExperimentLogEntry>(data, isExperimentLogEntry)) {
           arr = data.value.data;
-          total = Number((data as { value: { totalCount?: unknown } })?.value?.totalCount ?? arr.length);
+          let totalCountValue = arr.length;
+          if (
+            typeof data === 'object' &&
+            data !== null &&
+            'value' in data &&
+            typeof (data as { value: unknown }).value === 'object' &&
+            (data as { value: { totalCount?: unknown } }).value.totalCount !== undefined
+          ) {
+            totalCountValue = Number((data as { value: { totalCount?: unknown } }).value.totalCount);
+          }
+          total = totalCountValue;
         } else if (typeof data === 'object' && data !== null && 'value' in data) {
           arr = ((data as ExperimentLogApiResponse).value ?? []).filter(isExperimentLogEntry);
           total = (data as ExperimentLogApiResponse).totalCount ?? arr.length;
@@ -249,20 +148,14 @@ const ExperimentLog = () => {
           arr = data.filter(isExperimentLogEntry);
           total = arr.length;
         }
-
-        arr = arr.map(log => ({
-          ...log,
-          status: normalizeStatus(log.status)
-        }));
-
         setLogs(arr);
         setTotalCount(total);
-
+        
         if (arr.length > 0) {
           await fetchAllSampleCounts(arr);
         }
       } catch {
-        setError('Không thể tải dữ liệu.');
+        setError('Không thể tải dữ liệu nhật ký thí nghiệm.');
         setLogs([]);
         setTotalCount(0);
       } finally {
@@ -270,79 +163,73 @@ const ExperimentLog = () => {
       }
     };
 
-    void fetchData();
-    void fetchStatsOnly();
-  }, [currentPage, logsPerPage, methodFilter, fetchAllSampleCounts, fetchStatsOnly]);
+    fetchData();
+  }, [currentPage, logsPerPage, searchTerm]);
+
+  // Reset về trang 1 khi filter/search thay đổi
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, methodFilter, stageFilter]);
+
+  // Filter phía frontend cho status/method/stage nếu backend chưa hỗ trợ
+  const filteredLogs = logs.filter(log => {
+    const matchesStatus = statusFilter === 'all' || log.status === statusFilter;
+    const matchesMethod = methodFilter === 'all' || log.methodName === methodFilter;
+    const matchesStage = stageFilter === 'all' || log.stagesDTO?.some(s => s.name === stageFilter);
+    return matchesStatus && matchesMethod && matchesStage;
+  });
 
   const getStatusColor = (status?: number | string): string => {
-    switch (normalizeStatus(status)) {
-      case 'Created': return 'bg-blue-100 text-blue-800';
-      case 'InProcess': return 'bg-yellow-100 text-yellow-800';
-      case 'Done': return 'bg-green-100 text-green-800';
-      case 'Cancel': return 'bg-red-100 text-red-800';
+    const txt = status === 0 || status === '0' || status === 'Đang thực hiện'
+      ? 'Đang thực hiện'
+      : status === 1 || status === '1' || status === 'Hoàn thành'
+      ? 'Hoàn thành'
+      : status === 2 || status === '2' || status === 'Thất bại'
+      ? 'Thất bại'
+      : String(status ?? '');
+    switch (txt) {
+      case 'Đang thực hiện': return 'bg-green-100 text-green-800';
+      case 'Hoàn thành': return 'bg-purple-100 text-purple-800';
+      case 'Thất bại': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
+  const getStatusCount = (status: ExperimentStatus): number => {
+    return logs.filter((log) => log.status === status).length;
+  };
 
-
-  const filteredLogs = logs.filter(log => {
-    const matchesSearch = !searchTerm ||
-      log.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.tissueCultureBatchName.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = statusFilter === 'all' || normalizeStatus(log.status) === statusFilter;
-
-    let matchesStage = true;
-    if (stageFilter !== 'all' && log.stages && log.stages.length > 0 && log.currentStageName) {
-      const stageNumber = parseInt(stageFilter.split(' ')[2]);
-      if (stageNumber >= 1 && stageNumber <= log.stages.length) {
-        const stageIndex = stageNumber - 1;
-        const targetStageName = log.stages[stageIndex].name;
-        matchesStage = log.currentStageName === targetStageName;
-      } else {
-        matchesStage = false;
-      }
-    }
-
-    return matchesSearch && matchesStatus && matchesStage;
-  });
+  const handleClosePopup = () => {
+    setShowDetailPopup(false);
+    setSelectedLog(null);
+  };
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 ">
+      {/* Header với thống kê */}
       <div className="bg-white shadow-sm border-b">
         <div className="px-6 py-4">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Nhật ký thí nghiệm</h1>
-            <Link
-              to="/experiment-log/create/step-1"
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-            >
-              Tạo nhật ký thí nghiệm mới
-            </Link>
           </div>
 
-          {/* Thống kê */}
-          <div className="grid grid-cols-5 gap-4 mb-6">
+          {/* Thống kê cards */}
+          <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-green-50 p-4 rounded-lg">
               <div className="text-green-600 text-sm font-medium">TỔNG THÍ NGHIỆM</div>
-              <div className="text-2xl font-bold text-green-700">{stats.total}</div>
+              <div className="text-2xl font-bold text-green-700">{totalCount}</div>
             </div>
             <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="text-blue-600 text-sm font-medium">{statusToVietnamese("Created")}</div>
-              <div className="text-2xl font-bold text-blue-700">{stats.Created}</div>
+              <div className="text-blue-600 text-sm font-medium">ĐANG THỰC HIỆN</div>
+              <div className="text-2xl font-bold text-blue-700">{getStatusCount('Đang thực hiện')}</div>
             </div>
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <div className="text-yellow-600 text-sm font-medium">{statusToVietnamese("InProcess")}</div>
-              <div className="text-2xl font-bold text-yellow-700">{stats.InProcess}</div>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-green-600 text-sm font-medium">{statusToVietnamese("Done")}</div>
-              <div className="text-2xl font-bold text-green-700">{stats.Done}</div>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <div className="text-purple-600 text-sm font-medium">HOÀN THÀNH</div>
+              <div className="text-2xl font-bold text-purple-700">{getStatusCount('Hoàn thành')}</div>
             </div>
             <div className="bg-red-50 p-4 rounded-lg">
-              <div className="text-red-600 text-sm font-medium">{statusToVietnamese("Cancel")}</div>
-              <div className="text-2xl font-bold text-red-700">{stats.Cancel}</div>
+              <div className="text-red-600 text-sm font-medium">THẤT BẠI</div>
+              <div className="text-2xl font-bold text-red-700">{getStatusCount('Thất bại')}</div>
             </div>
           </div>
         </div>
@@ -351,7 +238,7 @@ const ExperimentLog = () => {
       {/* Content */}
       <div className="px-6 py-6">
         <div className="bg-white rounded-lg shadow">
-          {/* Filters */}
+          {/* Header và filters */}
           <div className="p-6 border-b">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Danh sách nhật ký thí nghiệm</h2>
             <p className="text-gray-600 text-sm mb-4">Quản lý và theo dõi các thí nghiệm của bạn</p>
@@ -377,23 +264,21 @@ const ExperimentLog = () => {
                   }
                 >
                   <option value="all">Tất cả trạng thái</option>
-                  <option value="Created">Đã tạo</option>
-                  <option value="InProcess">Đang thực hiện</option>
-                  <option value="Done">Hoàn thành</option>
-                  <option value="Cancel">Đã hủy</option>
+                  <option value="Đang thực hiện">Đang thực hiện</option>
+                  <option value="Hoàn thành">Hoàn thành</option>
+                  <option value="Thất bại">Thất bại</option>
                 </select>
               </div>
-              <div className="flex items-center gap-2 min-w-[220px]">
+              <div className="flex items-center gap-2 min-w-[180px]">
                 <span className="text-gray-600 text-sm">Phương pháp:</span>
                 <select
                   className="border border-gray-300 rounded-full px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                   value={methodFilter}
-                  onChange={e => setMethodFilter(e.target.value)}
+                  onChange={e => setMethodFilter(e.target.value as 'all' | 'Cấy mô' | 'Lai ghép')}
                 >
-                  <option value="">Tất cả</option>
-                  {methods.map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
+                  <option value="all">Tất cả</option>
+                  <option value="Cấy mô">Cấy mô</option>
+                  <option value="Lai ghép">Lai ghép</option>
                 </select>
               </div>
               <div className="flex items-center gap-2 min-w-[180px]">
@@ -401,13 +286,12 @@ const ExperimentLog = () => {
                 <select
                   className="border border-gray-300 rounded-full px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                   value={stageFilter}
-                  onChange={e => setStageFilter(e.target.value as 'all' | 'Giai đoạn 1' | 'Giai đoạn 2' | 'Giai đoạn 3' | 'Giai đoạn 4')}
+                  onChange={e => setStageFilter(e.target.value as 'all' | 'Giai đoạn 1' | 'Giai đoạn 2' | 'Giai đoạn 3')}
                 >
                   <option value="all">Tất cả</option>
                   <option value="Giai đoạn 1">Giai đoạn 1</option>
                   <option value="Giai đoạn 2">Giai đoạn 2</option>
                   <option value="Giai đoạn 3">Giai đoạn 3</option>
-                  <option value="Giai đoạn 4">Giai đoạn 4</option>
                 </select>
               </div>
             </div>
@@ -430,7 +314,9 @@ const ExperimentLog = () => {
                 {loading ? (
                   <tr>
                     <td colSpan={6} className="text-center py-10">
-                      <div className="text-gray-500">Đang tải dữ liệu...</div>
+                      <div className="text-gray-500">
+                        Đang tải dữ liệu experiment logs và samples...
+                      </div>
                     </td>
                   </tr>
                 ) : error ? (
@@ -444,22 +330,36 @@ const ExperimentLog = () => {
                     <tr
                       key={log.id}
                       className="hover:bg-green-50 cursor-pointer transition"
-                      onClick={() => void navigate(`/experiment-log/${log.id}`)}
+                      onClick={() => void navigate(`/admin/experiment-log/${log.id}`)}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{log.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.methodName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.tissueCultureBatchName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {log.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {log.methodName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {log.tissueCultureBatchName}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {log.createdDate ? new Date(log.createdDate).toLocaleDateString('vi-VN') : ''}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(log.status)}`}>
-                          {statusToVietnamese(log.status)}
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                            log.status
+                          )}`}
+                        >
+                          {typeof log.status === 'number'
+                            ? getStatusColor(log.status)
+                            : log.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-blue-600">{sampleCounts[log.id] ?? 0}</span>
+                          <span className="font-semibold text-blue-600">
+                            {sampleCounts[log.id] ?? 0}
+                          </span>
                           <span className="text-xs text-gray-400">mẫu</span>
                         </div>
                       </td>
@@ -479,25 +379,38 @@ const ExperimentLog = () => {
           {/* Pagination */}
           <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
             <div className="text-sm text-gray-500">
-              {(() => {
-                const start = filteredLogs.length === 0 ? 0 : (currentPage - 1) * logsPerPage + 1;
-                const end = filteredLogs.length === 0 ? 0 : (currentPage - 1) * logsPerPage + filteredLogs.length;
-                return <span>Hiển thị {start}-{end} của {totalCount} kết quả</span>;
-              })()}
+              Hiển thị {filteredLogs.length === 0 ? 0 : (currentPage - 1) * logsPerPage + 1}
+              -{Math.min(currentPage * logsPerPage, totalCount)} của {totalCount} kết quả
             </div>
             {totalCount > logsPerPage && (
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}
-                  className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed">Trước</button>
-                {Array.from({ length: Math.ceil(totalCount / logsPerPage) }, (_, i) => i + 1).map((number) => (
-                  <button type="button" key={number} onClick={() => setCurrentPage(number)}
-                    className={`${currentPage === number ? 'bg-green-600 text-white' : 'text-gray-500 hover:text-gray-700'} px-3 py-1 rounded text-sm`}>
+                <button
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Trước
+                </button>
+                {Array.from({ length: Math.ceil(totalCount / logsPerPage) }, (_, i) => i + 1).map(number => (
+                  <button
+                    key={number}
+                    onClick={() => setCurrentPage(number)}
+                    className={`$${
+                      currentPage === number
+                        ? 'bg-green-600 text-white'
+                        : 'text-gray-500 hover:text-gray-700'
+                    } px-3 py-1 rounded text-sm`}
+                  >
                     {number}
                   </button>
                 ))}
-                <button type="button" onClick={() => setCurrentPage(currentPage + 1)}
+                <button
+                  onClick={() => setCurrentPage(currentPage + 1)}
                   disabled={currentPage === Math.ceil(totalCount / logsPerPage)}
-                  className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed">Sau</button>
+                  className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Sau
+                </button>
               </div>
             )}
           </div>
@@ -507,4 +420,4 @@ const ExperimentLog = () => {
   );
 };
 
-export default ExperimentLog;
+export default AdminExperimentLog;

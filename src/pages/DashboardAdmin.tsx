@@ -197,14 +197,8 @@ export default function DashboardAdmin() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID
-                </th>
-                {/* <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tên người dùng
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Họ tên
-                </th> */}
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
                 </th>
@@ -216,12 +210,6 @@ export default function DashboardAdmin() {
                 </th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Ngày tạo
-                </th>
-                {/* <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Trạng thái
-                </th> */}
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Hành động
                 </th>
               </tr>
             </thead>
@@ -249,7 +237,7 @@ export default function DashboardAdmin() {
                 ))
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-8 text-gray-400">
+                  <td colSpan={5} className="text-center py-8 text-gray-400">
                     Không có người dùng nào phù hợp.
                   </td>
                 </tr>
@@ -257,14 +245,8 @@ export default function DashboardAdmin() {
                 filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {user.id}
-                    </td>
-                    {/* <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                      {user.userName ?? "Chưa có tên đăng nhập"}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
                       {user.name ?? "Chưa có họ tên"}
-                    </td> */}
+                    </td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
                       {user.email}
                     </td>
@@ -286,48 +268,6 @@ export default function DashboardAdmin() {
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
                       {user.create_at}
-                    </td>
-                    {/* <td className="px-3 py-2 whitespace-nowrap text-sm">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold status-badge ${
-                          user.status === "active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {user.status === "active"
-                          ? "Hoạt động"
-                          : "Không hoạt động"}
-                      </span>
-                    </td> */}
-                    <td className="px-3 py-2 whitespace-nowrap text-sm flex gap-1">
-                      <button
-                        className="action-btn btn-edit bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white px-2 py-1 rounded transition"
-                        title="Chỉnh sửa"
-                        // onClick={() => handleEdit(user.id)}
-                        onClick={() => alert(`Chỉnh sửa người dùng ${user.id}`)}
-                        type="button"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        className="action-btn btn-reset bg-yellow-100 text-yellow-700 hover:bg-yellow-600 hover:text-white px-2 py-1 rounded transition"
-                        title="Reset mật khẩu"
-                        // onClick={() => handleReset(user.id, user.name)}
-                        onClick={() => alert(`Reset mật khẩu cho ${user.name}`)}
-                        type="button"
-                      >
-                        <FaKey />
-                      </button>
-                      <button
-                        className="action-btn btn-delete bg-red-100 text-red-700 hover:bg-red-600 hover:text-white px-2 py-1 rounded transition"
-                        title="Xóa"
-                        // onClick={() => handleDelete(user.id, user.name)}
-                        onClick={() => alert(`Xóa người dùng ${user.id}`)}
-                        type="button"
-                      >
-                        <FaTrash />
-                      </button>
                     </td>
                   </tr>
                 ))

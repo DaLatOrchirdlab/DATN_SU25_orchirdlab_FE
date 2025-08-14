@@ -8,6 +8,7 @@ interface Task {
   name: string;
   researcher: string;
   end_date: string;
+  create_at?: string;
   status: StatusType;
 }
 
@@ -97,48 +98,57 @@ export default function Tasks() {
         // Lấy tất cả tasks để tính summary (có thể cache ở đây)
         const response = await axiosInstance.get(`/api/tasks?pageNo=1&pageSize=1000`);
         
-        if (isApiTaskResponse(response.data)) {
-          const allTasks = Array.isArray(response.data.value?.data) ? response.data.value.data : [];
-          
-          // Tính status counts
-          const counts: Record<StatusType, number> = {
-            Assigned: 0,
-            Taken: 0,
-            InProcess: 0,
-            DoneInTime: 0,
-            DoneInLate: 0,
-            Cancel: 0,
-          };
-          
-          // Lấy unique researchers
-          const researcherSet = new Set<string>();
-          
-          allTasks.forEach(task => {
-            counts[task.status] = (counts[task.status] || 0) + 1;
-            researcherSet.add(task.researcher);
-          });
-          
-          setStatusCounts(counts);
-          setAllResearchers(Array.from(researcherSet));
-        }
+                 if (isApiTaskResponse(response.data)) {
+           const allTasks = Array.isArray(response.data.value?.data) ? response.data.value.data : [];
+           
+           // Sort all tasks by create_at (newest first) for summary
+           allTasks.sort((a, b) => {
+             const dateA = new Date(a.create_at ?? a.end_date ?? new Date(0));
+             const dateB = new Date(b.create_at ?? b.end_date ?? new Date(0));
+             return dateB.getTime() - dateA.getTime();
+           });
+           
+           // Tính status counts
+           const counts: Record<StatusType, number> = {
+             Assigned: 0,
+             Taken: 0,
+             InProcess: 0,
+             DoneInTime: 0,
+             DoneInLate: 0,
+             Cancel: 0,
+           };
+           
+           // Lấy unique researchers
+           const researcherSet = new Set<string>();
+           
+           allTasks.forEach(task => {
+             counts[task.status] = (counts[task.status] || 0) + 1;
+             researcherSet.add(task.researcher);
+           });
+           
+           setStatusCounts(counts);
+           setAllResearchers(Array.from(researcherSet));
+         }
       } catch (err) {
         console.error('Error loading summary data:', err);
       }
     };
 
-    loadSummaryData();
+    void loadSummaryData();
   }, []);
+
+
 
   // Build query parameters cho API call chính
   const buildApiQuery = useMemo(() => {
     const params = new URLSearchParams();
-    params.append('pageNo', currentPage.toString());
-    params.append('pageSize', tasksPerPage.toString());
     
-    // Chỉ thêm filter params nếu không phải "Tất cả"
-    if (statusFilter !== "Tất cả") {
-      params.append('status', statusFilter);
-    }
+    // Luôn load tất cả tasks để sort và filter ở frontend
+    params.append('pageNo', '1');
+    params.append('pageSize', '1000'); // Load tất cả để sort và filter
+    console.log('Loading all tasks for frontend sorting and filtering');
+    
+    // Backend không hỗ trợ status filter, chỉ có thể filter ở frontend
     if (researcherFilter !== "Tất cả") {
       params.append('researcher', researcherFilter);
     }
@@ -146,7 +156,17 @@ export default function Tasks() {
       params.append('search', searchTerm.trim());
     }
     
-    return params.toString();
+    const queryString = params.toString();
+    console.log('Built query parameters:', {
+      pageNo: currentPage,
+      pageSize: tasksPerPage,
+      statusFilter,
+      researcherFilter,
+      searchTerm,
+      finalQuery: queryString
+    });
+    
+    return queryString;
   }, [currentPage, statusFilter, researcherFilter, searchTerm]);
 
   // Load tasks với debounce cho search
@@ -155,17 +175,68 @@ export default function Tasks() {
       setLoading(true);
       setError(null);
       
+      console.log('API Query:', buildApiQuery); // Debug log
+      console.log('Current filters:', { statusFilter, researcherFilter, searchTerm, currentPage });
+      
       axiosInstance.get(`/api/tasks?${buildApiQuery}`)
         .then(res => {
-          if (isApiTaskResponse(res.data)) {
-            const data = Array.isArray(res.data.value?.data) ? res.data.value.data : [];
-            const total = typeof res.data.value?.totalCount === 'number' ? res.data.value.totalCount : 0;
-            
-            setTasks(data);
-            setTotalCount(total);
-          }
+          console.log('API Response:', res.data); // Debug log
+                     if (isApiTaskResponse(res.data)) {
+             const data = Array.isArray(res.data.value?.data) ? res.data.value.data : [];
+             const total = typeof res.data.value?.totalCount === 'number' ? res.data.value.totalCount : 0;
+             
+             // Sort toàn bộ danh sách theo create_at (newest first)
+             const sortedData = [...data].sort((a, b) => {
+               const dateA = new Date(a.create_at ?? a.end_date ?? new Date(0));
+               const dateB = new Date(b.create_at ?? b.end_date ?? new Date(0));
+               return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
+             });
+             
+             console.log('Sorted all tasks by create_at (newest first):', 
+               sortedData.slice(0, 3).map(task => ({
+                 name: task.name,
+                 create_at: task.create_at,
+                 end_date: task.end_date
+               }))
+             );
+             
+             // Filter trên data đã sort
+             let filteredData = sortedData;
+             
+             // Filter by status
+             if (statusFilter !== "Tất cả") {
+               const beforeFilter = filteredData.length;
+               filteredData = filteredData.filter(task => task.status === statusFilter);
+               console.log(`Filtered by status ${statusFilter}: ${beforeFilter} -> ${filteredData.length} tasks`);
+               console.log('Available statuses in data:', [...new Set(data.map(task => task.status))]);
+             }
+             
+             // Filter by researcher
+             if (researcherFilter !== "Tất cả") {
+               filteredData = filteredData.filter(task => task.researcher === researcherFilter);
+               console.log(`Filtered by researcher ${researcherFilter}: ${filteredData.length} tasks`);
+             }
+             
+             // Filter by search term
+             if (searchTerm.trim()) {
+               filteredData = filteredData.filter(task => 
+                 task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 task.researcher.toLowerCase().includes(searchTerm.toLowerCase())
+               );
+               console.log(`Filtered by search "${searchTerm}": ${filteredData.length} tasks`);
+             }
+             
+             // Apply pagination to filtered/sorted data
+             const startIndex = (currentPage - 1) * tasksPerPage;
+             const endIndex = startIndex + tasksPerPage;
+             const paginatedData = filteredData.slice(startIndex, endIndex);
+             
+             setTasks(paginatedData);
+             setTotalCount(filteredData.length); // Total filtered count
+           }
         })
-        .catch((err) => {
+        .catch((error) => {
+          console.error('API Error:', error); // Debug log
           setError('Không thể tải danh sách nhiệm vụ');
           enqueueSnackbar('Lỗi khi tải dữ liệu', { variant: 'error' });
         })
@@ -175,14 +246,26 @@ export default function Tasks() {
     }, searchTerm ? 300 : 0); // Debounce 300ms cho search, ngay lập tức cho các filter khác
 
     return () => clearTimeout(timeoutId);
-  }, [buildApiQuery, enqueueSnackbar]);
+  }, [buildApiQuery, statusFilter, researcherFilter, searchTerm, currentPage, enqueueSnackbar]);
 
-  // Reset về trang 1 khi filter thay đổi
+  // Reset về trang 1 khi filter thay đổi (chỉ khi có filter)
   useEffect(() => {
-    setCurrentPage(1);
+    console.log('Filter changed:', { statusFilter, researcherFilter, searchTerm });
+    if (statusFilter !== "Tất cả" || researcherFilter !== "Tất cả" || searchTerm.trim()) {
+      setCurrentPage(1);
+    }
   }, [statusFilter, researcherFilter, searchTerm]);
 
   const totalPages = Math.ceil(totalCount / tasksPerPage);
+  
+  // Debug logs cho pagination
+  console.log('Pagination debug:', {
+    totalCount,
+    tasksPerPage,
+    totalPages,
+    currentPage,
+    tasksLength: tasks.length
+  });
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -195,13 +278,22 @@ export default function Tasks() {
             <h1 className="text-2xl font-bold text-gray-900">Quản lý nghiên cứu lai tạo</h1>
             <p className="text-gray-600 mt-1">Theo dõi và quản lý các nhiệm vụ nghiên cứu lai tạo và kết quả thí nghiệm</p>
           </div>
-          <button
-            type="button"
-            onClick={() => { void navigate("/create-task/step-1"); }}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
-          >
-            + Tạo nhiệm vụ nghiên cứu
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => { void navigate("/task-templates"); }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
+            >
+              Mẫu nhiệm vụ
+            </button>
+            <button
+              type="button"
+              onClick={() => { void navigate("/create-task/step-1"); }}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
+            >
+              + Tạo nhiệm vụ nghiên cứu
+            </button>
+          </div>
         </div>
         
         {/* 6 ô tổng hợp */}
@@ -217,47 +309,85 @@ export default function Tasks() {
         </div>
         
         {/* Bộ lọc */}
-        <div className="flex flex-wrap items-center gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Trạng thái:</span>
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value as StatusType | "Tất cả")}
-              className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="flex flex-wrap items-center gap-4 mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700 font-medium">Trạng thái:</span>
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value as StatusType | "Tất cả")}
+                className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="Tất cả">Tất cả</option>
+                {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700 font-medium">Người tạo:</span>
+              <select
+                value={researcherFilter}
+                onChange={e => setResearcherFilter(e.target.value)}
+                className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="Tất cả">Tất cả</option>
+                {allResearchers.map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <input
+                type="text"
+                placeholder="Tìm kiếm nhiệm vụ..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("Tất cả");
+                setResearcherFilter("Tất cả");
+                setSearchTerm("");
+              }}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
             >
-              <option value="Tất cả">Tất cả</option>
-              {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
+              Xóa bộ lọc
+            </button>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Người tạo:</span>
-            <select
-              value={researcherFilter}
-              onChange={e => setResearcherFilter(e.target.value)}
-              className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              <option value="Tất cả">Tất cả</option>
-              {allResearchers.map(r => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex-1 min-w-[200px]">
-            <input
-              type="text"
-              placeholder="Tìm kiếm nhiệm vụ..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
+          
+          {/* Hiển thị active filters */}
+          {(statusFilter !== "Tất cả" || researcherFilter !== "Tất cả" || searchTerm.trim()) && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              <span className="text-xs text-gray-500">Bộ lọc đang áp dụng:</span>
+              {statusFilter !== "Tất cả" && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                  Trạng thái: {STATUS_LABELS[statusFilter]}
+                </span>
+              )}
+              {researcherFilter !== "Tất cả" && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                  Người tạo: {researcherFilter}
+                </span>
+              )}
+              {searchTerm.trim() && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
+                  Tìm kiếm: "{searchTerm}"
+                </span>
+              )}
+            </div>
+          )}
         </div>
         
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="text-gray-500">Đang tải danh sách nhiệm vụ...</div>
+            <div className="flex items-center gap-2 text-gray-500">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+              Đang tải danh sách nhiệm vụ...
+            </div>
           </div>
         ) : error ? (
           <div className="text-red-500 text-center py-8">{error}</div>
@@ -277,7 +407,10 @@ export default function Tasks() {
                   {tasks.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="p-8 text-center text-gray-500">
-                        Không tìm thấy nhiệm vụ nào
+                        {searchTerm.trim() || statusFilter !== "Tất cả" || researcherFilter !== "Tất cả" 
+                          ? "Không tìm thấy nhiệm vụ nào phù hợp với bộ lọc hiện tại"
+                          : "Không có nhiệm vụ nào"
+                        }
                       </td>
                     </tr>
                   ) : (

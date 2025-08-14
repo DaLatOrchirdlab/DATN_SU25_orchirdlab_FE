@@ -25,6 +25,7 @@ const ConfirmTaskContainer: React.FC = () => {
       description: state.description,
       start_date: state.start_date ? new Date(state.start_date).toISOString() : "",
       end_date: state.end_date ? new Date(state.end_date).toISOString() : "",
+      isDaily: state.isDaily,
       attribute: state.attribute.map(attr => ({
         elementId: attr.elementId,
         name: attr.elementName, // Thêm field name cho API
@@ -115,6 +116,15 @@ const ConfirmTaskContainer: React.FC = () => {
             <input 
               type="text" 
               value={state.technician ? state.technician.name : ""}
+              disabled 
+              className="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="font-medium mb-1.5">Nhiệm vụ hàng ngày</label>
+            <input 
+              type="text" 
+              value={state.isDaily ? "Có" : "Không"}
               disabled 
               className="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
             />

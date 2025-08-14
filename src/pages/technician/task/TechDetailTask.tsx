@@ -41,6 +41,14 @@ const TechDetailTask: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  
+  // Report popup states
+  const [showReportPopup, setShowReportPopup] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileName, setFileName] = useState("");
+  const [reportInformation, setReportInformation] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [submittingReport, setSubmittingReport] = useState(false);
 
   useEffect(() => {
     const fetchTaskDetail = async () => {
@@ -185,8 +193,77 @@ const TechDetailTask: React.FC = () => {
 
   // Xử lý nút hoàn thành nhiệm vụ
   const handleCompleteTask = () => {
-    const status = isTaskLate() ? 4 : 3; // 4 = DoneInLate, 3 = DoneInTime
-    void updateTaskStatus(status);
+    setShowReportPopup(true);
+  };
+
+  // Xử lý file upload
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setFileName(file.name);
+      
+      // Tạo preview URL
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  // Xử lý gửi báo cáo
+  const handleSubmitReport = async () => {
+    if (!selectedFile || !fileName || !reportInformation || !taskData?.id) {
+      enqueueSnackbar('Vui lòng điền đầy đủ thông tin báo cáo', { variant: 'error' });
+      return;
+    }
+
+    try {
+      setSubmittingReport(true);
+      
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const fileStream = reader.result as string;
+        
+        const reportData = {
+          id: taskData.id,
+          fileStream: fileStream.split(',')[1], // Remove data:image/...;base64, prefix
+          fileName: fileName,
+          reportInformation: reportInformation
+        };
+
+        // Gửi báo cáo
+        await axiosInstance.put('/api/tasks/update-report-task', reportData);
+        
+        // Sau khi gửi báo cáo thành công, cập nhật status
+        const status = isTaskLate() ? 4 : 3; // 4 = DoneInLate, 3 = DoneInTime
+        await updateTaskStatus(status);
+        
+        // Đóng popup và reset form
+        setShowReportPopup(false);
+        setSelectedFile(null);
+        setFileName("");
+        setReportInformation("");
+        setPreviewUrl(null);
+        
+        enqueueSnackbar('Báo cáo đã được gửi thành công!', { variant: 'success' });
+      };
+      
+      reader.readAsDataURL(selectedFile);
+    } catch (err) {
+      console.error('Error submitting report:', err);
+      enqueueSnackbar('Không thể gửi báo cáo', { variant: 'error' });
+    } finally {
+      setSubmittingReport(false);
+    }
+  };
+
+  // Đóng popup
+  const handleClosePopup = () => {
+    setShowReportPopup(false);
+    setSelectedFile(null);
+    setFileName("");
+    setReportInformation("");
+    setPreviewUrl(null);
   };
 
   // Xử lý nút hủy nhiệm vụ
@@ -417,6 +494,104 @@ const TechDetailTask: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Report Popup */}
+      {showReportPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold">Báo cáo hoàn thành nhiệm vụ</h3>
+              <button
+                onClick={handleClosePopup}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* File Upload */}
+              <div>
+                <label className="block font-medium mb-2">Chọn ảnh báo cáo *</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                />
+                {selectedFile && (
+                  <p className="text-sm text-gray-600 mt-1">Đã chọn: {fileName}</p>
+                )}
+              </div>
+
+              {/* Image Preview */}
+              {previewUrl && (
+                <div>
+                  <label className="block font-medium mb-2">Xem trước ảnh</label>
+                  <div className="border border-gray-300 rounded-md p-2">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="max-w-full h-auto max-h-64 object-contain"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* File Name */}
+              <div>
+                <label className="block font-medium mb-2">Tên file *</label>
+                <input
+                  type="text"
+                  value={fileName}
+                  onChange={(e) => setFileName(e.target.value)}
+                  placeholder="Nhập tên file..."
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                />
+              </div>
+
+              {/* Report Information */}
+              <div>
+                <label className="block font-medium mb-2">Thông tin báo cáo *</label>
+                <textarea
+                  value={reportInformation}
+                  onChange={(e) => setReportInformation(e.target.value)}
+                  placeholder="Mô tả chi tiết công việc đã hoàn thành..."
+                  rows={4}
+                  className="w-full p-2 border border-gray-300 rounded-md resize-none"
+                />
+              </div>
+
+              {/* Deadline Warning */}
+              {isTaskLate() && (
+                <div className="p-3 bg-orange-100 border border-orange-300 rounded-md">
+                  <p className="text-orange-800 text-sm">
+                    ⚠️ Nhiệm vụ này đã quá hạn kết thúc. Báo cáo sẽ được đánh dấu là "Hoàn thành trễ hạn".
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+              <button
+                onClick={handleClosePopup}
+                disabled={submittingReport}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleSubmitReport}
+                disabled={submittingReport || !selectedFile || !fileName || !reportInformation}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submittingReport ? 'Đang gửi...' : 'Gửi báo cáo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

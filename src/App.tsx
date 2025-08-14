@@ -17,6 +17,7 @@ import SeedlingDetail from "./pages/seedling/SeedlingDetail";
 
 import { SeedlingFormProvider } from "./context/SeedlingFormContext";
 import CreateTaskContainer from "./pages/CreateTask/Form/CreateTaskContainer";
+import AutoCreateTaskContainer from "./pages/CreateTask/Form/AutoCreateTaskContainer";
 import SelectTechnicianContainer from "./pages/CreateTask/Form/SelectTechnicianContainer";
 import ConfirmTaskContainer from "./pages/CreateTask/Form/ConfirmTaskContainer";
 import TaskDetailPage from "./pages/CreateTask/TaskDetailPage";
@@ -50,6 +51,15 @@ import ReportsTechnician from "./pages/reports/technician/Reports";
 import SidebarTechnician from "./components/SidebarTechinician";
 import ListTask from "./pages/technician/task/listTask";
 import TechDetailTask from "./pages/technician/task/TechDetailTask";
+// Import admin pages
+import AdminTasks from "./pages/AdminTasks";
+import AdminTaskDetail from "./pages/AdminTaskDetail";
+import AdminExperimentLog from "./pages/AdminExperimentLog";
+import AdminExperimentLogDetail from "./pages/AdminExperimentLogDetail";
+import AdminLabRoomList from "./pages/AdminLabRoomList";
+import AdminLabRoomCreate from "./pages/AdminLabRoomCreate";
+import AdminLabRoomDetail from "./pages/AdminLabRoomDetail";
+
 function AppLayout() {
   const { user, isAuthReady } = useAuth();
   const location = useLocation();
@@ -212,7 +222,7 @@ function AppLayout() {
               element={
                 <CreateTaskProvider>
                   <Routes>
-                    <Route path="" element={<Navigate to="step-1" replace />} />
+                    <Route path="" element={<CreateTaskContainer />} />
                     <Route path="step-1" element={<CreateTaskContainer />} />
                     <Route
                       path="step-2"
@@ -264,6 +274,64 @@ function AppLayout() {
             <Route
               path="/experiment-log/:id"
               element={<ExperimentLogDetail />}
+            />
+
+            {/* Admin Routes */}
+            <Route
+              path="/admin/tasks"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminTasks />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/tasks/:id"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminTaskDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/experiment-log"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminExperimentLog />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/experiment-log/:id"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminExperimentLogDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/labroom"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminLabRoomList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/labroom/new"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminLabRoomCreate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/labroom/:id"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminLabRoomDetail />
+                </ProtectedRoute>
+              }
             />
           </Routes>
         </main>
