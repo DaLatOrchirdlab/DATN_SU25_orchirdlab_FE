@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import axiosInstance from "../api/axiosInstance";
+import type { User } from "../types/Auth";
+import { useSnackbar } from "notistack";
 
 function getRoleName(roleID: number) {
   switch (roleID) {
@@ -15,18 +18,75 @@ function getRoleName(roleID: number) {
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [editUser, setEditUser] = useState({
+    id: user?.id ?? "",
+    name: user?.name ?? "",
+    email: user?.email ?? "",
+    phoneNumber: user?.phoneNumber ?? "",
+    roleId: user?.roleID ?? 0,
+  });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const { enqueueSnackbar } = useSnackbar();
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setAvatarFile(e.target.files[0]);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    // const { name, value } = e.target;
+    const { name, value } = e.target;
+    setEditUser((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    alert("Thông tin hồ sơ đã được cập nhật!");
+  const handleSave = async () => {
+    try {
+      const infoChanged =
+        editUser.name !== user?.name ||
+        editUser.email !== user?.email ||
+        editUser.phoneNumber !== user?.phoneNumber;
+
+      // 1. Nếu có chỉnh sửa thông tin, gọi PUT /api/user
+      if (infoChanged) {
+        await axiosInstance.put("/api/user", editUser);
+      }
+
+      // 2. Nếu có cập nhật avatar, gọi POST /api/user/avatar
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append("userId", editUser.id);
+        formData.append("image", avatarFile);
+        await axiosInstance.put("/api/user/images", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      // 3. Gọi lại API lấy user mới nhất
+      const userRes = await axiosInstance.get<User>(`/api/user/${editUser.id}`);
+      const updatedUser = userRes.data;
+      updateUser(updatedUser);
+
+      setIsEditing(false);
+      setAvatarFile(null);
+      enqueueSnackbar("Thông tin hồ sơ đã được cập nhật", {
+        variant: "success",
+        preventDuplicate: true,
+        autoHideDuration: 2000,
+      });
+    } catch (err) {
+      console.error(err);
+      enqueueSnackbar("Cập nhật thất bại!", {
+        variant: "error",
+        preventDuplicate: true,
+        autoHideDuration: 2000,
+      });
+    }
   };
 
   const handleCancel = () => {
@@ -46,8 +106,40 @@ export default function ProfilePage() {
 
           {/* Profile Picture and Role */}
           <div className="flex items-center space-x-6 mb-8">
-            <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-2xl font-bold">
-              {user?.avatarUrl ? (
+            <div className="w-24 h-24 ml-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-2xl font-bold relative">
+              {isEditing ? (
+                <label
+                  className="w-full h-full flex items-center justify-center rounded-full bg-gray-200 relative cursor-pointer"
+                  title="Đổi ảnh"
+                >
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt="User Avatar"
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <span>{user?.name?.charAt(0).toUpperCase()}</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
+                  {/* Có thể thêm icon camera ở góc nếu muốn */}
+                  <span className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow text-green-700">
+                    <svg
+                      width="20"
+                      height="20"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-2.382a1 1 0 01-.894-.553l-.447-.894A1 1 0 0011.382 3H8.618a1 1 0 00-.894.553l-.447.894A1 1 0 016.382 5H4z" />
+                    </svg>
+                  </span>
+                </label>
+              ) : user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
                   alt="User Avatar"
@@ -57,16 +149,7 @@ export default function ProfilePage() {
                 <span>{user?.name?.charAt(0).toUpperCase()}</span>
               )}
             </div>
-            <div className="flex flex-col gap-2">
-              <h3 className="text-lg font-medium text-gray-900">Ảnh hồ sơ</h3>
-              <p className="text-gray-600 text-sm">Tải lên ảnh đại diện mới</p>
-              <button
-                type="button"
-                className="mt-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors"
-              >
-                Change Photo
-              </button>
-            </div>
+
             <div className="ml-auto flex flex-col items-end">
               <span className="text-sm text-gray-500">Vai trò</span>
               <span className="text-base font-semibold text-green-700 bg-green-50 px-4 py-1 rounded-full border border-green-200 mt-1">
@@ -88,7 +171,7 @@ export default function ProfilePage() {
                 type="text"
                 id="name"
                 name="name"
-                value={user?.name ?? ""}
+                value={editUser?.name ?? ""}
                 onChange={handleChange}
                 readOnly={!isEditing}
                 className={`w-full border ${
@@ -98,7 +181,7 @@ export default function ProfilePage() {
                 } rounded-lg px-3 py-2 transition-colors`}
               />
             </div>
-            <div>
+            {/* <div>
               <label
                 htmlFor="username"
                 className="block text-sm font-medium text-gray-700 mb-1"
@@ -113,7 +196,7 @@ export default function ProfilePage() {
                 readOnly
                 className="w-full border border-transparent bg-gray-100 rounded-lg px-3 py-2 text-gray-500"
               />
-            </div>
+            </div> */}
             <div>
               <label
                 htmlFor="email"
@@ -125,14 +208,10 @@ export default function ProfilePage() {
                 type="email"
                 id="email"
                 name="email"
-                value={user?.email ?? ""}
+                value={editUser?.email ?? ""}
                 onChange={handleChange}
-                readOnly={!isEditing}
-                className={`w-full border ${
-                  isEditing
-                    ? "border-gray-300 focus:ring-green-500 focus:border-green-500"
-                    : "border-transparent bg-gray-100"
-                } rounded-lg px-3 py-2 transition-colors`}
+                readOnly
+                className="w-full border border-transparent bg-gray-100 rounded-lg px-3 py-2 text-gray-500"
               />
             </div>
             <div>
@@ -146,7 +225,7 @@ export default function ProfilePage() {
                 type="text"
                 id="phoneNumber"
                 name="phoneNumber"
-                value={user?.phoneNumber ?? ""}
+                value={editUser?.phoneNumber ?? ""}
                 onChange={handleChange}
                 readOnly={!isEditing}
                 className={`w-full border ${
@@ -187,7 +266,9 @@ export default function ProfilePage() {
                 </button>
                 <button
                   type="button"
-                  onClick={handleSave}
+                  onClick={() => {
+                    void handleSave();
+                  }}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   Lưu thay đổi

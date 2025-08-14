@@ -7,43 +7,55 @@ const PAGE_SIZE = 5;
 
 export default function Seedlings() {
   const navigate = useNavigate();
-  const [data, setData] = useState<Seedling[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [byMother, setByMother] = useState("");
   const [byFather, setByFather] = useState("");
   const [loading, setLoading] = useState(false);
+  const [allSeedlings, setAllSeedlings] = useState<Seedling[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({
-          pageNumber: String(page),
-          pageSize: String(PAGE_SIZE),
-          ...(searchTerm ? { searchTerm } : {}),
-          ...(byMother ? { byMother } : {}),
-          ...(byFather ? { byFather } : {}),
-        });
-        const res = await axiosInstance.get(
-          `https://net-api.orchid-lab.systems/api/seedling?${params}`
+        const allRes = await axiosInstance.get(
+          "https://net-api.orchid-lab.systems/api/seedling?pageNumber=1&pageSize=1000"
         );
-        const json = res.data as SeedlingApiResponse;
-        setData(json.value.data || []);
-        setTotal(json.value.totalCount || 0);
-        setTotalPages(json.value.pageCount || 1);
+        const allJson = allRes.data as SeedlingApiResponse;
+        setAllSeedlings(allJson.value.data || []);
       } catch {
-        setData([]);
-        setTotal(0);
-        setTotalPages(1);
+        setAllSeedlings([]);
       } finally {
         setLoading(false);
       }
     };
     void fetchData();
-  }, [page, searchTerm, byMother, byFather]);
+  }, []);
+
+  const filteredSeedlings = allSeedlings.filter((s) => {
+    // Lọc theo tên, mô tả, cây bố mẹ (chỉ dùng parent1, parent2)
+    const searchMatch =
+      !searchTerm ||
+      s.localName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.parent1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.parent2?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const motherMatch =
+      !byMother || s.parent1?.toLowerCase().includes(byMother.toLowerCase());
+
+    const fatherMatch =
+      !byFather || s.parent2?.toLowerCase().includes(byFather.toLowerCase());
+
+    return searchMatch && motherMatch && fatherMatch;
+  });
+
+  const total = filteredSeedlings.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const pagedSeedlings = filteredSeedlings.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
 
   return (
     <main className="ml-0 sm:ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 px-2 sm:px-4 md:px-8">
@@ -85,7 +97,7 @@ export default function Seedlings() {
         </div>
         <input
           type="text"
-          placeholder="Lọc theo mẹ"
+          placeholder="Lọc theo cây giống 1"
           className="border rounded px-3 py-2"
           value={byMother}
           onChange={(e) => {
@@ -95,7 +107,7 @@ export default function Seedlings() {
         />
         <input
           type="text"
-          placeholder="Lọc theo bố"
+          placeholder="Lọc theo cây giống 2"
           className="border rounded px-3 py-2"
           value={byFather}
           onChange={(e) => {
@@ -145,21 +157,23 @@ export default function Seedlings() {
                   </td>
                 </tr>
               ))
-            ) : data.length === 0 ? (
+            ) : pagedSeedlings.length === 0 ? (
               <tr>
                 <td colSpan={9} className="text-center py-8 text-gray-400">
                   Không tìm thấy cây giống.
                 </td>
               </tr>
             ) : (
-              data.map((s) => (
+              pagedSeedlings.map((s) => (
                 <tr key={s.id} className="border-t hover:bg-green-50">
-                  <td className="py-3 px-4">{s.localName}</td>
-                  <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                    {s.parent1}
+                  <td className="py-3 px-4 whitespace-nowrap overflow-hidden text-ellipsis">
+                    {s.localName}
                   </td>
                   <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                    {s.parent2}
+                    {s.parent1 || ""}
+                  </td>
+                  <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
+                    {s.parent2 || ""}
                   </td>
                   <td className="px-4">{s.doB}</td>
                   <td className="px-4">

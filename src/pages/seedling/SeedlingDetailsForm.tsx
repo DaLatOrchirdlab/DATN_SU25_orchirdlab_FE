@@ -33,8 +33,7 @@ export default function SeedlingDetailsForm() {
   const isValid =
     form.localName &&
     form.scientificName &&
-    form.fatherID &&
-    form.motherID &&
+    (form.fatherID || form.motherID) &&
     form.description &&
     form.doB;
 
@@ -106,13 +105,15 @@ export default function SeedlingDetailsForm() {
               >
                 <option value="">Chọn cây giống 1</option>
                 {seedlings.map((p) => (
-                  <option key={p.id} value={p.id}>
+                  <option key={p.id} value={p.localName}>
                     {p.localName}
                   </option>
                 ))}
               </select>
-              {touched && !form.fatherID && (
-                <div className="text-red-500 text-sm">Bắt buộc</div>
+              {touched && !form.fatherID && !form.motherID && (
+                <div className="text-red-500 text-sm mt-1">
+                  Cần chọn ít nhất 1 cây giống
+                </div>
               )}
             </div>
             <div className="flex-1">
@@ -125,14 +126,11 @@ export default function SeedlingDetailsForm() {
               >
                 <option value="">Chọn cây giống 2</option>
                 {seedlings.map((p) => (
-                  <option key={p.id} value={p.id}>
+                  <option key={p.id} value={p.localName}>
                     {p.localName}
                   </option>
                 ))}
               </select>
-              {touched && !form.motherID && (
-                <div className="text-red-500 text-sm">Bắt buộc</div>
-              )}
             </div>
           </div>
           <div>

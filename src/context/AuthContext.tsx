@@ -13,6 +13,7 @@ interface AuthContextType {
   }) => void;
   logout: () => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
+  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,6 +67,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", refreshToken);
   };
+  const updateUser = (user: User) => {
+    setUser(user);
+    localStorage.setItem("user", JSON.stringify(user));
+  };
 
   return (
     <AuthContext.Provider
@@ -77,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         setTokens,
+        updateUser,
       }}
     >
       {children}

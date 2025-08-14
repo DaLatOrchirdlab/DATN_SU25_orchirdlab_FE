@@ -1,7 +1,8 @@
-import  { useEffect, useState } from "react";
-import { FaEdit, FaKey, FaTrash, FaSearch, FaPlus } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { FaEdit, FaTrash, FaSearch, FaPlus } from "react-icons/fa";
 import type { User, UserApiResponse } from "../types/Auth";
 import axiosInstance from "../api/axiosInstance";
+import { useSnackbar } from "notistack";
 
 const roleOptions: { value: string; label: string }[] = [
   { value: "", label: "Tất cả vai trò" },
@@ -32,32 +33,48 @@ const PAGE_SIZE = 5;
 export default function DashboardAdmin() {
   const [search, setSearch] = useState<string>("");
   const [roleFilter, setRoleFilter] = useState<string>("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [users, setUsers] = useState<User[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    phoneNumber: "",
+    roleID: 0,
+  });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const { enqueueSnackbar } = useSnackbar();
 
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.get(
+        `/api/user?pageNumber=${page}&pageSize=${PAGE_SIZE}`
+      );
+      const data = res.data as UserApiResponse;
+      setUsers(data.data || []);
+      setTotal(Number(data.totalCount) || 0);
+      setTotalPages(Number(data.pageCount) || 1);
+    } catch {
+      setUsers([]);
+      setTotal(0);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        const res = await axiosInstance.get(
-          `/api/user?pageNumber=${page}&pageSize=${PAGE_SIZE}`
-        );
-        const data = res.data as UserApiResponse;
-        setUsers(data.data || []);
-        setTotal(Number(data.totalCount) || 0);
-        setTotalPages(Number(data.pageCount) || 1);
-      } catch {
-        setUsers([]);
-        setTotal(0);
-        setTotalPages(1);
-      } finally {
-        setLoading(false);
-      }
-    };
     void fetchUsers();
   }, [page]);
 
@@ -79,25 +96,81 @@ export default function DashboardAdmin() {
   const researcherCount = users.filter((u) => u.roleID === 2).length;
   const technicianCount = users.filter((u) => u.roleID === 3).length;
 
-  // Action handlers
-  // const handleEdit = (userId: string) => {
-  //   alert(`Chỉnh sửa người dùng ${userId}`);
-  // };
-  // const handleDelete = (userId: string, fullName: string) => {
-  //   if (window.confirm(`Bạn có chắc muốn xóa người dùng ${fullName} không?`)) {
-  //     alert(`Xóa người dùng ${userId} thành công!`);
-  //     // Thực hiện xóa người dùng ở đây
-  //   }
-  // };
-  // const handleReset = () => {
-  //   alert(
-  //     "Chức năng reset mật khảu sẽ được triển khai trong phiên bản tiếp theo!"
-  //   );
-  // };
-  const handleAddUser = () => {
-    alert(
-      "Chức năng thêm người dùng sẽ được triển khai trong phiên bản tiếp theo!"
-    );
+  const handleDeleteClick = (id: string, name: string) => {
+    setDeleteTarget({ id, name });
+    setShowDeleteModal(true);
+  };
+
+  const handleEdit = (user: User) => {
+    setEditUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editUser) return;
+    try {
+      await axiosInstance.put("/api/user", editUser);
+      setShowEditModal(false);
+      setEditUser(null);
+      await fetchUsers();
+      setPage(1); // Reload lại danh sách
+      enqueueSnackbar("Cập nhật người dùng thành công!", {
+        variant: "success",
+        autoHideDuration: 3000,
+        preventDuplicate: true,
+      });
+    } catch {
+      enqueueSnackbar("Cập nhật người dùng thất bại!", {
+        variant: "error",
+        autoHideDuration: 3000,
+        preventDuplicate: true,
+      });
+    }
+  };
+  const handleAddUser = async () => {
+    try {
+      await axiosInstance.post("/api/user", newUser);
+      setShowAddModal(false);
+      setNewUser({ name: "", email: "", phoneNumber: "", roleID: 0 });
+      // Reload lại danh sách
+      await fetchUsers();
+      setPage(1);
+      enqueueSnackbar("Tạo người dùng thành công!", {
+        variant: "success",
+        autoHideDuration: 3000,
+        preventDuplicate: true,
+      });
+    } catch {
+      enqueueSnackbar("Thêm người dùng thất bại!", {
+        variant: "error",
+        autoHideDuration: 3000,
+        preventDuplicate: true,
+      });
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteTarget) return;
+    try {
+      await axiosInstance.delete("/api/user", {
+        data: { id: deleteTarget.id },
+      });
+      setUsers((prev) => prev.filter((u) => u.id !== deleteTarget.id));
+      setShowDeleteModal(false);
+      setDeleteTarget(null);
+      await fetchUsers();
+      enqueueSnackbar("Xóa người dùng thành công!", {
+        variant: "success",
+        autoHideDuration: 3000,
+        preventDuplicate: true,
+      });
+    } catch {
+      enqueueSnackbar("Xóa người dùng thất bại!", {
+        variant: "error",
+        autoHideDuration: 3000,
+        preventDuplicate: true,
+      });
+    }
   };
 
   return (
@@ -152,7 +225,7 @@ export default function DashboardAdmin() {
           </select> */}
           <button
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-            onClick={handleAddUser}
+            onClick={() => setShowAddModal(true)}
             type="button"
           >
             <FaPlus /> Thêm người dùng
@@ -197,6 +270,9 @@ export default function DashboardAdmin() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tên
+                </th>
+                {/* <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tên người dùng
                 </th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -245,7 +321,10 @@ export default function DashboardAdmin() {
                 filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {user.name ?? "Chưa có họ tên"}
+                      {user.name}
+                    </td>
+                    {/* <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                      {user.userName ?? "Chưa có tên đăng nhập"}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
                       {user.email}
@@ -267,7 +346,48 @@ export default function DashboardAdmin() {
                       </span>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                      {user.create_at}
+                      {user.create_at
+                        ? new Date(user.create_at).toLocaleDateString("vi-VN", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : ""}
+                    </td>
+                    {/* <td className="px-3 py-2 whitespace-nowrap text-sm">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold status-badge ${
+                          user. === "active"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {user.status === "active"
+                          ? "Hoạt động"
+                          : "Không hoạt động"}
+                      </span>
+                    </td> */}
+                    <td className="px-3 py-2 whitespace-nowrap text-sm flex gap-1">
+                      <button
+                        className="action-btn btn-edit bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white px-2 py-1 rounded transition"
+                        title="Chỉnh sửa"
+                        onClick={() => handleEdit(user)}
+                        type="button"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        className="action-btn btn-delete bg-red-100 text-red-700 hover:bg-red-600 hover:text-white px-2 py-1 rounded transition"
+                        title="Xóa"
+                        onClick={() =>
+                          void handleDeleteClick(user.id, user.name)
+                        }
+                        type="button"
+                      >
+                        <FaTrash />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -293,6 +413,164 @@ export default function DashboardAdmin() {
           ))}
         </div>
       </div>
+      {/* Edit Modal */}
+      {showEditModal && editUser && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-[350px]">
+            <h2 className="text-lg font-bold mb-4">Chỉnh sửa người dùng</h2>
+            <input
+              className="border rounded px-3 py-2 w-full mb-2"
+              placeholder="Tên"
+              value={editUser.name}
+              onChange={(e) =>
+                setEditUser((u) => (u ? { ...u, name: e.target.value } : u))
+              }
+            />
+            <input
+              className="border rounded px-3 py-2 w-full mb-2"
+              placeholder="Email"
+              value={editUser.email}
+              onChange={(e) =>
+                setEditUser((u) => (u ? { ...u, email: e.target.value } : u))
+              }
+            />
+            <input
+              className="border rounded px-3 py-2 w-full mb-2"
+              placeholder="Số điện thoại"
+              value={editUser.phoneNumber}
+              onChange={(e) =>
+                setEditUser((u) =>
+                  u ? { ...u, phoneNumber: e.target.value } : u
+                )
+              }
+            />
+            <select
+              className="border rounded px-3 py-2 w-full mb-4"
+              value={editUser.roleID}
+              onChange={(e) =>
+                setEditUser((u) =>
+                  u ? { ...u, roleID: Number(e.target.value) } : u
+                )
+              }
+            >
+              <option value={1}>Admin</option>
+              <option value={2}>Researcher</option>
+              <option value={3}>Technician</option>
+            </select>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-200 rounded"
+                onClick={() => setShowEditModal(false)}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => {
+                  void handleSaveEdit();
+                }}
+              >
+                Lưu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Add Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-[350px]">
+            <h2 className="text-lg font-bold mb-4">Thêm người dùng mới</h2>
+            <input
+              className="border rounded px-3 py-2 w-full mb-2"
+              placeholder="Tên"
+              value={newUser.name}
+              onChange={(e) =>
+                setNewUser((u) => ({ ...u, name: e.target.value }))
+              }
+            />
+            <input
+              className="border rounded px-3 py-2 w-full mb-2"
+              placeholder="Email"
+              value={newUser.email}
+              onChange={(e) =>
+                setNewUser((u) => ({ ...u, email: e.target.value }))
+              }
+            />
+            <input
+              className="border rounded px-3 py-2 w-full mb-2"
+              placeholder="Số điện thoại"
+              value={newUser.phoneNumber}
+              onChange={(e) =>
+                setNewUser((u) => ({ ...u, phoneNumber: e.target.value }))
+              }
+            />
+            <select
+              className="border rounded px-3 py-2 w-full mb-4"
+              value={newUser.roleID}
+              onChange={(e) =>
+                setNewUser((u) => ({ ...u, roleID: Number(e.target.value) }))
+              }
+            >
+              <option value={0}>Chọn vai trò</option>
+              <option value={1}>Admin</option>
+              <option value={2}>Researcher</option>
+              <option value={3}>Technician</option>
+            </select>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-200 rounded"
+                onClick={() => setShowAddModal(false)}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-green-600 text-white rounded"
+                onClick={() => {
+                  void handleAddUser();
+                }}
+              >
+                Thêm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showDeleteModal && deleteTarget && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-[350px]">
+            <h2 className="text-lg font-bold mb-4 text-red-700">
+              Xác nhận xóa
+            </h2>
+            <p>
+              Bạn có chắc muốn xóa{" "}
+              <span className="font-semibold">{deleteTarget.name}</span> không?
+            </p>
+            <div className="flex gap-2 justify-end mt-6">
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-200 rounded"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-red-600 text-white rounded"
+                onClick={() => {
+                  void handleDeleteUser();
+                }}
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

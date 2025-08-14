@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Report } from "../../types/Report";
 import axiosInstance from "../../api/axiosInstance";
+import { useAuth } from "../../context/AuthContext";
 
 interface Sample {
   id: string;
@@ -12,10 +13,12 @@ interface Sample {
 }
 
 export default function ReportsDetails() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
   const [report, setReport] = useState<Report | null>(null);
   const [sample, setSample] = useState<Sample | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,16 +41,23 @@ export default function ReportsDetails() {
         } else {
           setSample(null);
         }
+        const imgRes = await axiosInstance.get<{
+          value?: { data?: { url: string }[] };
+        }>(`/api/images?pageNumber=1&pageSize=100&reportId=${id}`);
+        const imgList = imgRes.data?.value?.data ?? [];
+        setImages(imgList.map((img) => img.url));
       } catch (error) {
         console.error("Error fetching report details:", error);
         setReport(null);
         setSample(null);
+        setImages([]);
       } finally {
         setLoading(false);
       }
     };
     void fetchDetail();
   }, [id]);
+  console.log("Images:", images);
 
   if (loading) {
     return (
@@ -63,7 +73,11 @@ export default function ReportsDetails() {
         <button
           type="button"
           className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-6 hover:bg-green-800 hover:text-white transition"
-          onClick={() => void navigate("/reports")}
+          onClick={() =>
+            void navigate(
+              user?.roleID === 3 ? "/technician/reports" : "/reports"
+            )
+          }
         >
           &larr; Trở về
         </button>
@@ -129,11 +143,13 @@ export default function ReportsDetails() {
             </div>
           </div>
           {/* Hình ảnh đính kèm nếu có */}
-          {/* {report?.images && report.images.length > 0 && (
+          {images.length > 0 && (
             <div className="mb-6">
-              <h3 className="font-semibold text-green-800 mb-2">Hình ảnh đính kèm</h3>
+              <h3 className="font-semibold text-green-800 mb-2">
+                Hình ảnh đính kèm
+              </h3>
               <div className="flex gap-4 flex-wrap">
-                {report.images.map((img, idx) => (
+                {images.map((img, idx) => (
                   <img
                     key={idx}
                     src={img}
@@ -143,7 +159,7 @@ export default function ReportsDetails() {
                 ))}
               </div>
             </div>
-          )} */}
+          )}
         </div>
         {/* Thông tin mẫu vật */}
         <div className="bg-white rounded-xl shadow p-8">

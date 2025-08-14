@@ -2,15 +2,18 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import type { Element } from "../../types/Element";
+import { Select } from "antd";
+import type { Referent, ReferentApiResponse } from "../../types/Referent";
+import { useSnackbar } from "notistack";
 
 const methodTypes = [
-  { label: "Nhân giống vô tính", value: "vo_tinh" },
-  { label: "Nhân giống hữu tính", value: "huu_tinh" },
+  { label: "Nhân giống vô tính", value: 1 },
+  { label: "Nhân giống hữu tính", value: 2 },
 ];
 
-interface Referent {
+interface ReferentForCreate {
   name: string;
-  unit: number;
+  unit: string;
   valueFrom: number;
   valueTo: number;
 }
@@ -19,7 +22,7 @@ interface StageForm {
   title: string;
   content: string;
   elementInStages: string[];
-  referents: Referent[];
+  referents: ReferentForCreate[];
 }
 
 export default function MethodCreate() {
@@ -34,12 +37,14 @@ export default function MethodCreate() {
         title: "",
         content: "",
         elementInStages: [],
-        referents: [{ name: "", unit: 1, valueFrom: 0, valueTo: 0 }],
+        referents: [{ name: "", unit: "", valueFrom: 0, valueTo: 0 }],
       } as StageForm,
     ],
   });
+  const [referentOptions, setReferentOptions] = useState<Referent[]>([]);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     const fetchElements = async () => {
@@ -55,6 +60,18 @@ export default function MethodCreate() {
       }
     };
     void fetchElements();
+    const fetchReferents = async () => {
+      try {
+        const res = await axiosInstance.get(
+          "https://net-api.orchid-lab.systems/api/referents?pageNumber=1&pageSize=100"
+        );
+        const referentsData = res.data as ReferentApiResponse;
+        setReferentOptions(referentsData.value.data || []);
+      } catch {
+        setReferentOptions([]);
+      }
+    };
+    void fetchReferents();
   }, []);
 
   const handleChange = (
@@ -88,7 +105,7 @@ export default function MethodCreate() {
   const handleReferentChange = (
     stageIdx: number,
     referentIdx: number,
-    field: keyof Referent,
+    field: keyof ReferentForCreate,
     value: string | number
   ) => {
     setForm((prev) => {
@@ -108,7 +125,7 @@ export default function MethodCreate() {
               ...stage,
               referents: [
                 ...stage.referents,
-                { name: "", unit: 1, valueFrom: 0, valueTo: 0 },
+                { name: "", unit: "", valueFrom: 0, valueTo: 0 },
               ],
             }
           : stage
@@ -140,7 +157,7 @@ export default function MethodCreate() {
           title: "",
           content: "",
           elementInStages: [],
-          referents: [{ name: "", unit: 1, valueFrom: 0, valueTo: 0 }],
+          referents: [{ name: "", unit: "", valueFrom: 0, valueTo: 0 }],
         },
       ],
     }));
@@ -196,6 +213,8 @@ export default function MethodCreate() {
       })),
     };
 
+    console.log(payload);
+
     try {
       await axiosInstance.post(
         "https://net-api.orchid-lab.systems/api/method",
@@ -203,9 +222,18 @@ export default function MethodCreate() {
       );
       setLoading(false);
       void navigate("/method");
+      enqueueSnackbar("Tạo phương pháp thành công!", {
+        variant: "success",
+        autoHideDuration: 3000,
+        preventDuplicate: true,
+      });
     } catch (error) {
       setLoading(false);
-      alert("Có lỗi xảy ra khi tạo phương pháp!");
+      enqueueSnackbar("Tạo phương pháp thất bại!", {
+        variant: "error",
+        autoHideDuration: 3000,
+        preventDuplicate: true,
+      });
       console.error("Error creating method:", error);
     }
   };
@@ -313,31 +341,28 @@ export default function MethodCreate() {
                 />
                 {error && <p className="text-red-500">{error}</p>}
                 <label className="block font-semibold mb-1">
-                  Chọn element cho bước này
+                  Chọn nguyên vật liệu cho bước này
                 </label>
-                <select
-                  multiple
+                <Select
+                  mode="multiple"
+                  allowClear
+                  style={{ width: "100%", marginBottom: 8 }}
+                  placeholder="Chọn nguyên vật liệu"
                   value={stage.elementInStages}
-                  onChange={(e) =>
-                    handleElementChange(
-                      stageIdx,
-                      Array.from(e.target.selectedOptions, (opt) => opt.value)
-                    )
-                  }
-                  className="mb-2 w-full border px-3 py-2 rounded"
-                >
-                  {elements.map((el) => (
-                    <option key={el.id} value={el.id}>
-                      {el.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(values) => handleElementChange(stageIdx, values)}
+                  options={elements.map((el) => ({
+                    label: el.name,
+                    value: el.id,
+                  }))}
+                />
                 {error && <p className="text-red-500">{error}</p>}
                 <div>
-                  <label className="block font-semibold mb-1">Referents</label>
+                  <label className="block font-semibold mb-1">
+                    Thông tin tham chiếu
+                  </label>
                   {stage.referents.map((ref, refIdx) => (
                     <div key={refIdx} className="flex gap-2 mb-2 items-center">
-                      <input
+                      {/* <input
                         value={ref.name}
                         onChange={(e) =>
                           handleReferentChange(
@@ -350,17 +375,38 @@ export default function MethodCreate() {
                         placeholder="Tên"
                         required
                         className="border px-2 py-1 rounded"
+                      /> */}
+                      <Select
+                        showSearch
+                        style={{ minWidth: 180, marginRight: 8 }}
+                        placeholder="Chọn tham chiếu"
+                        value={ref.name}
+                        onChange={(value) => {
+                          const selected = referentOptions.find(
+                            (r) => r.id === value
+                          );
+                          handleReferentChange(
+                            stageIdx,
+                            refIdx,
+                            "name",
+                            selected?.name ?? ""
+                          );
+                        }}
+                        options={referentOptions.map((r) => ({
+                          label: r.name,
+                          value: r.id,
+                        }))}
                       />
                       {error && <p className="text-red-500">{error}</p>}
                       <input
-                        type="number"
+                        type="text"
                         value={ref.unit}
                         onChange={(e) =>
                           handleReferentChange(
                             stageIdx,
                             refIdx,
                             "unit",
-                            Number(e.target.value)
+                            e.target.value
                           )
                         }
                         placeholder="Đơn vị"
@@ -368,6 +414,9 @@ export default function MethodCreate() {
                         className="border px-2 py-1 rounded w-20"
                       />
                       {error && <p className="text-red-500">{error}</p>}
+                      <label className="block font-semibold mb-1">
+                        Giá trị min:
+                      </label>
                       <input
                         type="number"
                         value={ref.valueFrom}
@@ -384,6 +433,9 @@ export default function MethodCreate() {
                         className="border px-2 py-1 rounded w-20"
                       />
                       {error && <p className="text-red-500">{error}</p>}
+                      <label className="block font-semibold mb-1">
+                        Giá trị max:
+                      </label>
                       <input
                         type="number"
                         value={ref.valueTo}
