@@ -7,8 +7,8 @@ import type { Referent, ReferentApiResponse } from "../../types/Referent";
 import { useSnackbar } from "notistack";
 
 const methodTypes = [
-  { label: "Nhân giống vô tính", value: "vo_tinh" },
-  { label: "Nhân giống hữu tính", value: "huu_tinh" },
+  { label: "Nhân giống vô tính", value: 1 },
+  { label: "Nhân giống hữu tính", value: 2 },
 ];
 
 interface ReferentForCreate {
@@ -212,6 +212,8 @@ export default function MethodCreate() {
         referents: stage.referents,
       })),
     };
+
+    console.log(payload);
 
     try {
       await axiosInstance.post(
