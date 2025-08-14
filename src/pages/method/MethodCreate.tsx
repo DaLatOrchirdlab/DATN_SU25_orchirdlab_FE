@@ -4,6 +4,7 @@ import axiosInstance from "../../api/axiosInstance";
 import type { Element } from "../../types/Element";
 import { Select } from "antd";
 import type { Referent, ReferentApiResponse } from "../../types/Referent";
+import { useSnackbar } from "notistack";
 
 const methodTypes = [
   { label: "Nhân giống vô tính", value: "vo_tinh" },
@@ -43,6 +44,7 @@ export default function MethodCreate() {
   const [referentOptions, setReferentOptions] = useState<Referent[]>([]);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     const fetchElements = async () => {
@@ -218,9 +220,18 @@ export default function MethodCreate() {
       );
       setLoading(false);
       void navigate("/method");
+      enqueueSnackbar("Tạo phương pháp thành công!", {
+        variant: "success",
+        autoHideDuration: 3000,
+        preventDuplicate: true,
+      });
     } catch (error) {
       setLoading(false);
-      alert("Có lỗi xảy ra khi tạo phương pháp!");
+      enqueueSnackbar("Tạo phương pháp thất bại!", {
+        variant: "error",
+        autoHideDuration: 3000,
+        preventDuplicate: true,
+      });
       console.error("Error creating method:", error);
     }
   };
