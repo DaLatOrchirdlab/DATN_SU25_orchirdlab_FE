@@ -272,9 +272,7 @@ export default function DashboardAdmin() {
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tên
                 </th>
-                {/* <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tên người dùng
-                </th>
+                 
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
                 </th>
@@ -323,9 +321,7 @@ export default function DashboardAdmin() {
                     <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                       {user.name}
                     </td>
-                    {/* <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                      {user.userName ?? "Chưa có tên đăng nhập"}
-                    </td>
+                    
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
                       {user.email}
                     </td>

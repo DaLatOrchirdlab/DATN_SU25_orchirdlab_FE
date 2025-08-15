@@ -70,22 +70,25 @@ const CreateExperimentStep2 = () => {
   useEffect(() => {
     if (methodType === 'Clonal') {
       if (selected[0]) {
+        const displayName = selected[0].localName ?? selected[0].scientificName ?? selected[0].name ?? 'Chưa có tên';
         setForm(prev => ({
           ...prev,
           motherID: selected[0].id,
-          motherName: selected[0].localName ?? selected[0].name,
+          motherName: displayName,
           hybridization: [selected[0].id],
-          hybridizationNames: [selected[0].localName ?? selected[0].name].filter((n): n is string => !!n),
+          hybridizationNames: [displayName],
         }));
       }
     } else if (methodType === 'Sexual') {
       if (selected.length === 2) {
+        const motherName = selected[0].localName ?? selected[0].scientificName ?? selected[0].name ?? 'Chưa có tên';
+        const fatherName = selected[1].localName ?? selected[1].scientificName ?? selected[1].name ?? 'Chưa có tên';
         setForm(prev => ({
           ...prev,
           motherID: selected[0].id,
-          motherName: selected[0].localName ?? selected[0].name,
+          motherName: motherName,
           hybridization: [selected[1].id, selected[0].id],
-          hybridizationNames: [selected[1].localName ?? selected[1].name, selected[0].localName ?? selected[0].name].filter((n): n is string => !!n),
+          hybridizationNames: [fatherName, motherName],
         }));
       }
     }
@@ -174,7 +177,8 @@ const CreateExperimentStep2 = () => {
                 {methodType === 'Clonal' && selected[0] && (
                   <div className="mt-6 p-4 border rounded-lg bg-gray-50">
                     <h4 className="font-semibold mb-2">Thông tin cây mẹ đã chọn</h4>
-                    <div><strong>Tên:</strong> {selected[0].name}</div>
+                    <div><strong>Tên địa phương:</strong> {selected[0].localName ?? 'Chưa có'}</div>
+                    <div><strong>Tên khoa học:</strong> {selected[0].scientificName ?? 'Chưa có'}</div>
                     <div><strong>Mô tả:</strong> {selected[0].description}</div>
                     <div><strong>Ngày sinh:</strong> {selected[0].doB}</div>
                   </div>
@@ -184,7 +188,8 @@ const CreateExperimentStep2 = () => {
                     {selected[0] && (
                       <div className="p-4 border rounded-lg bg-gray-50">
                         <h4 className="font-semibold mb-2">Cây mẹ</h4>
-                        <div><strong>Tên:</strong> {selected[0].name}</div>
+                        <div><strong>Tên địa phương:</strong> {selected[0].localName ?? 'Chưa có'}</div>
+                        <div><strong>Tên khoa học:</strong> {selected[0].scientificName ?? 'Chưa có'}</div>
                         <div><strong>Mô tả:</strong> {selected[0].description}</div>
                         <div><strong>Ngày sinh:</strong> {selected[0].doB}</div>
                       </div>
@@ -192,7 +197,8 @@ const CreateExperimentStep2 = () => {
                     {selected[1] && (
                       <div className="p-4 border rounded-lg bg-gray-50">
                         <h4 className="font-semibold mb-2">Cây cha</h4>
-                        <div><strong>Tên:</strong> {selected[1].name}</div>
+                        <div><strong>Tên địa phương:</strong> {selected[1].localName ?? 'Chưa có'}</div>
+                        <div><strong>Tên khoa học:</strong> {selected[1].scientificName ?? 'Chưa có'}</div>
                         <div><strong>Mô tả:</strong> {selected[1].description}</div>
                         <div><strong>Ngày sinh:</strong> {selected[1].doB}</div>
                       </div>
@@ -224,13 +230,13 @@ const CreateExperimentStep2 = () => {
                   <div className="text-sm text-orange-700 space-y-1">
                     {methodType === 'Clonal' && (
                       selected[0]
-                        ? <div>• {selected[0].name}</div>
+                        ? <div>• {selected[0].localName ?? selected[0].scientificName ?? 'Chưa có tên'}</div>
                         : "Chưa chọn cây mẹ."
                     )}
                     {methodType === 'Sexual' && (
                       <>
-                        <div><strong>Mẹ:</strong> {selected[0]?.name ?? 'Chưa chọn'}</div>
-                        <div><strong>Cha:</strong> {selected[1]?.name ?? 'Chưa chọn'}</div>
+                        <div><strong>Mẹ:</strong> {selected[0]?.localName ?? selected[0]?.scientificName ?? 'Chưa chọn'}</div>
+                        <div><strong>Cha:</strong> {selected[1]?.localName ?? selected[1]?.scientificName ?? 'Chưa chọn'}</div>
                       </>
                     )}
                   </div>
