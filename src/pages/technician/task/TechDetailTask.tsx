@@ -45,7 +45,6 @@ const TechDetailTask: React.FC = () => {
   // Report popup states
   const [showReportPopup, setShowReportPopup] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState("");
   const [reportInformation, setReportInformation] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [submittingReport, setSubmittingReport] = useState(false);
@@ -201,7 +200,6 @@ const TechDetailTask: React.FC = () => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      setFileName(file.name);
       
       // Tạo preview URL
       const url = URL.createObjectURL(file);
@@ -211,7 +209,7 @@ const TechDetailTask: React.FC = () => {
 
   // Xử lý gửi báo cáo
   const handleSubmitReport = async () => {
-    if (!selectedFile || !fileName || !reportInformation || !taskData?.id) {
+    if (!selectedFile || !reportInformation || !taskData?.id) {
       enqueueSnackbar('Vui lòng điền đầy đủ thông tin báo cáo', { variant: 'error' });
       return;
     }
@@ -219,36 +217,30 @@ const TechDetailTask: React.FC = () => {
     try {
       setSubmittingReport(true);
       
-      // Convert file to base64
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const fileStream = reader.result as string;
-        
-        const reportData = {
-          id: taskData.id,
-          fileStream: fileStream.split(',')[1], // Remove data:image/...;base64, prefix
-          fileName: fileName,
-          reportInformation: reportInformation
-        };
+      // Tạo FormData để gửi file
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      formData.append('description', reportInformation);
+      formData.append('taskid', taskData.id);
 
-        // Gửi báo cáo
-        await axiosInstance.put('/api/tasks/update-report-task', reportData);
-        
-        // Sau khi gửi báo cáo thành công, cập nhật status
-        const status = isTaskLate() ? 4 : 3; // 4 = DoneInLate, 3 = DoneInTime
-        await updateTaskStatus(status);
-        
-        // Đóng popup và reset form
-        setShowReportPopup(false);
-        setSelectedFile(null);
-        setFileName("");
-        setReportInformation("");
-        setPreviewUrl(null);
-        
-        enqueueSnackbar('Báo cáo đã được gửi thành công!', { variant: 'success' });
-      };
+      // Gửi báo cáo
+      await axiosInstance.put('/api/tasks/update-report-task', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       
-      reader.readAsDataURL(selectedFile);
+      // Sau khi gửi báo cáo thành công, cập nhật status
+      const status = isTaskLate() ? 4 : 3; // 4 = DoneInLate, 3 = DoneInTime
+      await updateTaskStatus(status);
+      
+      // Đóng popup và reset form
+      setShowReportPopup(false);
+      setSelectedFile(null);
+      setReportInformation("");
+      setPreviewUrl(null);
+      
+      enqueueSnackbar('Báo cáo đã được gửi thành công!', { variant: 'success' });
     } catch (err) {
       console.error('Error submitting report:', err);
       enqueueSnackbar('Không thể gửi báo cáo', { variant: 'error' });
@@ -261,7 +253,6 @@ const TechDetailTask: React.FC = () => {
   const handleClosePopup = () => {
     setShowReportPopup(false);
     setSelectedFile(null);
-    setFileName("");
     setReportInformation("");
     setPreviewUrl(null);
   };
@@ -520,7 +511,7 @@ const TechDetailTask: React.FC = () => {
                   className="w-full p-2 border border-gray-300 rounded-md"
                 />
                 {selectedFile && (
-                  <p className="text-sm text-gray-600 mt-1">Đã chọn: {fileName}</p>
+                  <p className="text-sm text-gray-600 mt-1">Đã chọn: {selectedFile.name}</p>
                 )}
               </div>
 
@@ -538,17 +529,7 @@ const TechDetailTask: React.FC = () => {
                 </div>
               )}
 
-              {/* File Name */}
-              <div>
-                <label className="block font-medium mb-2">Tên file *</label>
-                <input
-                  type="text"
-                  value={fileName}
-                  onChange={(e) => setFileName(e.target.value)}
-                  placeholder="Nhập tên file..."
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                />
-              </div>
+
 
               {/* Report Information */}
               <div>
@@ -583,7 +564,7 @@ const TechDetailTask: React.FC = () => {
               </button>
               <button
                 onClick={handleSubmitReport}
-                disabled={submittingReport || !selectedFile || !fileName || !reportInformation}
+                disabled={submittingReport || !selectedFile || !reportInformation}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submittingReport ? 'Đang gửi...' : 'Gửi báo cáo'}

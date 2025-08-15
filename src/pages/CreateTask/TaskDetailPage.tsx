@@ -29,6 +29,8 @@ interface AssignDTO {
 interface TaskData {
   value: string;
   id: string;
+  experimentLogName: string; // Thêm field mới
+  sampleName: string;        // Thêm field mới
   researcher: string;
   assignDTOs: AssignDTO[];
   name: string;
@@ -48,36 +50,33 @@ const TaskDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Sửa lại phần fetchTaskDetail trong useEffect
+  useEffect(() => {
+    const fetchTaskDetail = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get(`/api/tasks/${id}`);
 
-useEffect(() => {
-  const fetchTaskDetail = async () => {
-    if (!id) return;
-    
-    try {
-      setLoading(true);
-      const response = await axiosInstance.get(`/api/tasks/${id}`);
-
-      // Sửa lại cách truy xuất dữ liệu từ response
-      if (response.data && response.data.value) {
-        console.log('API Response:', response.data.value); // Debug log
-        setTaskData(response.data.value); // Lấy data từ response.data.value
-      } else {
-        console.error('Invalid response structure:', response.data); // Debug log
-        throw new Error('No data received');
+        if (response.data && response.data.value) {
+          console.log('API Response:', response.data.value);
+          setTaskData(response.data.value);
+        } else {
+          console.error('Invalid response structure:', response.data);
+          throw new Error('No data received');
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Đã xảy ra lỗi khi tải dữ liệu';
+        setError(errorMessage);
+        enqueueSnackbar('Không thể tải chi tiết nhiệm vụ', { variant: 'error' });
+        console.error('Error fetching task detail:', err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Đã xảy ra lỗi khi tải dữ liệu';
-      setError(errorMessage);
-      enqueueSnackbar('Không thể tải chi tiết nhiệm vụ', { variant: 'error' });
-      console.error('Error fetching task detail:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchTaskDetail();
-}, [id, enqueueSnackbar]);
+    fetchTaskDetail();
+  }, [id, enqueueSnackbar]);
 
   const handleBack = (): void => {
     void navigate("/tasks");
@@ -203,6 +202,22 @@ useEffect(() => {
             <label className="font-medium mb-1.5">Tên researcher</label>
             <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
               {taskData.researcher}
+            </div>
+          </div>
+        </div>
+
+        {/* Thêm field mới */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="flex flex-col">
+            <label className="font-medium mb-1.5">Tên nhật ký thí nghiệm</label>
+            <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+              {taskData.experimentLogName}
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <label className="font-medium mb-1.5">Tên cây giống</label>
+            <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+              {taskData.sampleName}
             </div>
           </div>
         </div>
