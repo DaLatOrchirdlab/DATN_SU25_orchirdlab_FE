@@ -17,7 +17,6 @@ import SeedlingDetail from "./pages/seedling/SeedlingDetail";
 
 import { SeedlingFormProvider } from "./context/SeedlingFormContext";
 import CreateTaskContainer from "./pages/CreateTask/Form/CreateTaskContainer";
-import AutoCreateTaskContainer from "./pages/CreateTask/Form/AutoCreateTaskContainer";
 import SelectTechnicianContainer from "./pages/CreateTask/Form/SelectTechnicianContainer";
 import ConfirmTaskContainer from "./pages/CreateTask/Form/ConfirmTaskContainer";
 import TaskDetailPage from "./pages/CreateTask/TaskDetailPage";
@@ -59,6 +58,13 @@ import AdminExperimentLogDetail from "./pages/AdminExperimentLogDetail";
 import AdminLabRoomList from "./pages/AdminLabRoomList";
 import AdminLabRoomCreate from "./pages/AdminLabRoomCreate";
 import AdminLabRoomDetail from "./pages/AdminLabRoomDetail";
+import AdminSeedlings from "./pages/seedling/adminRole/AdminSeedlings";
+import AdminSeedlingDetail from "./pages/seedling/adminRole/AdminSeedlingDetail";
+import AdminMethodDetail from "./pages/method/adminRole/AdminMethodDetail";
+import AdminMethod from "./pages/method/adminRole/AdminMethod";
+import AdminReport from "./pages/reports/adminRole/AdminReports";
+import AdminReportsDetails from "./pages/reports/adminRole/AdminReportsDetails";
+import AdminElement from "./pages/element/adminRole/AdminElement";
 
 function AppLayout() {
   const { user, isAuthReady } = useAuth();
@@ -70,6 +76,8 @@ function AppLayout() {
   let sidebar = <Sidebar />;
   if (user?.roleID === 1) sidebar = <SidebarAdmin />;
   else if (user?.roleID === 3) sidebar = <SidebarTechnician />;
+
+  console.log("Current user role:", user?.roleID);
 
   if (!isAuthReady) {
     return <div>Đang tải...</div>;
@@ -330,6 +338,62 @@ function AppLayout() {
               element={
                 <ProtectedRoute requiredRole={1}>
                   <AdminLabRoomDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/seedling"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminSeedlings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/seedling/:id"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminSeedlingDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/method"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminMethod />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/method/:id"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminMethodDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/report"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminReport />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/report/:id"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminReportsDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/element"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminElement />
                 </ProtectedRoute>
               }
             />
