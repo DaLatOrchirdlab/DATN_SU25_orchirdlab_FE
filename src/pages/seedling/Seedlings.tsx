@@ -32,6 +32,12 @@ export default function Seedlings() {
     void fetchData();
   }, []);
 
+  const getSeedlingNameById = (id: string | null) => {
+    if (!id) return "";
+    const found = allSeedlings.find((s) => s.id === id);
+    return found ? found.localName : id;
+  };
+
   const filteredSeedlings = allSeedlings.filter((s) => {
     // Lọc theo tên, mô tả, cây bố mẹ (chỉ dùng parent1, parent2)
     const searchMatch =
@@ -170,10 +176,10 @@ export default function Seedlings() {
                     {s.localName}
                   </td>
                   <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                    {s.parent1 || ""}
+                    {getSeedlingNameById(s.parent1)}
                   </td>
                   <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                    {s.parent2 || ""}
+                    {getSeedlingNameById(s.parent2)}
                   </td>
                   <td className="px-4">{s.doB}</td>
                   <td className="px-4">

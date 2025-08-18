@@ -50,8 +50,8 @@ export default function SeedlingSummary() {
       localName: form.localName,
       scientificName: form.scientificName,
       description: form.description,
-      motherID: mother?.id,
-      fatherID: father?.id,
+      motherID: form.motherID,
+      fatherID: form.fatherID,
       doB: form.doB,
       characteristics: (form.characteristics || []).map(
         (c: SeedlingCharacteristic) => ({
@@ -76,6 +76,7 @@ export default function SeedlingSummary() {
       setLoading(false);
     }
   }
+  console.log("Form Data:", form);
 
   return (
     <main className="ml-0 sm:ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 px-2 sm:px-4 md:px-8">
