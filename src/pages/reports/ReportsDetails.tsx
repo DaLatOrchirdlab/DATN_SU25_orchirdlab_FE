@@ -12,6 +12,14 @@ interface Sample {
   statusEnum: string;
 }
 
+interface AnalyzeResult {
+  stage: string;
+  disease: {
+    predict: string;
+    probability: Record<string, number>;
+  };
+}
+
 export default function ReportsDetails() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -20,6 +28,52 @@ export default function ReportsDetails() {
   const [sample, setSample] = useState<Sample | null>(null);
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedImg, setSelectedImg] = useState<string | null>(null);
+  const [analyzeResult, setAnalyzeResult] = useState<AnalyzeResult | null>(
+    null
+  );
+  const [analyzeLoading, setAnalyzeLoading] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+
+  const diseaseNameMap: Record<string, string> = {
+    Anthracnose: "Thán thư",
+    "Bacterial Wilt": "Héo vi khuẩn",
+    Blackrot: "Thối đen",
+    Brownspots: "Đốm nâu",
+    "Mold Bacterial": "Mốc vi khuẩn",
+    "Mold Fungus": "Mốc nấm",
+    "Soft Rot": "Thối mềm",
+    "Stem Rot": "Thối thân",
+    "Withered Yellow Root": "Vàng rễ héo",
+    healthy: "Khỏe mạnh",
+    Oxidation: "Oxy hóa",
+    Virus: "Virus",
+  };
+
+  const stageNameMap: Record<string, string> = {
+    coppice: "Giai đoạn chồi",
+    tree: "Giai đoạn cây con",
+  };
+
+  const predictNameMap: Record<string, string> = {
+    brownspots: "Đốm nâu",
+    anthracnose: "Thán thư",
+    blackrot: "Thối đen",
+    bacterialwilt: "Héo vi khuẩn",
+    moldbacterial: "Mốc vi khuẩn",
+    moldfungus: "Mốc nấm",
+    softrot: "Thối mềm",
+    stemrot: "Thối thân",
+    witheredyellowroot: "Vàng rễ héo",
+    healthy: "Khỏe mạnh",
+    oxidation: "Oxy hóa",
+    virus: "Virus",
+  };
+
+  function getPredictVietnamese(predict: string) {
+    const key = predict.replace(/^disease_/, "").toLowerCase();
+    return predictNameMap[key] || predict;
+  }
 
   useEffect(() => {
     if (!id) return;
@@ -57,7 +111,27 @@ export default function ReportsDetails() {
     };
     void fetchDetail();
   }, [id]);
-  console.log("Images:", images);
+
+  const analyzeImageFromUrl = async (imgUrl: string) => {
+    setAnalyzeLoading(true);
+    setAnalyzeError(null);
+    setAnalyzeResult(null);
+    try {
+      const response = await fetch(imgUrl);
+      const blob = await response.blob();
+      const file = new File([blob], "image.jpg", { type: blob.type });
+      const formData = new FormData();
+      formData.append("imageFile", file);
+      const res = await axiosInstance.post("/api/disease/analyze", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setAnalyzeResult(res.data as AnalyzeResult);
+    } catch {
+      setAnalyzeError("Phân tích thất bại. Vui lòng thử lại.");
+    } finally {
+      setAnalyzeLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -143,23 +217,74 @@ export default function ReportsDetails() {
             </div>
           </div>
           {/* Hình ảnh đính kèm nếu có */}
-          {images.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-semibold text-green-800 mb-2">
-                Hình ảnh đính kèm
-              </h3>
-              <div className="flex gap-4 flex-wrap">
-                {images.map((img, idx) => (
-                  <img
-                    key={idx}
-                    src={img}
-                    alt={`report-img-${idx}`}
-                    className="w-32 h-32 object-cover rounded border"
-                  />
-                ))}
-              </div>
+          <div className="mb-6">
+            <h3 className="font-semibold text-green-800 mb-2">
+              Hình ảnh đính kèm
+            </h3>
+            <div className="flex gap-4 flex-wrap">
+              {images.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`report-img-${idx}`}
+                  className={`w-32 h-32 object-cover rounded border cursor-pointer transition
+          ${
+            selectedImg === img
+              ? "border-4 border-green-600 scale-105"
+              : "border"
+          }
+        `}
+                  onClick={() => setSelectedImg(img)}
+                />
+              ))}
             </div>
-          )}
+            {selectedImg && (
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  type="button"
+                  className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 transition"
+                  disabled={!selectedImg || analyzeLoading}
+                  onClick={() => void analyzeImageFromUrl(selectedImg)}
+                >
+                  {analyzeLoading ? "Đang phân tích..." : "Phân tích bệnh"}
+                </button>
+                <span className="text-sm text-gray-500">
+                  * Chọn ảnh rồi nhấn để phân tích
+                </span>
+              </div>
+            )}
+            {analyzeError && (
+              <div className="text-red-600 mt-2">{analyzeError}</div>
+            )}
+            {analyzeResult && (
+              <div className="mt-4 bg-gray-50 p-4 rounded">
+                <div className="font-semibold mb-2 text-green-700">
+                  Kết quả phân tích
+                </div>
+                <div className="mb-2">
+                  <span className="font-semibold">Giai đoạn:</span>{" "}
+                  {stageNameMap[analyzeResult.stage] || analyzeResult.stage}
+                </div>
+                <div className="mb-2">
+                  <span className="font-semibold">Dự đoán bệnh:</span>{" "}
+                  {getPredictVietnamese(analyzeResult.disease.predict)}
+                </div>
+                <div>
+                  <span className="font-semibold">Xác suất các bệnh:</span>
+                  <ul className="mt-2">
+                    {Object.entries(analyzeResult.disease.probability)
+                      .filter(([, value]) => value > 0.0001)
+                      .map(([key, value]) => (
+                        <li key={key} className="flex justify-between">
+                          <span>{diseaseNameMap[key] || key}</span>
+                          <span>{(value * 100).toFixed(2)}%</span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         {/* Thông tin mẫu vật */}
         <div className="bg-white rounded-xl shadow p-8">
