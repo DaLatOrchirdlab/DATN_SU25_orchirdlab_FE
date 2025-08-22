@@ -7,7 +7,6 @@ import type {
   SeedlingCharacteristic,
 } from "../../types/Seedling";
 import { useEffect, useState } from "react";
-import { FaCheckCircle } from "react-icons/fa";
 import axiosInstance from "../../api/axiosInstance";
 export default function SeedlingSummary() {
   const navigate = useNavigate();
@@ -15,7 +14,6 @@ export default function SeedlingSummary() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [seedlings, setSeedlings] = useState<Seedling[]>([]);
-  const [showSuccess, setShowSuccess] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
@@ -39,9 +37,6 @@ export default function SeedlingSummary() {
   const father = seedlings.find((s) => String(s.id) === String(form.fatherID));
   const mother = seedlings.find((s) => String(s.id) === String(form.motherID));
 
-  console.log("Father ID:", father?.id);
-  console.log("Mother ID:", mother?.id);
-
   async function handleCreate() {
     setLoading(true);
     setError("");
@@ -50,8 +45,8 @@ export default function SeedlingSummary() {
       localName: form.localName,
       scientificName: form.scientificName,
       description: form.description,
-      motherID: mother?.id,
-      fatherID: father?.id,
+      motherID: form.motherID,
+      fatherID: form.fatherID,
       doB: form.doB,
       characteristics: (form.characteristics || []).map(
         (c: SeedlingCharacteristic) => ({
@@ -66,8 +61,8 @@ export default function SeedlingSummary() {
     try {
       const res = await axiosInstance.post("/api/seedling", payload);
       if (!res.data) throw new Error("Tạo cây giống thất bại");
-      setShowSuccess(true);
       enqueueSnackbar("Tạo cây giống thành công!", { variant: "success" });
+      void navigate("/seedlings");
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : "Có lỗi xảy ra";
       setError(errMsg ?? "Có lỗi xảy ra");
@@ -76,6 +71,7 @@ export default function SeedlingSummary() {
       setLoading(false);
     }
   }
+  console.log("Form Data:", form);
 
   return (
     <main className="ml-0 sm:ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 px-2 sm:px-4 md:px-8">
@@ -115,8 +111,7 @@ export default function SeedlingSummary() {
             <thead>
               <tr className="bg-green-50 text-green-800 font-semibold">
                 <th className="py-2">Thuộc tính</th>
-                <th className="py-2">Giá trị</th>
-                <th className="py-2">Đơn vị</th>
+                <th className="py-2">Mô tả</th>
               </tr>
             </thead>
             <tbody>
@@ -124,7 +119,6 @@ export default function SeedlingSummary() {
                 (c: SeedlingCharacteristic, idx: number) => (
                   <tr key={idx} className="border-t text-center">
                     <td className="py-2 px-4">{c.seedlingAttribute.name}</td>
-                    <td className="py-2 px-4">{c.value}</td>
                     <td className="py-2 px-4">
                       {c.seedlingAttribute.description}
                     </td>
@@ -153,24 +147,6 @@ export default function SeedlingSummary() {
           </button>
         </div>
       </div>
-
-      {showSuccess && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded shadow-lg p-8 min-w-[320px] flex flex-col items-center">
-            <FaCheckCircle className="text-green-600 text-5xl mb-4" />
-            <div className="text-green-700 text-2xl font-bold mb-4">
-              Tạo cây giống thành công!
-            </div>
-            <button
-              type="button"
-              className="bg-green-800 text-white px-6 py-2 rounded font-semibold hover:bg-green-900 transition"
-              onClick={() => void navigate("/seedlings")}
-            >
-              Trở về danh sách
-            </button>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

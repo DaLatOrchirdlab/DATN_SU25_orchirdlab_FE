@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import type { Element } from "../../types/Element";
 import { Select } from "antd";
-import type { Referent, ReferentApiResponse } from "../../types/Referent";
+import type { Referent } from "../../types/Referent";
 import { useSnackbar } from "notistack";
 
 const methodTypes = [
@@ -41,7 +41,6 @@ export default function MethodCreate() {
       } as StageForm,
     ],
   });
-  const [referentOptions, setReferentOptions] = useState<Referent[]>([]);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
@@ -60,18 +59,6 @@ export default function MethodCreate() {
       }
     };
     void fetchElements();
-    const fetchReferents = async () => {
-      try {
-        const res = await axiosInstance.get(
-          "https://net-api.orchid-lab.systems/api/referents?pageNumber=1&pageSize=100"
-        );
-        const referentsData = res.data as ReferentApiResponse;
-        setReferentOptions(referentsData.value.data || []);
-      } catch {
-        setReferentOptions([]);
-      }
-    };
-    void fetchReferents();
   }, []);
 
   const handleChange = (
@@ -309,14 +296,16 @@ export default function MethodCreate() {
                 className="mb-6 border p-4 rounded bg-gray-50"
               >
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold">Bước {stageIdx + 1}</span>
+                  <span className="font-semibold">
+                    Giai đoạn {stageIdx + 1}
+                  </span>
                   {form.stages.length > 1 && (
                     <button
                       type="button"
                       className="text-red-600 hover:underline"
                       onClick={() => handleRemoveStage(stageIdx)}
                     >
-                      Xóa bước
+                      Xóa giai đoạn
                     </button>
                   )}
                 </div>
@@ -325,7 +314,7 @@ export default function MethodCreate() {
                   onChange={(e) =>
                     handleStageChange(stageIdx, "title", e.target.value)
                   }
-                  placeholder="Tên bước"
+                  placeholder="Tên giai đoạn"
                   required
                   className="mb-2 w-full border px-3 py-2 rounded"
                 />
@@ -335,13 +324,13 @@ export default function MethodCreate() {
                   onChange={(e) =>
                     handleStageChange(stageIdx, "content", e.target.value)
                   }
-                  placeholder="Mô tả bước"
+                  placeholder="Mô tả giai đoạn"
                   required
                   className="mb-2 w-full border px-3 py-2 rounded"
                 />
                 {error && <p className="text-red-500">{error}</p>}
                 <label className="block font-semibold mb-1">
-                  Chọn nguyên vật liệu cho bước này
+                  Chọn nguyên vật liệu cho giai đoạn này
                 </label>
                 <Select
                   mode="multiple"
@@ -362,7 +351,7 @@ export default function MethodCreate() {
                   </label>
                   {stage.referents.map((ref, refIdx) => (
                     <div key={refIdx} className="flex gap-2 mb-2 items-center">
-                      {/* <input
+                      <input
                         value={ref.name}
                         onChange={(e) =>
                           handleReferentChange(
@@ -375,8 +364,8 @@ export default function MethodCreate() {
                         placeholder="Tên"
                         required
                         className="border px-2 py-1 rounded"
-                      /> */}
-                      <Select
+                      />
+                      {/* <Select
                         showSearch
                         style={{ minWidth: 180, marginRight: 8 }}
                         placeholder="Chọn tham chiếu"
@@ -396,7 +385,7 @@ export default function MethodCreate() {
                           label: r.name,
                           value: r.id,
                         }))}
-                      />
+                      /> */}
                       {error && <p className="text-red-500">{error}</p>}
                       <input
                         type="text"
@@ -465,10 +454,10 @@ export default function MethodCreate() {
                   ))}
                   <button
                     type="button"
-                    className="text-green-700 hover:underline"
+                    className="text-green-700 hover:underline cursor-pointer"
                     onClick={() => handleAddReferent(stageIdx)}
                   >
-                    Thêm referent
+                    Thêm thông tin tham chiếu
                   </button>
                 </div>
               </div>
@@ -478,7 +467,7 @@ export default function MethodCreate() {
               className="bg-green-100 cursor-pointer text-green-800 px-4 py-1 rounded font-semibold hover:bg-green-200 transition"
               onClick={handleAddStage}
             >
-              + Thêm bước
+              + Thêm giai đoạn
             </button>
           </div>
           <button

@@ -29,7 +29,7 @@ export default function Login() {
         user: data.user,
       });
       if (data.user.roleID === 1) {
-        void navigate("/dashboard");
+        void navigate("/admin/user");
       } else if (data.user.roleID === 2) {
         void navigate("/method");
       } else if (data.user.roleID === 3) {

@@ -43,6 +43,9 @@ export default function Method() {
     void fetchData();
   }, [page]);
 
+  const clonalCount = data.filter((m) => m.type === "Clonal").length;
+  const sexualCount = data.filter((m) => m.type === "Sexual").length;
+
   const filtered = data.filter(
     (m) =>
       (filterType === "" ||
@@ -152,30 +155,6 @@ export default function Method() {
                 </tr>
               ))
             )}
-
-            {/* {paginated.map((m) => (
-              <tr key={m.id} className="border-t hover:bg-green-50">
-                <td className="py-3 px-4">{m.id}</td>
-                <td className="px-4">{m.name}</td>
-                <td className="px-4">{m.type}</td>
-                <td className="px-4">
-                  <button
-                    type="button"
-                    className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
-                    onClick={() => void navigate(`/method/${m.id}`)} // Nếu có trang chi tiết
-                  >
-                    Chi tiết
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {paginated.length === 0 && (
-              <tr>
-                <td colSpan={4} className="text-center py-8 text-gray-400">
-                  Không có phương pháp nào phù hợp.
-                </td>
-              </tr>
-            )} */}
           </tbody>
         </table>
       </div>
@@ -186,6 +165,18 @@ export default function Method() {
             Tổng số phương pháp
           </div>
           <div className="text-2xl font-bold text-green-800">{total}</div>
+        </div>
+        <div className="bg-green-100 rounded p-4 w-1/4">
+          <div className="font-semibold text-green-800">
+            Phương pháp vô tính
+          </div>
+          <div className="text-2xl font-bold text-green-800">{clonalCount}</div>
+        </div>
+        <div className="bg-green-100 rounded p-4 w-1/4">
+          <div className="font-semibold text-green-800">
+            Phương pháp hữu tính
+          </div>
+          <div className="text-2xl font-bold text-green-800">{sexualCount}</div>
         </div>
       </div>
       {/* Pagination */}

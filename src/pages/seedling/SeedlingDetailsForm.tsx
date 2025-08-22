@@ -105,7 +105,7 @@ export default function SeedlingDetailsForm() {
               >
                 <option value="">Chọn cây giống 1</option>
                 {seedlings.map((p) => (
-                  <option key={p.id} value={p.localName}>
+                  <option key={p.id} value={p.id}>
                     {p.localName}
                   </option>
                 ))}
@@ -126,7 +126,7 @@ export default function SeedlingDetailsForm() {
               >
                 <option value="">Chọn cây giống 2</option>
                 {seedlings.map((p) => (
-                  <option key={p.id} value={p.localName}>
+                  <option key={p.id} value={p.id}>
                     {p.localName}
                   </option>
                 ))}

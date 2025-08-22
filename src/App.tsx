@@ -28,7 +28,6 @@ import { ExperimentLogFormProvider } from "./context/ExperimentLogFormContext";
 import ProfilePage from "./pages/ProfilePage";
 import MethodDetail from "./pages/method/MethodDetail";
 import MethodCreate from "./pages/method/MethodCreate";
-import Element from "./pages/element/Element";
 import SeedlingDetailsForm from "./pages/seedling/SeedlingDetailsForm";
 import SeedlingCharacteristicsForm from "./pages/seedling/SeedlingCharacteristicsForm";
 import SeedlingSummary from "./pages/seedling/SeedlingSummary";
@@ -130,7 +129,7 @@ function AppLayout() {
               }
             />
             <Route
-              path="/dashboard"
+              path="/admin/user"
               element={
                 <ProtectedRoute requiredRole={1}>
                   <DashboardAdmin />
@@ -158,14 +157,6 @@ function AppLayout() {
               element={
                 <ProtectedRoute requiredRole={2}>
                   <MethodCreate />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/element"
-              element={
-                <ProtectedRoute requiredRole={2}>
-                  <Element />
                 </ProtectedRoute>
               }
             />

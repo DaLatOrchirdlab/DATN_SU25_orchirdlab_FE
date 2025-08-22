@@ -1,18 +1,12 @@
 import { NavLink } from "react-router-dom";
-import {
-  FaFlask,
-  FaTasks,
-  FaBook,
-  FaSeedling,
-  FaChartBar,
-} from "react-icons/fa";
+import { FaTasks, FaBook, FaSeedling, FaChartBar } from "react-icons/fa";
+import { PiBlueprintFill } from "react-icons/pi";
 
 const tabs = [
-  { name: "Phương pháp lai", path: "/method", icon: <FaFlask /> },
+  { name: "Phương pháp lai", path: "/method", icon: <PiBlueprintFill /> },
   { name: "Nhiệm vụ", path: "/tasks", icon: <FaTasks /> },
   { name: "Nhật ký thí nghiệm", path: "/experiment-log", icon: <FaBook /> },
   { name: "Cây giống", path: "/seedlings", icon: <FaSeedling /> },
-  { name: "Nguyên vật liệu", path: "/element", icon: <FaFlask /> },
   { name: "Báo cáo", path: "/reports", icon: <FaChartBar /> },
 ];
 

@@ -3,6 +3,7 @@ export interface Element {
   name: string;
   description?: string;
   status?: boolean;
+  currentInStage: number;
 }
 
 export interface ElementApiResponse {

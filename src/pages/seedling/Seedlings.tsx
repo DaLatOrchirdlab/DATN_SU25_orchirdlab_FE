@@ -22,7 +22,7 @@ export default function Seedlings() {
           "https://net-api.orchid-lab.systems/api/seedling?pageNumber=1&pageSize=1000"
         );
         const allJson = allRes.data as SeedlingApiResponse;
-        setAllSeedlings(allJson.value.data || []);
+        setAllSeedlings((allJson.value.data || []).reverse());
       } catch {
         setAllSeedlings([]);
       } finally {
@@ -32,23 +32,31 @@ export default function Seedlings() {
     void fetchData();
   }, []);
 
-  const filteredSeedlings = allSeedlings.filter((s) => {
-    // Lọc theo tên, mô tả, cây bố mẹ (chỉ dùng parent1, parent2)
-    const searchMatch =
-      !searchTerm ||
-      s.localName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.parent1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.parent2?.toLowerCase().includes(searchTerm.toLowerCase());
+  const getSeedlingNameById = (id: string | null) => {
+    if (!id) return "";
+    const found = allSeedlings.find((s) => s.id === id);
+    return found ? found.localName : id;
+  };
 
-    const motherMatch =
-      !byMother || s.parent1?.toLowerCase().includes(byMother.toLowerCase());
+  const filteredSeedlings = allSeedlings
+    .filter((s) => s.delete_date !== null)
+    .filter((s) => {
+      // Lọc theo tên, mô tả, cây bố mẹ (chỉ dùng parent1, parent2)
+      const searchMatch =
+        !searchTerm ||
+        s.localName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.parent1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.parent2?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const fatherMatch =
-      !byFather || s.parent2?.toLowerCase().includes(byFather.toLowerCase());
+      const motherMatch =
+        !byMother || s.parent1?.toLowerCase().includes(byMother.toLowerCase());
 
-    return searchMatch && motherMatch && fatherMatch;
-  });
+      const fatherMatch =
+        !byFather || s.parent2?.toLowerCase().includes(byFather.toLowerCase());
+
+      return searchMatch && motherMatch && fatherMatch;
+    });
 
   const total = filteredSeedlings.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -170,10 +178,10 @@ export default function Seedlings() {
                     {s.localName}
                   </td>
                   <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                    {s.parent1 || ""}
+                    {getSeedlingNameById(s.parent1)}
                   </td>
                   <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                    {s.parent2 || ""}
+                    {getSeedlingNameById(s.parent2)}
                   </td>
                   <td className="px-4">{s.doB}</td>
                   <td className="px-4">
