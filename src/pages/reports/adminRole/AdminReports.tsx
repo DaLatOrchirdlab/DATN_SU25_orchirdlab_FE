@@ -96,8 +96,8 @@ export default function AdminReport() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-green-50 text-green-800 font-semibold">
-                <th className="py-3 px-4">ID</th>
-                <th className="px-4">Tên task</th>
+                <th className="py-3 px-4">Tên task</th>
+                <th className="px-4">Mô tả</th>
                 <th className="px-4">Người viết</th>
                 <th className="px-4">Hành động</th>
               </tr>
@@ -130,8 +130,8 @@ export default function AdminReport() {
               ) : (
                 filteredReports.map((r) => (
                   <tr key={r.id} className="border-t">
-                    <td className="py-3 px-4">{r.id}</td>
-                    <td className="px-4">{r.name}</td>
+                    <td className="py-3 px-4">{r.name}</td>
+                    <td className="px-4">{r.description}</td>
                     <td className="px-4">{r.technician}</td>
                     <td className="px-4">
                       <button

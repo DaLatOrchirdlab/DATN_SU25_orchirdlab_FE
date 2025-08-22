@@ -57,7 +57,18 @@ export default function AdminReportsDetails() {
     };
     void fetchDetail();
   }, [id]);
-  console.log("Images:", images);
+
+  const getStatusDisplay = (status?: string) => {
+    if (!status) return "Chưa xác định";
+
+    const statusMap: Record<string, string> = {
+      Process: "Đang xử lý",
+      Suspended: "Tạm dừng",
+      Destroyed: "Đã hủy",
+    };
+
+    return statusMap[status] || status;
+  };
 
   if (loading) {
     return (
@@ -173,12 +184,6 @@ export default function AdminReportsDetails() {
                 <div className="text-lg">{sample.name}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 mb-1">
-                  ID mẫu vật
-                </div>
-                <div>{sample.id}</div>
-              </div>
-              <div>
                 <div className="font-semibold text-gray-700 mb-1">Ngày tạo</div>
                 <div>
                   {sample.dob ? new Date(sample.dob).toLocaleDateString() : ""}
@@ -189,13 +194,17 @@ export default function AdminReportsDetails() {
                   Trạng thái
                 </div>
                 <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                    sample.statusEnum === "Active"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-200 text-gray-700"
+                  className={`px-2 py-1 rounded-full font-semibold text-xs ${
+                    sample.statusEnum === "Process"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : sample.statusEnum === "Suspended"
+                      ? "bg-green-100 text-gray-800"
+                      : sample.statusEnum === "Destroyed"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {sample.statusEnum}
+                  {getStatusDisplay(sample.statusEnum)}
                 </span>
               </div>
               <div className="md:col-span-2">
