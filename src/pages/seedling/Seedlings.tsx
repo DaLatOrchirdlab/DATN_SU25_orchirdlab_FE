@@ -22,7 +22,7 @@ export default function Seedlings() {
           "https://net-api.orchid-lab.systems/api/seedling?pageNumber=1&pageSize=1000"
         );
         const allJson = allRes.data as SeedlingApiResponse;
-        setAllSeedlings(allJson.value.data || []);
+        setAllSeedlings((allJson.value.data || []).reverse());
       } catch {
         setAllSeedlings([]);
       } finally {
@@ -38,23 +38,25 @@ export default function Seedlings() {
     return found ? found.localName : id;
   };
 
-  const filteredSeedlings = allSeedlings.filter((s) => {
-    // Lọc theo tên, mô tả, cây bố mẹ (chỉ dùng parent1, parent2)
-    const searchMatch =
-      !searchTerm ||
-      s.localName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.parent1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.parent2?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredSeedlings = allSeedlings
+    .filter((s) => s.delete_date !== null)
+    .filter((s) => {
+      // Lọc theo tên, mô tả, cây bố mẹ (chỉ dùng parent1, parent2)
+      const searchMatch =
+        !searchTerm ||
+        s.localName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.parent1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.parent2?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const motherMatch =
-      !byMother || s.parent1?.toLowerCase().includes(byMother.toLowerCase());
+      const motherMatch =
+        !byMother || s.parent1?.toLowerCase().includes(byMother.toLowerCase());
 
-    const fatherMatch =
-      !byFather || s.parent2?.toLowerCase().includes(byFather.toLowerCase());
+      const fatherMatch =
+        !byFather || s.parent2?.toLowerCase().includes(byFather.toLowerCase());
 
-    return searchMatch && motherMatch && fatherMatch;
-  });
+      return searchMatch && motherMatch && fatherMatch;
+    });
 
   const total = filteredSeedlings.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));

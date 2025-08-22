@@ -115,7 +115,8 @@ export default function AdminSeedlingDetail() {
                 {seedling.characteristics.map((c, idx) => (
                   // eslint-disable-next-line react-x/no-array-index-key
                   <li key={idx}>
-                    <b>{c.seedlingAttribute.name}:</b> {c.value}
+                    <b>{c.seedlingAttribute.name}:</b>{" "}
+                    {c.seedlingAttribute.description}
                   </li>
                 ))}
               </ul>

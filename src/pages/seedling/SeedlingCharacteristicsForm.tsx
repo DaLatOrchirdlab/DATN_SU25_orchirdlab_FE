@@ -6,11 +6,7 @@ import { FaPlus, FaMinus } from "react-icons/fa";
 import { useSeedlingForm } from "../../context/SeedlingFormContext";
 import type { SeedlingCharacteristic } from "../../types/Seedling";
 
-const attributeOptions = [
-  { name: "Chiều cao", description: "cm" },
-  { name: "Số lá", description: "lá" },
-  { name: "Số rễ", description: "rễ" },
-];
+const attributeOptions = [{ name: "Thân" }, { name: "Hoa" }, { name: "Lá" }];
 
 export default function SeedlingCharacteristicsForm() {
   const navigate = useNavigate();
@@ -21,20 +17,18 @@ export default function SeedlingCharacteristicsForm() {
 
   function handleChange(
     idx: number,
-    field: "name" | "description" | "value",
+    field: "name" | "description",
     value: string
   ) {
     const updated = characteristics.map((c, i) =>
       i === idx
-        ? field === "value"
-          ? { ...c, value: value === "" ? 0 : Number(value) }
-          : {
-              ...c,
-              seedlingAttribute: {
-                ...c.seedlingAttribute,
-                [field]: value,
-              },
-            }
+        ? {
+            ...c,
+            seedlingAttribute: {
+              ...c.seedlingAttribute,
+              [field]: value,
+            },
+          }
         : c
     );
     setForm({ ...form, characteristics: updated });
@@ -45,7 +39,7 @@ export default function SeedlingCharacteristicsForm() {
       ...form,
       characteristics: [
         ...(form.characteristics || []),
-        { value: 0, seedlingAttribute: { name: "", description: "" } },
+        { value: 1, seedlingAttribute: { name: "", description: "" } },
       ],
     });
   }
@@ -62,7 +56,6 @@ export default function SeedlingCharacteristicsForm() {
     characteristics.every(
       (c) =>
         c.seedlingAttribute.name &&
-        c.value !== 0 &&
         c.seedlingAttribute.description !== undefined
     );
 
@@ -114,20 +107,6 @@ export default function SeedlingCharacteristicsForm() {
                     ))}
                   </select>
                   {touched && !c.seedlingAttribute.name && (
-                    <div className="text-red-500 text-xs">Phải điền</div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1">
-                    Giá trị*
-                  </label>
-                  <input
-                    className="w-full border rounded px-2 py-1"
-                    value={c.value}
-                    onChange={(e) => handleChange(idx, "value", e.target.value)}
-                    placeholder="Value"
-                  />
-                  {touched && !c.value && (
                     <div className="text-red-500 text-xs">Phải điền</div>
                   )}
                 </div>
