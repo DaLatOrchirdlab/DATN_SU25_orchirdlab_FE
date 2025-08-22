@@ -102,7 +102,7 @@ function AppLayout() {
         <main className="flex-1 p-8">
           <Routes>
             <Route
-              path="/dashboard"
+              path="/admin/user"
               element={
                 <ProtectedRoute requiredRole={1}>
                   <DashboardAdmin />

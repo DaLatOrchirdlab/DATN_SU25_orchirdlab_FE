@@ -1,12 +1,13 @@
 import { NavLink } from "react-router-dom";
 import {
-  FaTachometerAlt,
   FaTasks,
   FaClipboardList,
   FaChartBar,
   FaFlask,
   FaSeedling,
+  FaUser,
 } from "react-icons/fa";
+import { PiBlueprintFill } from "react-icons/pi";
 import { GiMicroscope } from "react-icons/gi";
 
 export default function SidebarAdmin() {
@@ -17,7 +18,7 @@ export default function SidebarAdmin() {
       </div>
       <nav className="flex-1 py-4 text-white">
         <NavLink
-          to="/dashboard"
+          to="/admin/user"
           className={({ isActive }) =>
             `flex items-center gap-3 px-6 py-3 hover:bg-white/10 transition ${
               isActive ? "bg-white/20 font-semibold" : ""
@@ -25,9 +26,9 @@ export default function SidebarAdmin() {
           }
         >
           <span className="text-lg">
-            <FaTachometerAlt />
+            <FaUser />
           </span>
-          <span>Dashboard</span>
+          <span>Người dùng</span>
         </NavLink>
         <NavLink
           to="/admin/tasks"
@@ -90,7 +91,7 @@ export default function SidebarAdmin() {
           }
         >
           <span className="text-lg">
-            <FaFlask />
+            <PiBlueprintFill />
           </span>
           <span>Phương pháp lai</span>
         </NavLink>
