@@ -53,6 +53,7 @@ export default function ReportsDetails() {
   const stageNameMap: Record<string, string> = {
     coppice: "Giai đoạn chồi",
     tree: "Giai đoạn cây con",
+    tissue: "Giai đoạn mô",
   };
 
   const predictNameMap: Record<string, string> = {
