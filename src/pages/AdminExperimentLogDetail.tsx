@@ -9,10 +9,19 @@ interface Sample {
   statusEnum?: string;
 }
 
+interface ElementDTO {
+  id: string;
+  name: string;
+  description?: string;
+  status?: boolean;
+  currentInStage?: number;
+}
+
 interface StageDTO {
   name: string;
   description?: string;
   dateOfProcessing?: number | string;
+  elementDTO?: ElementDTO | ElementDTO[];
 }
 
 interface Hybridization {
@@ -30,6 +39,8 @@ interface ExperimentLogDetailType {
   description?: string;
   tissueCultureBatchName: string;
   createdDate?: string;
+  create_date?: string;
+  create_by?: string;
   status?: string;
   samples?: Sample[];
   stages?: StageDTO[];
@@ -62,6 +73,8 @@ const AdminExperimentLogDetail = () => {
   const [samplesLoading, setSamplesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedStage, setSelectedStage] = useState(1);
+  const [labName, setLabName] = useState<string>('Đang tải...');
+  const [creator, setCreator] = useState<string>('Đang tải...');
 
   // Fetch experiment log detail
   useEffect(() => {
@@ -73,11 +86,12 @@ const AdminExperimentLogDetail = () => {
         if (!res.ok) throw new Error('Lỗi khi lấy dữ liệu chi tiết nhật ký thí nghiệm');
         const data: unknown = await res.json();
         const logData = (data as { value?: unknown }).value ?? data;
-        if (isExperimentLogDetail(logData)) {
-          setLog(logData);
-        } else {
-          setError('Dữ liệu trả về không hợp lệ.');
-        }
+        const anyLog = logData as Record<string, unknown>;
+        const normalized: Partial<ExperimentLogDetailType> = {
+          ...(anyLog as unknown as Partial<ExperimentLogDetailType>),
+          createdDate: (anyLog.createdDate as string | undefined) ?? (anyLog.create_date as string | undefined),
+        };
+        setLog(normalized as ExperimentLogDetailType);
       })
       .catch(() => setError('Không thể tải chi tiết nhật ký thí nghiệm.'))
       .finally(() => setLoading(false));
@@ -110,6 +124,33 @@ const AdminExperimentLogDetail = () => {
       })
       .finally(() => setSamplesLoading(false));
   }, [id, log]);
+
+  // Fetch lab room name by tissueCultureBatchId (if available in value or normalized field)
+  useEffect(() => {
+    const tcbId = (log as any)?.tissueCultureBatchId ?? (log as any)?.tissueCultureBatchID;
+    if (tcbId) {
+      fetch(`https://net-api.orchid-lab.systems/api/tissue-culture-batch/${tcbId}`)
+        .then(r => r.json())
+        .then((raw: any) => {
+          const name = raw?.value?.labName ?? raw?.labName;
+          setLabName(name ?? 'Không xác định');
+        })
+        .catch(() => setLabName('Không xác định'));
+    }
+  }, [log]);
+
+  // Fetch creator by create_by
+  useEffect(() => {
+    if (log?.create_by) {
+      fetch(`https://net-api.orchid-lab.systems/api/user/${log.create_by}`)
+        .then(r => r.json())
+        .then((raw: any) => {
+          const name = raw?.value?.name ?? raw?.name;
+          setCreator(name ?? 'Không xác định');
+        })
+        .catch(() => setCreator('Không xác định'));
+    }
+  }, [log]);
 
   if (loading) return <div className="ml-64 mt-16 p-8 text-gray-500">Đang tải dữ liệu...</div>;
   if (error) return <div className="ml-64 mt-16 p-8 text-red-500">{error}</div>;
@@ -173,8 +214,11 @@ const AdminExperimentLogDetail = () => {
           <div>
             <p><b>Phương pháp:</b> {log.methodName}</p>
             <p><b>Lô thí nghiệm:</b> {log.tissueCultureBatchName}</p>
+            <p><b>Phòng thí nghiệm:</b> {labName}</p>
             <p><b>Trạng thái:</b> {getStatusDisplay(log.status)}</p>
             <p><b>Số lượng mẫu:</b> {samples.length}</p>
+            <p><b>Ngày tạo:</b> {formatDate(log.createdDate)}</p>
+            <p><b>Người tạo:</b> {creator}</p>
             {log.description && <p><b>Mô tả:</b> {log.description}</p>}
           </div>
         </div>
@@ -207,10 +251,30 @@ const AdminExperimentLogDetail = () => {
           
           <div className="mt-4 p-4 bg-gray-50 rounded border text-sm">
             <b>Chi tiết {stages[selectedStage - 1]}</b>
-            <div className="mt-2">
-              {log.stages?.[selectedStage - 1]?.description
-                ? log.stages[selectedStage - 1]?.description
-                : 'Nội dung chi tiết về giai đoạn này sẽ hiển thị ở đây...'}
+            <div className="mt-2 space-y-2">
+              <p><b>Mô tả:</b> {log.stages?.[selectedStage - 1]?.description ?? 'Không có mô tả'}</p>
+              <p><b>Ngày xử lý:</b> {log.stages?.[selectedStage - 1]?.dateOfProcessing ?? 'Chưa xác định'} ngày</p>
+              {(() => {
+                const stage = log.stages?.[selectedStage - 1];
+                if (!stage?.elementDTO) return null;
+                const elements = Array.isArray(stage.elementDTO) ? stage.elementDTO : [stage.elementDTO];
+                if (elements.length === 0) return null;
+                return (
+                  <div>
+                    <b>Nguyên vật liệu:</b>
+                    <div className="ml-4 space-y-1">
+                      {elements.map((el) => (
+                        <div key={(el as ElementDTO).id}>
+                          <p>- {(el as ElementDTO).name ?? '-'}</p>
+                          {(el as ElementDTO).description && (
+                            <p className="text-gray-600 text-sm">{(el as ElementDTO).description}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

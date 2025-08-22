@@ -20,11 +20,11 @@ const AdminLabRoomCreate: React.FC = () => {
     try {
       setSubmitting(true);
       await axiosInstance.post("/api/labroom", { name, description });
-      enqueueSnackbar("Tạo Lab Room thành công", { variant: "success" });
+              enqueueSnackbar("Tạo phòng thực nghiệm thành công", { variant: "success" });
       navigate("/admin/labroom");
     } catch (err) {
-      console.error("Create lab room error:", err);
-      enqueueSnackbar("Không thể tạo Lab Room", { variant: "error" });
+              console.error("Create lab room error:", err);
+        enqueueSnackbar("Không thể tạo phòng thực nghiệm", { variant: "error" });
     } finally {
       setSubmitting(false);
     }
@@ -33,14 +33,14 @@ const AdminLabRoomCreate: React.FC = () => {
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 p-8">
       <div className="max-w-xl mx-auto bg-white rounded shadow p-8">
-        <h1 className="text-2xl font-bold text-green-800 mb-6">Tạo Lab Room</h1>
+        <h1 className="text-2xl font-bold text-green-800 mb-6">Tạo phòng thực nghiệm</h1>
         <form onSubmit={handleCreate} className="space-y-5">
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Tên</label>
             <input
               type="text"
               className="border rounded px-3 py-2"
-              placeholder="Nhập tên lab room"
+                              placeholder="Nhập tên phòng thực nghiệm"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />

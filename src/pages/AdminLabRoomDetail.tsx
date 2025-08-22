@@ -42,7 +42,7 @@ const AdminLabRoomDetail: React.FC = () => {
           setData(res.data.value ?? null);
         }
       } catch (err) {
-        console.error("Fetch lab room detail error:", err);
+        console.error("Fetch phòng thực nghiệm detail error:", err);
         enqueueSnackbar("Không thể tải chi tiết", { variant: "error" });
       } finally {
         setLoading(false);
@@ -62,7 +62,7 @@ const AdminLabRoomDetail: React.FC = () => {
       });
       enqueueSnackbar("Cập nhật thành công", { variant: "success" });
     } catch (err) {
-      console.error("Update lab room error:", err);
+              console.error("Update phòng thực nghiệm error:", err);
       enqueueSnackbar("Không thể cập nhật", { variant: "error" });
     } finally {
       setSaving(false);
@@ -79,7 +79,7 @@ const AdminLabRoomDetail: React.FC = () => {
       enqueueSnackbar("Xóa thành công", { variant: "success" });
       navigate("/admin/labroom");
     } catch (err) {
-      console.error("Delete lab room error:", err);
+              console.error("Delete phòng thực nghiệm error:", err);
       enqueueSnackbar("Không thể xóa", { variant: "error" });
     } finally {
       setDeleting(false);
@@ -97,7 +97,7 @@ const AdminLabRoomDetail: React.FC = () => {
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 p-8">
       <div className="max-w-xl mx-auto bg-white rounded shadow p-8 space-y-5">
-        <h1 className="text-2xl font-bold text-green-800">Chi tiết Lab Room</h1>
+        <h1 className="text-2xl font-bold text-green-800">Chi tiết phòng thực nghiệm</h1>
         <div className="flex flex-col">
           <label className="font-medium mb-1.5">Tên</label>
           <input

@@ -52,7 +52,7 @@ const AdminLabRoomList: React.FC = () => {
           setError("Dữ liệu không đúng định dạng");
         }
       } catch (err) {
-        console.error("Error fetching lab rooms:", err);
+        console.error("Error fetching phòng thực nghiệm:", err);
         setError("Không thể tải danh sách phòng thí nghiệm");
         enqueueSnackbar("Lỗi khi tải dữ liệu", { variant: "error" });
       } finally {
@@ -67,13 +67,13 @@ const AdminLabRoomList: React.FC = () => {
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 p-8">
       <div className="max-w-4xl mx-auto bg-white rounded shadow p-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-green-800">Danh sách Lab Room</h1>
+          <h1 className="text-2xl font-bold text-green-800">Danh sách phòng thực nghiệm</h1>
           <button
             onClick={() => void navigate("/admin/labroom/new")}
             className="px-4 py-2 rounded bg-green-700 text-white hover:bg-green-800"
             type="button"
           >
-            Tạo Lab Room
+            Tạo phòng thực nghiệm
           </button>
         </div>
 
@@ -96,7 +96,7 @@ const AdminLabRoomList: React.FC = () => {
               {items.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="p-8 text-center text-gray-500">
-                    Không có Lab Room nào
+                    Không có phòng thực nghiệm nào
                   </td>
                 </tr>
               ) : (
@@ -109,7 +109,7 @@ const AdminLabRoomList: React.FC = () => {
                     onClick={() => {
                       if (!item.status) {
                         enqueueSnackbar(
-                          "Labroom này đã ngừng hoạt động nên không thể xem chi tiết",
+                          "Phòng thực nghiệm này đã ngừng hoạt động nên không thể xem chi tiết",
                           { variant: "warning" }
                         );
                         return;

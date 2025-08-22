@@ -65,6 +65,9 @@ import AdminMethod from "./pages/method/adminRole/AdminMethod";
 import AdminReport from "./pages/reports/adminRole/AdminReports";
 import AdminReportsDetails from "./pages/reports/adminRole/AdminReportsDetails";
 import AdminElement from "./pages/element/adminRole/AdminElement";
+import AdminTissueCultureBatchList from "./pages/AdminTissueCultureBatchList";
+import AdminTissueCultureBatchCreate from "./pages/AdminTissueCultureBatchCreate";
+import AdminTissueCultureBatchDetail from "./pages/AdminTissueCultureBatchDetail";
 
 function AppLayout() {
   const { user, isAuthReady } = useAuth();
@@ -102,6 +105,30 @@ function AppLayout() {
         <Topbar />
         <main className="flex-1 p-8">
           <Routes>
+            <Route
+              path="/admin/tissue-culture-batches"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminTissueCultureBatchList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/tissue-culture-batches/create"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminTissueCultureBatchCreate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/tissue-culture-batches/:id"
+              element={
+                <ProtectedRoute requiredRole={1}>
+                  <AdminTissueCultureBatchDetail />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/dashboard"
               element={

@@ -9,6 +9,7 @@ interface Task {
   name: string;
   researcher: string;
   end_date: string;
+  create_at: string;
   status: StatusType;
 }
 
@@ -148,16 +149,23 @@ export default function ListTask() {
       setLoading(true);
       setError(null);
       
-      axiosInstance.get(`/api/tasks?${buildApiQuery}`)
-        .then(res => {
-          if (isApiTaskResponse(res.data)) {
-            const data = Array.isArray(res.data.value?.data) ? res.data.value.data : [];
-            const total = typeof res.data.value?.totalCount === 'number' ? res.data.value.totalCount : 0;
-            
-            setTasks(data);
-            setTotalCount(total);
-          }
-        })
+             axiosInstance.get(`/api/tasks?${buildApiQuery}`)
+         .then(res => {
+           if (isApiTaskResponse(res.data)) {
+             const data = Array.isArray(res.data.value?.data) ? res.data.value.data : [];
+             const total = typeof res.data.value?.totalCount === 'number' ? res.data.value.totalCount : 0;
+             
+             // Sort tasks by create_at date (newest first)
+             const sortedData = data.sort((a, b) => {
+               const dateA = new Date(a.create_at).getTime();
+               const dateB = new Date(b.create_at).getTime();
+               return dateB - dateA; // Descending order (newest first)
+             });
+             
+             setTasks(sortedData);
+             setTotalCount(total);
+           }
+         })
         .catch(() => {
           setError('Không thể tải danh sách nhiệm vụ');
           enqueueSnackbar('Lỗi khi tải dữ liệu', { variant: 'error' });
@@ -187,6 +195,7 @@ export default function ListTask() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Danh sách nhiệm vụ của tôi</h1>
             <p className="text-gray-600 mt-1">Theo dõi và quản lý các nhiệm vụ được giao</p>
+            <p className="text-sm text-green-600 mt-1">📅 Sắp xếp theo thời gian tạo mới nhất</p>
           </div>
         </div>
         

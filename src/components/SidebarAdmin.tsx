@@ -6,6 +6,7 @@ import {
   FaChartBar,
   FaFlask,
   FaSeedling,
+  FaVials,
 } from "react-icons/fa";
 import { GiMicroscope } from "react-icons/gi";
 
@@ -66,7 +67,20 @@ export default function SidebarAdmin() {
           <span className="text-lg">
             <GiMicroscope />
           </span>
-          <span>Lab room</span>
+          <span>Phòng thực nghiệm</span>
+        </NavLink>
+        <NavLink
+          to="/admin/tissue-culture-batches"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-6 py-3 hover:bg-white/10 transition ${
+              isActive ? "bg-white/20 font-semibold" : ""
+            }`
+          }
+        >
+          <span className="text-lg">
+            <FaVials />
+          </span>
+          <span>Lô cấy mô</span>
         </NavLink>
         <NavLink
           to="/admin/report"

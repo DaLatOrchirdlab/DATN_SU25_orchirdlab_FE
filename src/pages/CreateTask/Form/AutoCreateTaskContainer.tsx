@@ -84,6 +84,9 @@ const AutoCreateTaskContainer: React.FC = () => {
   const [loadingMethod, setLoadingMethod] = useState(false);
   const [method, setMethod] = useState<Method | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Derived dates
+  const [startDateIso, setStartDateIso] = useState<string>("");
+  const [endDateIso, setEndDateIso] = useState<string>("");
 
   // Load method and stage information
   useEffect(() => {
@@ -106,6 +109,33 @@ const AutoCreateTaskContainer: React.FC = () => {
       })
       .finally(() => setLoadingMethod(false));
   }, [experimentLogId, enqueueSnackbar]);
+
+  // Compute start/end dates: start = tomorrow, end = start + dateOfProcessing days
+  useEffect(() => {
+    // start date = tomorrow
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const startIso = tomorrow.toISOString();
+    setStartDateIso(startIso);
+
+    // end date depends on stage's dateOfProcessing
+    let durationDays = 0;
+    if (method && stageId) {
+      const st = method.stages?.find(s => s.id === stageId);
+      if (st && typeof st.dateOfProcessing === 'number') {
+        durationDays = st.dateOfProcessing;
+      }
+    }
+    const end = new Date(tomorrow);
+    if (durationDays > 0) {
+      end.setDate(end.getDate() + durationDays);
+    } else {
+      // default to same as start if unknown
+      end.setDate(end.getDate());
+    }
+    setEndDateIso(end.toISOString());
+  }, [method, stageId]);
 
   // Load task templates based on stageId
   useEffect(() => {
@@ -155,23 +185,14 @@ const AutoCreateTaskContainer: React.FC = () => {
 
   // Generate task data from template
   const generateTaskFromTemplate = (template: TaskTemplate) => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    const dayAfterTomorrow = new Date(today);
-    dayAfterTomorrow.setDate(today.getDate() + 2);
-
-    const startDate = tomorrow.toISOString();
-    const endDate = dayAfterTomorrow.toISOString();
-
     return {
       experimentLogID: experimentLogId,
       stageID: stageId,
       sampleID: null, // Không bắt buộc, sử dụng null thay vì ""
       name: template.name,
       description: template.description,
-      start_date: startDate,
-      end_date: endDate,
+      start_date: startDateIso,
+      end_date: endDateIso,
       isDaily: true, // Luôn luôn là daily task cho auto-create
       attribute: template.details.map(detail => ({
         elementId: detail.element, // Thêm elementId từ template detail
@@ -287,7 +308,7 @@ const AutoCreateTaskContainer: React.FC = () => {
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 flex flex-col items-center py-10">
       <div className="bg-white rounded-xl px-8 pt-8 pb-8 shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-full max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Tạo nhiệm vụ tự động</h2>
+          <h2 className="text-2xl font-semibold">Tạo nhiệm vụ tự động hằng ngày</h2>
           <button
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             onClick={() => void navigate('/create-task/step-1')}
@@ -306,10 +327,10 @@ const AutoCreateTaskContainer: React.FC = () => {
               <span className="font-medium">Giai đoạn:</span> {method?.stages?.find(s => s.id === stageId)?.name ?? 'Đang tải...'}
             </div>
             <div>
-              <span className="font-medium">ID Nhật ký:</span> {experimentLogId}
+              <span className="font-medium">Ngày bắt đầu:</span> {startDateIso ? new Date(startDateIso).toLocaleDateString('vi-VN') : 'Đang tính...'}
             </div>
             <div>
-              <span className="font-medium">ID Giai đoạn:</span> {stageId}
+              <span className="font-medium">Ngày kết thúc:</span> {endDateIso ? new Date(endDateIso).toLocaleDateString('vi-VN') : 'Đang tính...'}
             </div>
           </div>
         </div>
