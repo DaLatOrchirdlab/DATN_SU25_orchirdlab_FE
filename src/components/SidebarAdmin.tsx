@@ -5,11 +5,8 @@ import {
   FaChartBar,
   FaFlask,
   FaSeedling,
-<<<<<<< HEAD
   FaVials,
-=======
   FaUser,
->>>>>>> 466cc771eb8b929bebc90bfde68b901fd23c58cc
 } from "react-icons/fa";
 import { PiBlueprintFill } from "react-icons/pi";
 import { GiMicroscope } from "react-icons/gi";

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import {  useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Doughnut } from "react-chartjs-2";
 import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
-Chart.register(ArcElement, Tooltip, Legend);
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+(Chart as any).register(ArcElement, Tooltip, Legend);
 
 interface Sample {
   id: string;
@@ -57,19 +59,19 @@ interface SamplesResponse {
   data?: Sample[];
 }
 
-function isExperimentLogDetail(obj: unknown): obj is ExperimentLogDetailType {
-  if (typeof obj !== "object" || obj === null) return false;
-  const o = obj as Record<string, unknown>;
-  return (
-    typeof o.id === "string" &&
-    typeof o.name === "string" &&
-    typeof o.methodName === "string" &&
-    typeof o.tissueCultureBatchName === "string"
-  );
-}
+// Helper function to convert status enum to Vietnamese
+const statusEnumToVietnamese = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    Process: "Đang xử lý",
+    Suspended: "Tạm dừng", 
+    Destroyed: "Đã huỷ",
+  };
+  return statusMap[status] || status;
+};
 
 const AdminExperimentLogDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [log, setLog] = useState<ExperimentLogDetailType | null>(null);
   const [samples, setSamples] = useState<Sample[]>([]);
   const [loading, setLoading] = useState(true);
@@ -143,12 +145,13 @@ const AdminExperimentLogDetail = () => {
 
   // Fetch lab room name by tissueCultureBatchId (if available in value or normalized field)
   useEffect(() => {
-    const tcbId = (log as any)?.tissueCultureBatchId ?? (log as any)?.tissueCultureBatchID;
+    if (!log) return;
+    const tcbId = (log as unknown as Record<string, unknown>)?.tissueCultureBatchId as string ?? (log as unknown as Record<string, unknown>)?.tissueCultureBatchID as string;
     if (tcbId) {
       fetch(`https://net-api.orchid-lab.systems/api/tissue-culture-batch/${tcbId}`)
         .then(r => r.json())
-        .then((raw: any) => {
-          const name = raw?.value?.labName ?? raw?.labName;
+        .then((raw: Record<string, unknown>) => {
+          const name = (raw?.value as Record<string, unknown>)?.labName as string ?? raw?.labName as string;
           setLabName(name ?? 'Không xác định');
         })
         .catch(() => setLabName('Không xác định'));
@@ -160,8 +163,8 @@ const AdminExperimentLogDetail = () => {
     if (log?.create_by) {
       fetch(`https://net-api.orchid-lab.systems/api/user/${log.create_by}`)
         .then(r => r.json())
-        .then((raw: any) => {
-          const name = raw?.value?.name ?? raw?.name;
+        .then((raw: Record<string, unknown>) => {
+          const name = (raw?.value as Record<string, unknown>)?.name as string ?? raw?.name as string;
           setCreator(name ?? 'Không xác định');
         })
         .catch(() => setCreator('Không xác định'));
@@ -197,21 +200,6 @@ const AdminExperimentLogDetail = () => {
   const sampleChartOptions = {
     plugins: {
       legend: { display: true, position: "bottom" as const },
-      tooltip: {
-        callbacks: {
-          label: function (
-            context: import("chart.js").TooltipItem<"doughnut">
-          ) {
-            const total = context.dataset.data.reduce(
-              (a: number, b: number) => a + b,
-              0
-            );
-            const value = context.parsed;
-            const percent = ((value / total) * 100).toFixed(1);
-            return `${context.label}: ${value} (${percent}%)`;
-          },
-        },
-      },
     },
   };
 
@@ -368,10 +356,10 @@ const AdminExperimentLogDetail = () => {
                     <b>Nguyên vật liệu:</b>
                     <div className="ml-4 space-y-1">
                       {elements.map((el) => (
-                        <div key={(el as ElementDTO).id}>
-                          <p>- {(el as ElementDTO).name ?? '-'}</p>
-                          {(el as ElementDTO).description && (
-                            <p className="text-gray-600 text-sm">{(el as ElementDTO).description}</p>
+                        <div key={el.id}>
+                          <p>- {el.name ?? '-'}</p>
+                          {el.description && (
+                            <p className="text-gray-600 text-sm">{el.description}</p>
                           )}
                         </div>
                       ))}
