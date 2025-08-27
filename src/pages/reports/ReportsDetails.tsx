@@ -232,7 +232,10 @@ export default function ReportsDetails() {
           {/* Hình ảnh đính kèm nếu có */}
           <div className="mb-6">
             <h3 className="font-semibold text-green-800 mb-2">
-              Hình ảnh đính kèm
+              Hình ảnh đính kèm{" "}
+              <span className="text-sm font-normal text-gray-500">
+                (* Chọn ảnh để phân tích)
+              </span>
             </h3>
             <div className="flex gap-4 flex-wrap">
               {images.map((img, idx) => (
@@ -255,15 +258,12 @@ export default function ReportsDetails() {
               <div className="mt-4 flex items-center gap-3">
                 <button
                   type="button"
-                  className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 transition"
+                  className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 transition cursor-pointer"
                   disabled={!selectedImg || analyzeLoading}
                   onClick={() => void analyzeImageFromUrl(selectedImg)}
                 >
                   {analyzeLoading ? "Đang phân tích..." : "Phân tích bệnh"}
                 </button>
-                <span className="text-sm text-gray-500">
-                  * Chọn ảnh rồi nhấn để phân tích
-                </span>
               </div>
             )}
             {analyzeError && (
@@ -287,6 +287,7 @@ export default function ReportsDetails() {
                   <ul className="mt-2">
                     {Object.entries(analyzeResult.disease.probability)
                       .filter(([, value]) => value > 0.0001)
+                      .sort((a, b) => b[1] - a[1])
                       .map(([key, value]) => (
                         <li key={key} className="flex justify-between">
                           <span>{diseaseNameMap[key] || key}</span>

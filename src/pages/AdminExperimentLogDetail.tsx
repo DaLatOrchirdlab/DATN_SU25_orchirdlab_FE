@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Doughnut } from "react-chartjs-2";
 import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
+import type { Report } from "../types/Report";
+import axiosInstance from "../api/axiosInstance";
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-(Chart as any).register(ArcElement, Tooltip, Legend);
+Chart.register(ArcElement, Tooltip, Legend);
 
 interface Sample {
   id: string;
@@ -23,6 +24,7 @@ interface ElementDTO {
 }
 
 interface StageDTO {
+  id: string;
   name: string;
   description?: string;
   dateOfProcessing?: number | string;
@@ -59,11 +61,22 @@ interface SamplesResponse {
   data?: Sample[];
 }
 
+interface Task {
+  id: string;
+  researcher: string;
+  name: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  create_at: string;
+  status: string;
+}
+
 // Helper function to convert status enum to Vietnamese
 const statusEnumToVietnamese = (status: string): string => {
   const statusMap: Record<string, string> = {
     Process: "Đang xử lý",
-    Suspended: "Tạm dừng", 
+    Suspended: "Tạm dừng",
     Destroyed: "Đã huỷ",
   };
   return statusMap[status] || status;
@@ -78,8 +91,55 @@ const AdminExperimentLogDetail = () => {
   const [samplesLoading, setSamplesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedStage, setSelectedStage] = useState(1);
-  const [labName, setLabName] = useState<string>('Đang tải...');
-  const [creator, setCreator] = useState<string>('Đang tải...');
+  const [labName, setLabName] = useState<string>("Đang tải...");
+  const [creator, setCreator] = useState<string>("Đang tải...");
+  const [stageTasks, setStageTasks] = useState<Record<string, Task[]>>({});
+  const [stageReports, setStageReports] = useState<Record<string, Report[]>>(
+    {}
+  );
+
+  useEffect(() => {
+    if (!log?.stages || !id) return;
+    log.stages.forEach((stage) => {
+      const stageId = stage.id;
+      // Task
+      axiosInstance
+        .get(
+          `/api/tasks?pageNo=1&pageSize=1000&experimentlogId=${id}&stageId=${stageId}`
+        )
+        .then((res: { data: { value?: { data?: Task[] } } }) => {
+          setStageTasks((prev) => ({
+            ...prev,
+            [stageId]: res.data.value?.data ?? [],
+          }));
+        })
+        .catch((err: unknown) => {
+          console.error("Error fetching tasks for stage", stageId, err);
+          setStageTasks((prev) => ({
+            ...prev,
+            [stageId]: [],
+          }));
+        });
+      // Report
+      axiosInstance
+        .get(
+          `/api/report?pageNumber=1&pageSize=1000&experimentLogId=${id}&stageId=${stageId}`
+        )
+        .then((res: { data: { value?: { data?: Report[] } } }) => {
+          setStageReports((prev) => ({
+            ...prev,
+            [stageId]: res.data.value?.data ?? [],
+          }));
+        })
+        .catch((err: unknown) => {
+          console.error("Error fetching reports for stage", stageId, err);
+          setStageReports((prev) => ({
+            ...prev,
+            [stageId]: [],
+          }));
+        });
+    });
+  }, [log, id]);
 
   // Fetch experiment log detail
   useEffect(() => {
@@ -95,7 +155,9 @@ const AdminExperimentLogDetail = () => {
         const anyLog = logData as Record<string, unknown>;
         const normalized: Partial<ExperimentLogDetailType> = {
           ...(anyLog as unknown as Partial<ExperimentLogDetailType>),
-          createdDate: (anyLog.createdDate as string | undefined) ?? (anyLog.create_date as string | undefined),
+          createdDate:
+            (anyLog.createdDate as string | undefined) ??
+            (anyLog.create_date as string | undefined),
         };
         setLog(normalized as ExperimentLogDetailType);
       })
@@ -146,15 +208,23 @@ const AdminExperimentLogDetail = () => {
   // Fetch lab room name by tissueCultureBatchId (if available in value or normalized field)
   useEffect(() => {
     if (!log) return;
-    const tcbId = (log as unknown as Record<string, unknown>)?.tissueCultureBatchId as string ?? (log as unknown as Record<string, unknown>)?.tissueCultureBatchID as string;
+    const tcbId =
+      ((log as unknown as Record<string, unknown>)
+        ?.tissueCultureBatchId as string) ??
+      ((log as unknown as Record<string, unknown>)
+        ?.tissueCultureBatchID as string);
     if (tcbId) {
-      fetch(`https://net-api.orchid-lab.systems/api/tissue-culture-batch/${tcbId}`)
-        .then(r => r.json())
+      fetch(
+        `https://net-api.orchid-lab.systems/api/tissue-culture-batch/${tcbId}`
+      )
+        .then((r) => r.json())
         .then((raw: Record<string, unknown>) => {
-          const name = (raw?.value as Record<string, unknown>)?.labName as string ?? raw?.labName as string;
-          setLabName(name ?? 'Không xác định');
+          const name =
+            ((raw?.value as Record<string, unknown>)?.labName as string) ??
+            (raw?.labName as string);
+          setLabName(name ?? "Không xác định");
         })
-        .catch(() => setLabName('Không xác định'));
+        .catch(() => setLabName("Không xác định"));
     }
   }, [log]);
 
@@ -162,18 +232,26 @@ const AdminExperimentLogDetail = () => {
   useEffect(() => {
     if (log?.create_by) {
       fetch(`https://net-api.orchid-lab.systems/api/user/${log.create_by}`)
-        .then(r => r.json())
+        .then((r) => r.json())
         .then((raw: Record<string, unknown>) => {
-          const name = (raw?.value as Record<string, unknown>)?.name as string ?? raw?.name as string;
-          setCreator(name ?? 'Không xác định');
+          const name =
+            ((raw?.value as Record<string, unknown>)?.name as string) ??
+            (raw?.name as string);
+          setCreator(name ?? "Không xác định");
         })
-        .catch(() => setCreator('Không xác định'));
+        .catch(() => setCreator("Không xác định"));
     }
   }, [log]);
 
-  if (loading) return <div className="ml-64 mt-16 p-8 text-gray-500">Đang tải dữ liệu...</div>;
+  if (loading)
+    return (
+      <div className="ml-64 mt-16 p-8 text-gray-500">Đang tải dữ liệu...</div>
+    );
   if (error) return <div className="ml-64 mt-16 p-8 text-red-500">{error}</div>;
-  if (!log) return <div className="ml-64 mt-16 p-8">Không tìm thấy nhật ký thí nghiệm!</div>;
+  if (!log)
+    return (
+      <div className="ml-64 mt-16 p-8">Không tìm thấy nhật ký thí nghiệm!</div>
+    );
 
   const statusList = ["Process", "Suspended", "Destroyed"];
   const sampleStatusStats = samples.reduce((acc, sample) => {
@@ -282,14 +360,32 @@ const AdminExperimentLogDetail = () => {
 
         <div className="mb-6 grid grid-cols-2 gap-4">
           <div>
-            <p><b>Phương pháp:</b> {log.methodName}</p>
-            <p><b>Lô thí nghiệm:</b> {log.tissueCultureBatchName}</p>
-            <p><b>Phòng thí nghiệm:</b> {labName}</p>
-            <p><b>Trạng thái:</b> {getStatusDisplay(log.status)}</p>
-            <p><b>Số lượng mẫu:</b> {samples.length}</p>
-            <p><b>Ngày tạo:</b> {formatDate(log.createdDate)}</p>
-            <p><b>Người tạo:</b> {creator}</p>
-            {log.description && <p><b>Mô tả:</b> {log.description}</p>}
+            <p>
+              <b>Phương pháp:</b> {log.methodName}
+            </p>
+            <p>
+              <b>Lô thí nghiệm:</b> {log.tissueCultureBatchName}
+            </p>
+            <p>
+              <b>Phòng thí nghiệm:</b> {labName}
+            </p>
+            <p>
+              <b>Trạng thái:</b> {getStatusDisplay(log.status)}
+            </p>
+            <p>
+              <b>Số lượng mẫu:</b> {samples.length}
+            </p>
+            <p>
+              <b>Ngày tạo:</b> {formatDate(log.createdDate)}
+            </p>
+            <p>
+              <b>Người tạo:</b> {creator}
+            </p>
+            {log.description && (
+              <p>
+                <b>Mô tả:</b> {log.description}
+              </p>
+            )}
           </div>
         </div>
 
@@ -344,12 +440,23 @@ const AdminExperimentLogDetail = () => {
           <div className="mt-4 p-4 bg-gray-50 rounded border text-sm">
             <b>Chi tiết {stages[selectedStage - 1]}</b>
             <div className="mt-2 space-y-2">
-              <p><b>Mô tả:</b> {log.stages?.[selectedStage - 1]?.description ?? 'Không có mô tả'}</p>
-              <p><b>Ngày xử lý:</b> {log.stages?.[selectedStage - 1]?.dateOfProcessing ?? 'Chưa xác định'} ngày</p>
+              <p>
+                <b>Mô tả:</b>{" "}
+                {log.stages?.[selectedStage - 1]?.description ??
+                  "Không có mô tả"}
+              </p>
+              <p>
+                <b>Ngày xử lý:</b>{" "}
+                {log.stages?.[selectedStage - 1]?.dateOfProcessing ??
+                  "Chưa xác định"}{" "}
+                ngày
+              </p>
               {(() => {
                 const stage = log.stages?.[selectedStage - 1];
                 if (!stage?.elementDTO) return null;
-                const elements = Array.isArray(stage.elementDTO) ? stage.elementDTO : [stage.elementDTO];
+                const elements = Array.isArray(stage.elementDTO)
+                  ? stage.elementDTO
+                  : [stage.elementDTO];
                 if (elements.length === 0) return null;
                 return (
                   <div>
@@ -357,9 +464,11 @@ const AdminExperimentLogDetail = () => {
                     <div className="ml-4 space-y-1">
                       {elements.map((el) => (
                         <div key={el.id}>
-                          <p>- {el.name ?? '-'}</p>
+                          <p>- {el.name ?? "-"}</p>
                           {el.description && (
-                            <p className="text-gray-600 text-sm">{el.description}</p>
+                            <p className="text-gray-600 text-sm">
+                              {el.description}
+                            </p>
                           )}
                         </div>
                       ))}
@@ -367,6 +476,115 @@ const AdminExperimentLogDetail = () => {
                   </div>
                 );
               })()}
+              {/* Task Table */}
+              <div className="mt-4">
+                <h3 className="font-semibold mb-2">
+                  Công việc (Task) của giai đoạn này
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border">
+                    <thead>
+                      <tr>
+                        <th className="px-3 py-2 border">Tên công việc</th>
+                        <th className="px-3 py-2 border">Ngày giao</th>
+                        <th className="px-3 py-2 border">Ngày hoàn thành</th>
+                        <th className="px-3 py-2 border">Trạng thái</th>
+                        <th className="px-3 py-2 border">Chi tiết</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        const stageId = log.stages?.[selectedStage - 1]?.id;
+                        const tasks: Task[] =
+                          stageId && Array.isArray(stageTasks[stageId])
+                            ? stageTasks[stageId]
+                            : [];
+                        return tasks.map((task) => (
+                          <tr key={task.id}>
+                            <td className="px-3 py-2 border">{task.name}</td>
+                            <td className="px-3 py-2 border">
+                              {task.start_date}
+                            </td>
+                            <td className="px-3 py-2 border">
+                              {task.end_date}
+                            </td>
+                            <td className="px-3 py-2 border">{task.status}</td>
+                            <td className="px-3 py-2 border">
+                              <button
+                                type="button"
+                                className="text-blue-600 underline"
+                                onClick={() =>
+                                  void navigate(`/admin/tasks/${task.id}`)
+                                }
+                              >
+                                Chi tiết
+                              </button>
+                            </td>
+                          </tr>
+                        ));
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Report Table */}
+              <div className="mt-4">
+                <h3 className="font-semibold mb-2">
+                  Báo cáo (Report) của giai đoạn này
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border">
+                    <thead>
+                      <tr>
+                        <th className="px-3 py-2 border">Tên báo cáo</th>
+                        <th className="px-3 py-2 border">Mô tả</th>
+                        <th className="px-3 py-2 border">Sample</th>
+                        <th className="px-3 py-2 border">Thuộc tính</th>
+                        <th className="px-3 py-2 border">Chi tiết</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        const stageId = log.stages?.[selectedStage - 1]?.id;
+                        const reports: Report[] =
+                          stageId && Array.isArray(stageReports[stageId])
+                            ? stageReports[stageId]
+                            : [];
+                        return reports.map((report) => (
+                          <tr key={report.id}>
+                            <td className="px-3 py-2 border">{report.name}</td>
+                            <td className="px-3 py-2 border">
+                              {report.description}
+                            </td>
+                            <td className="px-3 py-2 border">
+                              {report.sample}
+                            </td>
+                            <td className="px-3 py-2 border">
+                              {report.reportAttributes?.map((a, idx) => (
+                                <div key={idx}>
+                                  {a.name}: {a.value} {a.measurementUnit}
+                                </div>
+                              ))}
+                            </td>
+                            <td className="px-3 py-2 border">
+                              <button
+                                type="button"
+                                className="text-blue-600 underline"
+                                onClick={() =>
+                                  void navigate(`/admin/report/${report.id}`)
+                                }
+                              >
+                                Chi tiết
+                              </button>
+                            </td>
+                          </tr>
+                        ));
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </div>
