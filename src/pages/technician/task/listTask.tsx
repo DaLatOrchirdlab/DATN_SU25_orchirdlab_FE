@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../api/axiosInstance";
 import { useSnackbar } from 'notistack';
 import { useAuth } from "../../../context/AuthContext";
+import { Doughnut } from "react-chartjs-2";
+import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
+Chart.register(ArcElement, Tooltip, Legend);
 
 interface Task {
   id: string;
@@ -78,6 +81,7 @@ export default function ListTask() {
   // State cho filters
   const [statusFilter, setStatusFilter] = useState<StatusType | "Tất cả">("Tất cả");
   const [searchTerm, setSearchTerm] = useState("");
+  const [todayFilter, setTodayFilter] = useState(false);
   
   // State cho summary data (chỉ load 1 lần)
   const [statusCounts, setStatusCounts] = useState<Record<StatusType, number>>({
@@ -87,6 +91,17 @@ export default function ListTask() {
     DoneInTime: 0,
     DoneInLate: 0,
     Cancel: 0,
+  });
+  
+  // State cho thống kê
+  const [stats, setStats] = useState<{
+    totalToday: number;
+    completed: number;
+    inProgress: number;
+  }>({
+    totalToday: 0,
+    completed: 0,
+    inProgress: 0,
   });
   
   const tasksPerPage = 20;
@@ -115,7 +130,36 @@ export default function ListTask() {
             counts[task.status] = (counts[task.status] || 0) + 1;
           });
           
+          // Tính thống kê cho task hôm nay
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          // Lọc các task có end_date là hôm nay
+          const todayTasks = allTasks.filter(task => {
+            const taskEndDate = new Date(task.end_date);
+            taskEndDate.setHours(0, 0, 0, 0);
+            return taskEndDate.getTime() === today.getTime();
+          });
+          
+          const totalToday = todayTasks.length;
+          
+          // Tính số task đã hoàn thành và chưa hoàn thành trong ngày hôm nay
+          const completed = todayTasks.filter(task =>
+            task.status === "DoneInTime" || task.status === "DoneInLate"
+          ).length;
+          
+          const inProgress = todayTasks.filter(task =>
+            task.status === "Assigned" ||
+            task.status === "Taken" ||
+            task.status === "InProcess"
+          ).length;
+          
           setStatusCounts(counts);
+          setStats({
+            totalToday,
+            completed,
+            inProgress
+          });
         }
       } catch (err) {
         console.error('Error loading summary data:', err);
@@ -128,20 +172,19 @@ export default function ListTask() {
   // Build query parameters cho API call chính
   const buildApiQuery = useMemo(() => {
     const params = new URLSearchParams();
-    params.append('pageNo', currentPage.toString());
-    params.append('pageSize', tasksPerPage.toString());
+    
+    // Luôn load tất cả tasks để sort và filter ở frontend
+    params.append('pageNo', '1');
+    params.append('pageSize', '1000'); // Load tất cả để sort và filter
     params.append('technicianId', user?.id ?? '');
     
-    // Chỉ thêm filter params nếu không phải "Tất cả"
-    if (statusFilter !== "Tất cả") {
-      params.append('status', statusFilter);
-    }
+    // Backend không hỗ trợ status filter, chỉ có thể filter ở frontend
     if (searchTerm.trim()) {
       params.append('search', searchTerm.trim());
     }
     
     return params.toString();
-  }, [currentPage, statusFilter, searchTerm, user?.id]);
+  }, [searchTerm, user?.id]);
 
   // Load tasks với debounce cho search
   useEffect(() => {
@@ -149,23 +192,55 @@ export default function ListTask() {
       setLoading(true);
       setError(null);
       
-             axiosInstance.get(`/api/tasks?${buildApiQuery}`)
-         .then(res => {
-           if (isApiTaskResponse(res.data)) {
-             const data = Array.isArray(res.data.value?.data) ? res.data.value.data : [];
-             const total = typeof res.data.value?.totalCount === 'number' ? res.data.value.totalCount : 0;
-             
-             // Sort tasks by create_at date (newest first)
-             const sortedData = data.sort((a, b) => {
-               const dateA = new Date(a.create_at).getTime();
-               const dateB = new Date(b.create_at).getTime();
-               return dateB - dateA; // Descending order (newest first)
-             });
-             
-             setTasks(sortedData);
-             setTotalCount(total);
-           }
-         })
+      axiosInstance.get(`/api/tasks?${buildApiQuery}`)
+        .then(res => {
+          if (isApiTaskResponse(res.data)) {
+            const data = Array.isArray(res.data.value?.data) ? res.data.value.data : [];
+            
+            // Sort toàn bộ danh sách theo create_at (newest first)
+            const sortedData = [...data].sort((a, b) => {
+              const dateA = new Date(a.create_at);
+              const dateB = new Date(b.create_at);
+              return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
+            });
+            
+            // Filter trên data đã sort
+            let filteredData = sortedData;
+            
+            // Filter by status
+            if (statusFilter !== "Tất cả") {
+              filteredData = filteredData.filter(task => task.status === statusFilter);
+            }
+            
+            // Filter by today based on end_date
+            if (todayFilter) {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              
+              filteredData = filteredData.filter(task => {
+                const taskEndDate = new Date(task.end_date);
+                taskEndDate.setHours(0, 0, 0, 0);
+                return taskEndDate.getTime() === today.getTime();
+              });
+            }
+            
+            // Filter by search term
+            if (searchTerm.trim()) {
+              filteredData = filteredData.filter(task =>
+                task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                task.researcher.toLowerCase().includes(searchTerm.toLowerCase())
+              );
+            }
+            
+            // Apply pagination to filtered/sorted data
+            const startIndex = (currentPage - 1) * tasksPerPage;
+            const endIndex = startIndex + tasksPerPage;
+            const paginatedData = filteredData.slice(startIndex, endIndex);
+            
+            setTasks(paginatedData);
+            setTotalCount(filteredData.length); // Total filtered count
+          }
+        })
         .catch(() => {
           setError('Không thể tải danh sách nhiệm vụ');
           enqueueSnackbar('Lỗi khi tải dữ liệu', { variant: 'error' });
@@ -176,16 +251,54 @@ export default function ListTask() {
     }, searchTerm ? 300 : 0); // Debounce 300ms cho search, ngay lập tức cho các filter khác
 
     return () => clearTimeout(timeoutId);
-  }, [buildApiQuery, enqueueSnackbar]);
+  }, [buildApiQuery, statusFilter, searchTerm, todayFilter, currentPage, enqueueSnackbar]);
 
   // Reset về trang 1 khi filter thay đổi
   useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, searchTerm]);
+  }, [statusFilter, searchTerm, todayFilter]);
 
   const totalPages = Math.ceil(totalCount / tasksPerPage);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  
+  // Chart data
+  const chartData = {
+    labels: ["Đã hoàn thành", "Đang thực hiện", "Task hôm nay"],
+    datasets: [
+      {
+        data: [stats.completed, stats.inProgress, stats.totalToday],
+        backgroundColor: [
+          "#22c55e", // green
+          "#facc15", // yellow
+          "#3b82f6", // blue
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    plugins: {
+      legend: {
+        display: true,
+        position: "bottom" as const,
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context: import("chart.js").TooltipItem<"doughnut">) {
+            const total = context.dataset.data.reduce(
+              (a: number, b: number) => a + b,
+              0
+            );
+            const value = context.parsed;
+            const percent = ((value / total) * 100).toFixed(1);
+            return `${context.label}: ${value} (${percent}%)`;
+          },
+        },
+      },
+    },
+  };
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-50 p-8">
@@ -196,6 +309,47 @@ export default function ListTask() {
             <h1 className="text-2xl font-bold text-gray-900">Danh sách nhiệm vụ của tôi</h1>
             <p className="text-gray-600 mt-1">Theo dõi và quản lý các nhiệm vụ được giao</p>
             <p className="text-sm text-green-600 mt-1">📅 Sắp xếp theo thời gian tạo mới nhất</p>
+          </div>
+        </div>
+        
+        {/* Thống kê */}
+        <div className="flex flex-col md:flex-row gap-6 mb-8">
+          {/* Chart trạng thái */}
+          <div className="flex justify-center">
+            <div className="bg-white rounded-lg shadow p-4 w-full md:w-[340px]">
+              <h3 className="text-center text-green-700 font-semibold mb-2 text-sm">
+                Biểu đồ thống kê nhiệm vụ ngày hôm nay
+              </h3>
+              <Doughnut data={chartData} options={chartOptions} />
+            </div>
+          </div>
+          
+          {/* Số liệu thống kê */}
+          <div className="flex flex-wrap justify-center md:justify-start gap-4">
+            <div className="bg-green-50 p-4 rounded-lg w-40">
+              <div className="text-green-600 text-sm font-medium">
+                NHIỆM VỤ HÔM NAY
+              </div>
+              <div className="text-2xl font-bold text-green-700">
+                {stats.totalToday}
+              </div>
+            </div>
+            <div className="bg-blue-50 p-4 rounded-lg w-40">
+              <div className="text-blue-600 text-sm font-medium">
+                NHIỆM VỤ CHƯA HOÀN THÀNH
+              </div>
+              <div className="text-2xl font-bold text-blue-700">
+                {stats.inProgress}
+              </div>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg w-40">
+              <div className="text-green-600 text-sm font-medium">
+                NHIỆM VỤ ĐÃ HOÀN THÀNH
+              </div>
+              <div className="text-2xl font-bold text-green-700">
+                {stats.completed}
+              </div>
+            </div>
           </div>
         </div>
         
@@ -212,29 +366,77 @@ export default function ListTask() {
         </div>
         
         {/* Bộ lọc */}
-        <div className="flex flex-wrap items-center gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Trạng thái:</span>
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value as StatusType | "Tất cả")}
-              className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="flex flex-wrap items-center gap-4 mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700 font-medium">Trạng thái:</span>
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value as StatusType | "Tất cả")}
+                className="border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="Tất cả">Tất cả</option>
+                {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setTodayFilter(!todayFilter)}
+                className={`px-3 py-2 text-sm rounded-full border ${
+                  todayFilter
+                    ? "bg-green-100 border-green-500 text-green-700"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                Nhiệm vụ hôm nay
+              </button>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <input
+                type="text"
+                placeholder="Tìm kiếm nhiệm vụ..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("Tất cả");
+                setSearchTerm("");
+                setTodayFilter(false);
+              }}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
             >
-              <option value="Tất cả">Tất cả</option>
-              {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
+              Xóa bộ lọc
+            </button>
           </div>
-          <div className="flex-1 min-w-[200px]">
-            <input
-              type="text"
-              placeholder="Tìm kiếm nhiệm vụ..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
+          
+          {/* Hiển thị active filters */}
+          {(statusFilter !== "Tất cả" || searchTerm.trim() || todayFilter) && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              <span className="text-xs text-gray-500">Bộ lọc đang áp dụng:</span>
+              {statusFilter !== "Tất cả" && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                  Trạng thái: {STATUS_LABELS[statusFilter]}
+                </span>
+              )}
+              {todayFilter && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                  Task hôm nay
+                </span>
+              )}
+              {searchTerm.trim() && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
+                  Tìm kiếm: "{searchTerm}"
+                </span>
+              )}
+            </div>
+          )}
         </div>
         
         {loading ? (

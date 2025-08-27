@@ -116,6 +116,8 @@ const AutoCreateTaskContainer: React.FC = () => {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
+    // Đặt thời gian về 00:00:00 và thêm 7 tiếng cho múi giờ Việt Nam
+    tomorrow.setHours(7, 0, 0, 0);
     const startIso = tomorrow.toISOString();
     setStartDateIso(startIso);
 
@@ -134,6 +136,8 @@ const AutoCreateTaskContainer: React.FC = () => {
       // default to same as start if unknown
       end.setDate(end.getDate());
     }
+    // Đặt thời gian về 00:00:00 và thêm 7 tiếng cho múi giờ Việt Nam
+    end.setHours(7, 0, 0, 0);
     setEndDateIso(end.toISOString());
   }, [method, stageId]);
 
