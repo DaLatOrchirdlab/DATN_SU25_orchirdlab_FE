@@ -181,6 +181,27 @@ const CreateTaskContainer: React.FC = () => {
   // Submit (Next)
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
+    
+    // Chuyển đổi startDate và endDate sang múi giờ Việt Nam (thêm 7 tiếng)
+    let startDateWithTimezone = startDate;
+    let endDateWithTimezone = endDate;
+    
+    if (startDate) {
+      // Tạo Date object từ chuỗi YYYY-MM-DD
+      const startDateObj = new Date(startDate);
+      // Đặt thời gian về 00:00:00 và thêm 7 tiếng
+      startDateObj.setHours(7, 0, 0, 0);
+      startDateWithTimezone = startDateObj.toISOString();
+    }
+    
+    if (endDate) {
+      // Tạo Date object từ chuỗi YYYY-MM-DD
+      const endDateObj = new Date(endDate);
+      // Đặt thời gian về 00:00:00 và thêm 7 tiếng
+      endDateObj.setHours(7, 0, 0, 0);
+      endDateWithTimezone = endDateObj.toISOString();
+    }
+    
     setState(prev => ({
       ...prev,
       name,
@@ -188,8 +209,8 @@ const CreateTaskContainer: React.FC = () => {
       stage: stages.find(s => s.id === selectedStage) ?? null,
       sample: samples.find(s => s.id === selectedSample) ?? null,
       description,
-      start_date: startDate,
-      end_date: endDate,
+      start_date: startDateWithTimezone,
+      end_date: endDateWithTimezone,
       isDaily,
       attribute: attributes,
     }));
