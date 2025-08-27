@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
-import { useSnackbar } from 'notistack';
+import { useSnackbar } from "notistack";
 
 type StatusType =
   | "Assigned"
@@ -51,23 +51,26 @@ const AdminTaskDetail: React.FC = () => {
   useEffect(() => {
     const fetchTaskDetail = async () => {
       if (!id) return;
-      
+
       try {
         setLoading(true);
         const response = await axiosInstance.get(`/api/tasks/${id}`);
 
         if (response.data && response.data.value) {
-          console.log('API Response:', response.data.value);
+          console.log("API Response:", response.data.value);
           setTaskData(response.data.value);
         } else {
-          console.error('Invalid response structure:', response.data);
-          throw new Error('No data received');
+          console.error("Invalid response structure:", response.data);
+          throw new Error("No data received");
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Đã xảy ra lỗi khi tải dữ liệu';
+        const errorMessage =
+          err instanceof Error ? err.message : "Đã xảy ra lỗi khi tải dữ liệu";
         setError(errorMessage);
-        enqueueSnackbar('Không thể tải chi tiết nhiệm vụ', { variant: 'error' });
-        console.error('Error fetching task detail:', err);
+        enqueueSnackbar("Không thể tải chi tiết nhiệm vụ", {
+          variant: "error",
+        });
+        console.error("Error fetching task detail:", err);
       } finally {
         setLoading(false);
       }
@@ -77,37 +80,51 @@ const AdminTaskDetail: React.FC = () => {
   }, [id, enqueueSnackbar]);
 
   const handleBack = (): void => {
-    void navigate("/admin/tasks");
+    void navigate(-1);
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Assigned': return 'bg-blue-100 text-blue-800';
-      case 'Taken': return 'bg-purple-100 text-purple-800';
-      case 'InProcess': return 'bg-yellow-100 text-yellow-800';
-      case 'DoneInTime': return 'bg-green-100 text-green-800';
-      case 'DoneInLate': return 'bg-orange-100 text-orange-800';
-      case 'Cancel': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "Assigned":
+        return "bg-blue-100 text-blue-800";
+      case "Taken":
+        return "bg-purple-100 text-purple-800";
+      case "InProcess":
+        return "bg-yellow-100 text-yellow-800";
+      case "DoneInTime":
+        return "bg-green-100 text-green-800";
+      case "DoneInLate":
+        return "bg-orange-100 text-orange-800";
+      case "Cancel":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'Assigned': return 'Đã giao';
-      case 'Taken': return 'Đã nhận';
-      case 'InProcess': return 'Đang thực hiện';
-      case 'DoneInTime': return 'Hoàn thành đúng hạn';
-      case 'DoneInLate': return 'Hoàn thành trễ hạn';
-      case 'Cancel': return 'Bị hủy';
-      default: return status;
+      case "Assigned":
+        return "Đã giao";
+      case "Taken":
+        return "Đã nhận";
+      case "InProcess":
+        return "Đang thực hiện";
+      case "DoneInTime":
+        return "Hoàn thành đúng hạn";
+      case "DoneInLate":
+        return "Hoàn thành trễ hạn";
+      case "Cancel":
+        return "Bị hủy";
+      default:
+        return status;
     }
   };
 
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('vi-VN');
+      return date.toLocaleDateString("vi-VN");
     } catch {
       return dateString;
     }
@@ -160,17 +177,23 @@ const AdminTaskDetail: React.FC = () => {
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 flex flex-col items-center py-10 px-4">
       <div className="bg-white rounded-xl px-8 pt-8 pb-8 shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-full max-w-[900px] mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Chi tiết Task: {taskData.name}</h2>
+          <h2 className="text-2xl font-semibold">
+            Chi tiết Task: {taskData.name}
+          </h2>
         </div>
 
         {/* Status */}
         <div className="flex flex-col mb-6">
           <label className="font-medium mb-1.5">Trạng thái</label>
-          <span className={`px-3 py-2 rounded-md text-sm font-medium w-fit ${getStatusColor(taskData.status)}`}>
+          <span
+            className={`px-3 py-2 rounded-md text-sm font-medium w-fit ${getStatusColor(
+              taskData.status
+            )}`}
+          >
             {getStatusLabel(taskData.status)}
           </span>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Tên nhiệm vụ</label>
@@ -185,14 +208,14 @@ const AdminTaskDetail: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="flex flex-col mb-6">
           <label className="font-medium mb-1.5">Mô tả nhiệm vụ</label>
           <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 min-h-[80px]">
             {taskData.description}
           </div>
         </div>
-        
+
         {/* Nguyên vật liệu */}
         <div className="flex flex-col mb-6">
           <label className="font-medium mb-1.5">Nguyên vật liệu</label>
@@ -207,7 +230,10 @@ const AdminTaskDetail: React.FC = () => {
               </div>
               {/* Data rows */}
               {taskData.attributeDTOs.map((attribute, idx) => (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-2" key={attribute.id || idx}>
+                <div
+                  className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-2"
+                  key={attribute.id || idx}
+                >
                   <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
                     {attribute.name}
                   </div>
@@ -218,7 +244,7 @@ const AdminTaskDetail: React.FC = () => {
                     {attribute.value}
                   </div>
                   <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
-                    {attribute.description || 'N/A'}
+                    {attribute.description || "N/A"}
                   </div>
                 </div>
               ))}
@@ -229,7 +255,7 @@ const AdminTaskDetail: React.FC = () => {
             </div>
           )}
         </div>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Ngày bắt đầu</label>
@@ -250,20 +276,29 @@ const AdminTaskDetail: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Kỹ thuật viên được giao */}
         <div className="flex flex-col mb-8">
           <label className="font-medium mb-1.5">Kỹ thuật viên được giao</label>
           {taskData.assignDTOs && taskData.assignDTOs.length > 0 ? (
             <div className="space-y-2">
               {taskData.assignDTOs.map((assign, idx) => (
-                <div key={assign.id || idx} className="bg-green-50 border-[1.5px] border-green-700 rounded-lg py-2.5 px-[18px] font-semibold flex items-center min-h-[40px]">
+                <div
+                  key={assign.id || idx}
+                  className="bg-green-50 border-[1.5px] border-green-700 rounded-lg py-2.5 px-[18px] font-semibold flex items-center min-h-[40px]"
+                >
                   <span className="w-8 h-8 rounded-full bg-[#4cafef] text-white flex items-center justify-center font-bold text-[1.05rem] mr-2.5 flex-shrink-0">
                     TV
                   </span>
                   <span className="flex-1">{assign.technicianName}</span>
-                  <span className={`text-[0.98em] ml-2.5 flex-shrink-0 px-2 py-1 rounded-full text-xs ${assign.status ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'}`}>
-                    {assign.status ? 'Hoạt động' : 'Không hoạt động'}
+                  <span
+                    className={`text-[0.98em] ml-2.5 flex-shrink-0 px-2 py-1 rounded-full text-xs ${
+                      assign.status
+                        ? "text-green-700 bg-green-100"
+                        : "text-red-700 bg-red-100"
+                    }`}
+                  >
+                    {assign.status ? "Hoạt động" : "Không hoạt động"}
                   </span>
                 </div>
               ))}
@@ -274,7 +309,7 @@ const AdminTaskDetail: React.FC = () => {
             </div>
           )}
         </div>
-        
+
         <div className="flex justify-end gap-3 pt-4 border-t">
           <button
             type="button"
