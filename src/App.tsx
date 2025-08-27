@@ -79,8 +79,6 @@ function AppLayout() {
   if (user?.roleID === 1) sidebar = <SidebarAdmin />;
   else if (user?.roleID === 3) sidebar = <SidebarTechnician />;
 
-  console.log("Current user role:", user?.roleID);
-
   if (!isAuthReady) {
     return <div>Đang tải...</div>;
   }
@@ -91,6 +89,10 @@ function AppLayout() {
         <Route path="/login" element={<Login />} />
       </Routes>
     );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   if (isUnauthorizedPage) {
