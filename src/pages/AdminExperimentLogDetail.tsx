@@ -69,8 +69,24 @@ interface Task {
   start_date: string;
   end_date: string;
   create_at: string;
-  status: string;
+  status: StatusType;
 }
+type StatusType =
+  | "Assigned"
+  | "Taken"
+  | "InProcess"
+  | "DoneInTime"
+  | "DoneInLate"
+  | "Cancel";
+
+const STATUS_LABELS: Record<StatusType, string> = {
+  Assigned: "Đã giao",
+  Taken: "Đã nhận",
+  InProcess: "Đang thực hiện",
+  DoneInTime: "Hoàn thành đúng hạn",
+  DoneInLate: "Hoàn thành trễ hạn",
+  Cancel: "Bị hủy",
+};
 
 // Helper function to convert status enum to Vietnamese
 const statusEnumToVietnamese = (status: string): string => {
@@ -502,17 +518,19 @@ const AdminExperimentLogDetail = () => {
                         return tasks.map((task) => (
                           <tr key={task.id}>
                             <td className="px-3 py-2 border">{task.name}</td>
-                            <td className="px-3 py-2 border">
-                              {task.start_date}
+                            <td className="px-3 py-2 border text-center">
+                              {formatDate(task.start_date)}
+                            </td>
+                            <td className="px-3 py-2 border text-center">
+                              {formatDate(task.end_date)}
                             </td>
                             <td className="px-3 py-2 border">
-                              {task.end_date}
+                              {STATUS_LABELS[task.status]}
                             </td>
-                            <td className="px-3 py-2 border">{task.status}</td>
                             <td className="px-3 py-2 border">
                               <button
                                 type="button"
-                                className="text-blue-600 underline"
+                                className="text-blue-600 underline cursor-pointer"
                                 onClick={() =>
                                   void navigate(`/admin/tasks/${task.id}`)
                                 }
@@ -525,6 +543,56 @@ const AdminExperimentLogDetail = () => {
                       })()}
                     </tbody>
                   </table>
+                  {(() => {
+                    const stageId = log.stages?.[selectedStage - 1]?.id;
+                    const tasks: Task[] =
+                      stageId && Array.isArray(stageTasks[stageId])
+                        ? stageTasks[stageId]
+                        : [];
+                    const total = tasks.length;
+                    const doneInTime = tasks.filter(
+                      (t) => t.status === "DoneInTime"
+                    ).length;
+                    const doneInLate = tasks.filter(
+                      (t) => t.status === "DoneInLate"
+                    ).length;
+                    const canceled = tasks.filter(
+                      (t) => t.status === "Cancel"
+                    ).length;
+
+                    return (
+                      <div className="mt-2">
+                        <table className="w-full border text-center">
+                          <thead>
+                            <tr>
+                              <th className="border px-2 py-1">Thống kê</th>
+                              <th className="border px-2 py-1">Tổng task</th>
+                              <th className="border px-2 py-1">
+                                Số task đã hoàn thành đúng hạn
+                              </th>
+                              <th className="border px-2 py-1">
+                                Số task hoàn thành trễ hạn
+                              </th>
+                              <th className="border px-2 py-1">
+                                Số task bị huỷ
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="border px-2 py-1 font-semibold">
+                                Số lượng
+                              </td>
+                              <td className="border px-2 py-1">{total}</td>
+                              <td className="border px-2 py-1">{doneInTime}</td>
+                              <td className="border px-2 py-1">{doneInLate}</td>
+                              <td className="border px-2 py-1">{canceled}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
