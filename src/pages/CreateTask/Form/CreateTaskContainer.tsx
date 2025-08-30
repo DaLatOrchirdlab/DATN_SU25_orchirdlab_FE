@@ -60,6 +60,7 @@ const CreateTaskContainer: React.FC = () => {
   const [loadingStage, setLoadingStage] = useState(false);
   const [loadingSample, setLoadingSample] = useState(false);
   const [loadingElements, setLoadingElements] = useState(false);
+  const [loadingSampleDetails, setLoadingSampleDetails] = useState(false);
   const navigate = useNavigate();
   const { setState } = useCreateTask();
   const { enqueueSnackbar } = useSnackbar();
@@ -217,20 +218,47 @@ const CreateTaskContainer: React.FC = () => {
     void navigate("/create-task/step-2");
   };
 
-  // Check if this is auto-create mode
-  const [searchParams] = useSearchParams();
-  const autoCreate = searchParams.get('autoCreate') === 'true';
-  const experimentLogId = searchParams.get('experimentLogId');
-  const stageId = searchParams.get('stageId');
+  
+    // Check if this is auto-create mode
+    const [searchParams] = useSearchParams();
+    const autoCreate = searchParams.get('autoCreate') === 'true';
+    const experimentLogId = searchParams.get('experimentLogId');
+    const stageId = searchParams.get('stageId');
+    const sampleId = searchParams.get('sampleId');
+  
+    // Debug: Log URL parameters
+    console.log('CreateTaskContainer URL params:', { autoCreate, experimentLogId, stageId, sampleId });
+  
+    // If auto-create mode, show auto-create component
+    if (autoCreate && experimentLogId && stageId) {
+      console.log('Rendering AutoCreateTaskContainer');
+      return <AutoCreateTaskContainer />;
+    }
+  
+    // Fetch sample details when sampleId is provided
+    // Fetch sample details khi có sampleId
+useEffect(() => {
+  if (!sampleId) return;
+  
+  const fetchSampleDetails = async () => {
+    setLoadingSampleDetails(true);
+    try {
+      const res = await axiosInstance.get(`/api/sample/${sampleId}`);
+      const data = res.data.value as Sample;
+      if (data) {
+        setSelectedSample(data.id);
+        setSamples([{ id: data.id, name: data.name }]); // để UI hiển thị
+      }
+    } catch (err) {
+      console.error("Error fetching sample details:", err);
+      enqueueSnackbar("Không thể tải thông tin mẫu!", { variant: "error" });
+    } finally {
+      setLoadingSampleDetails(false);
+    }
+  };
 
-  // Debug: Log URL parameters
-  console.log('CreateTaskContainer URL params:', { autoCreate, experimentLogId, stageId });
-
-  // If auto-create mode, show auto-create component
-  if (autoCreate && experimentLogId && stageId) {
-    console.log('Rendering AutoCreateTaskContainer');
-    return <AutoCreateTaskContainer />;
-  }
+  void fetchSampleDetails();
+}, [sampleId, enqueueSnackbar]);
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 flex flex-col items-center py-10">
@@ -285,9 +313,21 @@ const CreateTaskContainer: React.FC = () => {
           </div>
         )}
         
-
+        {/* Show sample info when sampleId is provided from URL */}
+        {sampleId && (
+  <div className="flex flex-col mb-4 flex-1">
+    <label className="font-medium mb-1.5">Mẫu thí nghiệm đã chọn</label>
+    <div className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-100">
+      {samples.find(s => s.id === selectedSample)?.name || "Đang tải..."}
+    </div>
+    {loadingSampleDetails && (
+      <span className="text-xs text-gray-400">Đang tải thông tin mẫu...</span>
+    )}
+  </div>
+)}
         
-        {samples.length > 0 && (
+        {/* Show sample dropdown when sampleId is not provided and samples are available */}
+        {!sampleId && samples.length > 0 && (
           <div className="flex flex-col mb-4 flex-1">
             <label className="font-medium mb-1.5">Chọn mẫu thí nghiệm (Tùy chọn)</label>
             <select
@@ -434,8 +474,8 @@ const CreateTaskContainer: React.FC = () => {
             className="bg-green-700 text-white border-none py-2.5 px-8 rounded-lg text-base cursor-pointer hover:bg-green-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             disabled={
               !name || 
-              !selectedEL || 
-              !selectedStage || 
+              // !selectedEL || 
+              // !selectedStage || 
               !startDate || 
               !endDate || 
               attributes.some(a => !a.elementId || !a.value) ||

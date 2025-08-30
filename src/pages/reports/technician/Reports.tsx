@@ -79,6 +79,7 @@ export default function ReportsTechnician() {
             <tr className="bg-green-50 text-green-800 font-semibold">
               <th className="py-3 px-4 w-1/4">Tên</th>
               <th className="px-4 w-1/2">Mẫu cây</th>
+              <th className="px-4 w-1/4">Trạng thái</th>
               <th className="px-4 w-1/4">Hành động</th>
             </tr>
           </thead>
@@ -112,6 +113,17 @@ export default function ReportsTechnician() {
                     {samples.find((sample) => sample.id === s.sample)?.name ??
                       s.sample}
                   </td>
+                  <td className="px-4">
+  <span
+    className={`px-2 py-1 rounded-full text-xs font-semibold ${
+      s.status === "Seen"
+        ? "bg-green-100 text-green-800"
+        : "bg-yellow-100 text-yellow-800"
+    }`}
+  >
+    {s.status === "Seen" ? "Đã xem" : "Chưa xem"}
+  </span>
+</td>
                   <td className="px-4 flex gap-2 mt-2">
                     <button
                       type="button"

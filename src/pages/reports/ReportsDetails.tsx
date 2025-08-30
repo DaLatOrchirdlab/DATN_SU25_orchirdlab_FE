@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import type { Report } from "../../types/Report";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/AuthContext";
+import { useSnackbar } from 'notistack';
 
 interface Sample {
   id: string;
@@ -24,6 +25,7 @@ export default function ReportsDetails() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
+  const { enqueueSnackbar } = useSnackbar();
   const [report, setReport] = useState<Report | null>(null);
   const [sample, setSample] = useState<Sample | null>(null);
   const [images, setImages] = useState<string[]>([]);
@@ -33,7 +35,7 @@ export default function ReportsDetails() {
     null
   );
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
-  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [evaluation, setEvaluation] = useState<string>("");
 
   const diseaseNameMap: Record<string, string> = {
     Anthracnose: "Thán thư",
@@ -115,7 +117,6 @@ export default function ReportsDetails() {
 
   const analyzeImageFromUrl = async (imgUrl: string) => {
     setAnalyzeLoading(true);
-    setAnalyzeError(null);
     setAnalyzeResult(null);
     try {
       const response = await fetch(imgUrl);
@@ -128,7 +129,7 @@ export default function ReportsDetails() {
       });
       setAnalyzeResult(res.data as AnalyzeResult);
     } catch {
-      setAnalyzeError("Phân tích thất bại. Vui lòng thử lại.");
+      enqueueSnackbar("Phân tích thất bại. Vui lòng thử lại.", { variant: 'error' });
     } finally {
       setAnalyzeLoading(false);
     }
@@ -144,6 +145,22 @@ export default function ReportsDetails() {
     };
 
     return statusMap[status] || status;
+  };
+
+  const handleSendReview = async () => {
+    if (!id) return;
+    try {
+      await axiosInstance.put("/api/report/review-report-change", {
+        id,
+        reviewReportText: evaluation,
+      });
+
+      setReport((prev) => (prev ? { ...prev, reviewReport: evaluation } : prev));
+      enqueueSnackbar("Đánh giá đã được gửi thành công!", { variant: 'success' });
+    } catch (error) {
+      console.error("Lỗi khi gửi đánh giá:", error);
+      enqueueSnackbar("Gửi đánh giá thất bại!", { variant: 'error' });
+    }
   };
 
   if (loading) {
@@ -185,14 +202,15 @@ export default function ReportsDetails() {
               <div className="font-semibold text-gray-700 mb-1">Trạng thái</div>
               <span
                 className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                  report?.status === true
+                  report?.status === "Seen"
                     ? "bg-green-100 text-green-700"
                     : "bg-yellow-100 text-yellow-700"
                 }`}
               >
-                {report?.status}
+                {report?.status === "Seen" ? "Đã xem" : "Chưa xem"}
               </span>
             </div>
+
             <div>
               <div className="font-semibold text-gray-700 mb-1">
                 Thông tin thuộc tính
@@ -229,6 +247,19 @@ export default function ReportsDetails() {
               {report?.description}
             </div>
           </div>
+
+          {/* Đánh giá báo cáo - hiển thị cho cả roleID 2 và 3 */}
+          {report?.reviewReport && (
+            <div className="mb-6">
+              <h3 className="font-semibold text-green-800 mb-2">
+                Đánh giá báo cáo
+              </h3>
+              <div className="bg-gray-50 p-4 rounded text-gray-800 whitespace-pre-line">
+                {report.reviewReport}
+              </div>
+            </div>
+          )}
+
           {/* Hình ảnh đính kèm nếu có */}
           <div className="mb-6">
             <h3 className="font-semibold text-green-800 mb-2">
@@ -266,9 +297,6 @@ export default function ReportsDetails() {
                 </button>
               </div>
             )}
-            {analyzeError && (
-              <div className="text-red-600 mt-2">{analyzeError}</div>
-            )}
             {analyzeResult && (
               <div className="mt-4 bg-gray-50 p-4 rounded">
                 <div className="font-semibold mb-2 text-green-700">
@@ -300,6 +328,7 @@ export default function ReportsDetails() {
             )}
           </div>
         </div>
+
         {/* Thông tin mẫu vật */}
         <div className="bg-white rounded-xl shadow p-8">
           <h2 className="text-xl font-bold text-green-900 mb-4">
@@ -347,8 +376,44 @@ export default function ReportsDetails() {
               </div>
             </div>
           ) : (
-            <div className="text-gray-500">
-              Không tìm thấy thông tin mẫu vật.
+            <div className="text-gray-500">Không tìm thấy thông tin mẫu vật.</div>
+          )}
+
+          {/* Nút tạo task mới */}
+          {sample && user?.roleID === 2 && (
+            <div className="mt-6">
+              <button
+                type="button"
+                className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 transition"
+                onClick={() => {
+                  void navigate(`/create-task/step-1?sampleId=${sample.id}`);
+                }}
+              >
+                Tạo task mới
+              </button>
+            </div>
+          )}
+
+          {/* Form đánh giá báo cáo cho researcher (roleID 2) */}
+          {user?.roleID === 2 && (
+            <div className="mt-6">
+              <h3 className="font-semibold text-green-800 mb-2">Đánh giá báo cáo</h3>
+              <textarea
+                className="w-full border border-gray-300 rounded-md p-2 mb-2"
+                rows={4}
+                placeholder="Nhập đánh giá của bạn..."
+                value={evaluation}
+                onChange={(e) => setEvaluation(e.target.value)}
+              />
+              <button
+                type="button"
+                className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 transition"
+                onClick={() => {
+                  void handleSendReview();
+                }}
+              >
+                Gửi đánh giá
+              </button>
             </div>
           )}
         </div>

@@ -97,6 +97,7 @@ export default function ReportList() {
                 <th className="py-3 px-4">Tên task</th>
                 <th className="px-4">Mô tả</th>
                 <th className="px-4">Người viết</th>
+                <th className="px-4">Trạng thái</th>
                 <th className="px-4">Hành động</th>
               </tr>
             </thead>
@@ -131,6 +132,17 @@ export default function ReportList() {
                     <td className="py-3 px-4">{r.name}</td>
                     <td className="px-4">{r.description}</td>
                     <td className="px-4">{r.technician}</td>
+                    <td className="px-4">
+  <span
+    className={`px-2 py-1 rounded-full text-xs font-semibold ${
+      r.status === "Seen"
+        ? "bg-green-100 text-green-800"
+        : "bg-yellow-100 text-yellow-800"
+    }`}
+  >
+    {r.status === "Seen" ? "Đã xem" : "Chưa xem"}
+  </span>
+</td>
                     <td className="px-4">
                       <a
                         href={`/reports/${r.id}`}

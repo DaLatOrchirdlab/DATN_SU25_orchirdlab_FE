@@ -107,12 +107,12 @@ export default function AdminReportsDetails() {
               <div className="font-semibold text-gray-700 mb-1">Trạng thái</div>
               <span
                 className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                  report?.status === true
+                  report?.status === "Seen"
                     ? "bg-green-100 text-green-700"
                     : "bg-yellow-100 text-yellow-700"
                 }`}
               >
-                {report?.status}
+                {report?.status === "Seen" ? "Đã xem" : "Chưa xem"}
               </span>
             </div>
             <div>
@@ -151,6 +151,19 @@ export default function AdminReportsDetails() {
               {report?.description}
             </div>
           </div>
+
+          {/* Hiển thị đánh giá báo cáo (reviewReport) */}
+          {report?.reviewReport && (
+            <div className="mb-6">
+              <h3 className="font-semibold text-green-800 mb-2">
+                Đánh giá báo cáo
+              </h3>
+              <div className="bg-blue-50 p-4 rounded text-gray-800 whitespace-pre-line">
+                {report.reviewReport}
+              </div>
+            </div>
+          )}
+
           {/* Hình ảnh đính kèm nếu có */}
           {images.length > 0 && (
             <div className="mb-6">
@@ -170,6 +183,7 @@ export default function AdminReportsDetails() {
             </div>
           )}
         </div>
+
         {/* Thông tin mẫu vật */}
         <div className="bg-white rounded-xl shadow p-8">
           <h2 className="text-xl font-bold text-green-900 mb-4">

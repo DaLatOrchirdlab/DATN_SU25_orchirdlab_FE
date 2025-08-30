@@ -12,7 +12,7 @@ export interface Report {
   description: string;
   sample: string;
   technician: string;
-  status: boolean;
+  status: string;
   reportAttributes: reportAttributes[];
 }
 export interface ReportApiResponse {
