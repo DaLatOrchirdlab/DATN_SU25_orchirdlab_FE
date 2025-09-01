@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { User } from "../types/Auth";
+import axiosInstance from "../api/axiosInstance";
 
 interface AuthContextType {
   user: User | null;
@@ -36,6 +37,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthReady(true);
   }, []);
 
+  //Api logout
+  const handleLogoutApi = async () => {
+      const res = await axiosInstance.post("/api/user/logout", {
+        refreshToken: refreshToken,
+      });
+      if (res.status !== 200) {
+        throw new Error("Logout failed");
+      }
+  };
+
   const login = ({
     accessToken,
     refreshToken,
@@ -54,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    handleLogoutApi();
     setUser(null);
     setAccessToken(null);
     setRefreshToken(null);
