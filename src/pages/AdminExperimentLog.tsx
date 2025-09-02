@@ -454,20 +454,12 @@ const AdminExperimentLog = () => {
               </div>
             </div>
             <div className="flex flex-wrap justify-center h-25 gap-4 mb-6">
-              <div className="bg-green-50 p-4 rounded-lg w-40">
-                <div className="text-green-600 text-sm font-medium">
-                  TỔNG THÍ NGHIỆM
-                </div>
-                <div className="text-2xl font-bold text-green-700">
-                  {stats.total}
-                </div>
-              </div>
               <div className="bg-blue-50 p-4 rounded-lg w-40">
                 <div className="text-blue-600 text-sm font-medium">
-                  {statusToVietnamese("Created")}
+                  TỔNG THÍ NGHIỆM
                 </div>
                 <div className="text-2xl font-bold text-blue-700">
-                  {stats.Created}
+                  {stats.total}
                 </div>
               </div>
               <div className="bg-yellow-50 p-4 rounded-lg w-40">
