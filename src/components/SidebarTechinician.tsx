@@ -1,8 +1,9 @@
 import { NavLink } from "react-router-dom";
-import { FaTasks, FaChartBar } from "react-icons/fa";
+import { FaTasks, FaChartBar, FaFlask } from "react-icons/fa";
 
 const tabs = [
   { name: "Nhiệm vụ", path: "/technician/tasks", icon: <FaTasks /> },
+  { name: "Mẫu thí nghiệm", path: "/technician/samples", icon: <FaFlask /> },
   { name: "Báo cáo", path: "/technician/reports", icon: <FaChartBar /> },
 ];
 

@@ -49,6 +49,8 @@ import ReportsTechnician from "./pages/reports/technician/Reports";
 import SidebarTechnician from "./components/SidebarTechinician";
 import ListTask from "./pages/technician/task/listTask";
 import TechDetailTask from "./pages/technician/task/TechDetailTask";
+import ListSample from "./pages/technician/sample/ListSample";
+import TechDetailSample from "./pages/technician/sample/TechDetailSample";
 // Import admin pages
 import AdminTasks from "./pages/AdminTasks";
 import AdminTaskDetail from "./pages/AdminTaskDetail";
@@ -214,6 +216,14 @@ function AppLayout() {
               }
             />
             <Route
+              path="/technician/samples"
+              element={
+                <ProtectedRoute requiredRole={3}>
+                  <ListSample />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/technician/reports"
               element={
                 <ProtectedRoute requiredRole={3}>
@@ -267,6 +277,14 @@ function AppLayout() {
               element={
                 <ProtectedRoute requiredRole={3}>
                   <TechDetailTask />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/technician/samples/:id"
+              element={
+                <ProtectedRoute requiredRole={3}>
+                  <TechDetailSample />
                 </ProtectedRoute>
               }
             />
