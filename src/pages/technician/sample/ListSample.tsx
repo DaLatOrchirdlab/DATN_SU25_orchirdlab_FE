@@ -66,9 +66,18 @@ function normalizeSamplesResponse(data: unknown): {
 
 const STATUS_COLOR_MAP: Record<string, string> = {
   Process: "text-yellow-700",
-  Active: "text-green-700",
-  Inactive: "text-gray-700",
+  Suspended: "text-orange-700",
   Destroyed: "text-red-700",
+
+  ChangedToSeedling: "text-green-700",
+};
+
+const STATUS_LABEL_MAP: Record<string, string> = {
+  Process: "Đang xử lý",
+  Suspended: "Tạm dừng",
+  Destroyed: "Đã tiêu hủy",
+
+  ChangedToSeedling: "Đã chuyển thành cây con",
 };
 
 export default function ListSample() {
@@ -79,6 +88,7 @@ export default function ListSample() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 20;
@@ -107,11 +117,15 @@ export default function ListSample() {
               return db.getTime() - da.getTime();
             });
 
-            const filtered = searchTerm
-              ? sorted.filter((s) =>
-                  s.name.toLowerCase().includes(searchTerm.toLowerCase())
-                )
-              : sorted;
+            const filtered = sorted.filter((s) => {
+              const matchesSearch = searchTerm
+                ? s.name.toLowerCase().includes(searchTerm.toLowerCase())
+                : true;
+              const matchesStatus = statusFilter
+                ? s.statusEnum === statusFilter
+                : true;
+              return matchesSearch && matchesStatus;
+            });
 
             const start = (currentPage - 1) * itemsPerPage;
             const end = start + itemsPerPage;
@@ -127,7 +141,7 @@ export default function ListSample() {
       searchTerm ? 300 : 0
     );
     return () => clearTimeout(t);
-  }, [query, searchTerm, currentPage, enqueueSnackbar]);
+  }, [query, searchTerm, statusFilter, currentPage, enqueueSnackbar]);
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const paginate = (p: number) => setCurrentPage(p);
@@ -157,10 +171,26 @@ export default function ListSample() {
                 className="w-full border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
+            <div className="min-w-[200px]">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="">Tất cả trạng thái</option>
+                <option value="Process">Đang xử lý</option>
+                <option value="Suspended">Tạm dừng</option>
+                <option value="Destroyed">Đã tiêu hủy</option>
+                <option value="ChangedToSeedling">
+                  Đã chuyển thành cây con
+                </option>
+              </select>
+            </div>
             <button
               type="button"
               onClick={() => {
                 setSearchTerm("");
+                setStatusFilter("");
                 setCurrentPage(1);
               }}
               className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
@@ -219,7 +249,7 @@ export default function ListSample() {
                               STATUS_COLOR_MAP[s.statusEnum] || "text-gray-700"
                             }`}
                           >
-                            {s.statusEnum}
+                            {STATUS_LABEL_MAP[s.statusEnum] || s.statusEnum}
                           </span>
                         </td>
                       </tr>

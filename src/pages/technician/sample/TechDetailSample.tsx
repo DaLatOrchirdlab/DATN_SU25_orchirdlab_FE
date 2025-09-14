@@ -23,6 +23,22 @@ interface SampleDetail {
   reportAttributes?: ReportAttribute[];
 }
 
+const STATUS_COLOR_MAP: Record<string, string> = {
+  Process: "bg-yellow-100 text-yellow-800",
+  Suspended: "bg-orange-100 text-orange-800",
+  Destroyed: "bg-red-100 text-red-800",
+
+  ChangedToSeedling: "bg-green-100 text-green-800",
+};
+
+const STATUS_LABEL_MAP: Record<string, string> = {
+  Process: "Đang xử lý",
+  Suspended: "Tạm dừng",
+  Destroyed: "Đã tiêu hủy",
+
+  ChangedToSeedling: "Đã chuyển thành cây con",
+};
+
 export default function TechDetailSample() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -145,8 +161,12 @@ export default function TechDetailSample() {
 
         <div className="flex flex-col mb-6">
           <label className="font-medium mb-1.5">Trạng thái</label>
-          <span className="px-3 py-2 rounded-md text-sm font-medium w-fit bg-blue-100 text-blue-800">
-            {sample.statusEnum}
+          <span
+            className={`px-3 py-2 rounded-md text-sm font-medium w-fit ${
+              STATUS_COLOR_MAP[sample.statusEnum] || "bg-gray-100 text-gray-800"
+            }`}
+          >
+            {STATUS_LABEL_MAP[sample.statusEnum] || sample.statusEnum}
           </span>
         </div>
 
