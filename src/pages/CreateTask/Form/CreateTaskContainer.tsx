@@ -5,7 +5,6 @@ import { useCreateTask } from "../../../context/CreateTaskContext";
 import type {
   Attribute,
   ExperimentLog,
-  Stage,
   Sample,
   Element,
 } from "../../../context/CreateTaskContext";
@@ -25,12 +24,6 @@ interface ApiExperimentLogResponse {
   };
 }
 
-interface ApiStageResponse {
-  value?: {
-    stages?: { id: string; name: string }[];
-  };
-}
-
 interface ApiSampleResponse {
   value?: {
     data?: { id: string; name: string }[];
@@ -41,8 +34,6 @@ const CreateTaskContainer: React.FC = () => {
   const [name, setName] = useState("");
   const [experimentLogs, setExperimentLogs] = useState<ExperimentLog[]>([]);
   const [selectedEL, setSelectedEL] = useState<string>("");
-  const [stages, setStages] = useState<Stage[]>([]);
-  const [selectedStage, setSelectedStage] = useState<string>("");
   const [samples, setSamples] = useState<Sample[]>([]);
   const [selectedSample, setSelectedSample] = useState<string>("");
   const [description, setDescription] = useState("");
@@ -61,7 +52,6 @@ const CreateTaskContainer: React.FC = () => {
   ]);
 
   const [loadingEL, setLoadingEL] = useState(false);
-  const [loadingStage, setLoadingStage] = useState(false);
   const [loadingSample, setLoadingSample] = useState(false);
   const [loadingElements, setLoadingElements] = useState(false);
   const [loadingSampleDetails, setLoadingSampleDetails] = useState(false);
@@ -114,33 +104,6 @@ const CreateTaskContainer: React.FC = () => {
       })
       .finally(() => setLoadingEL(false));
   }, [enqueueSnackbar]);
-
-  // Fetch stages when EL changes
-  useEffect(() => {
-    if (!selectedEL) {
-      setStages([]);
-      setSelectedStage("");
-      setSamples([]);
-      setSelectedSample("");
-      return;
-    }
-    setLoadingStage(true);
-    axiosInstance
-      .get(`/api/experimentlog/${selectedEL}`)
-      .then((res: { data: ApiStageResponse }) => {
-        const stagesData = Array.isArray(res.data?.value?.stages)
-          ? res.data.value.stages
-          : [];
-        setStages(stagesData.map((s) => ({ id: s.id, name: s.name })));
-      })
-      .catch(() => {
-        setStages([]);
-        enqueueSnackbar("Không thể tải danh sách giai đoạn!", {
-          variant: "error",
-        });
-      })
-      .finally(() => setLoadingStage(false));
-  }, [selectedEL, enqueueSnackbar]);
 
   // Fetch samples when EL changes
   useEffect(() => {
@@ -238,7 +201,7 @@ const CreateTaskContainer: React.FC = () => {
       ...prev,
       name,
       experimentLog: experimentLogs.find((el) => el.id === selectedEL) ?? null,
-      stage: stages.find((s) => s.id === selectedStage) ?? null,
+      stage: null,
       sample: samples.find((s) => s.id === selectedSample) ?? null,
       description,
       start_date: startDateWithTimezone,
@@ -333,33 +296,6 @@ const CreateTaskContainer: React.FC = () => {
               ))}
             </select>
             {loadingEL && (
-              <span className="text-xs text-gray-400">Đang tải...</span>
-            )}
-          </div>
-        )}
-        {/* Always show stage dropdown after EL is selected */}
-        {selectedEL && !sampleId && (
-          <div className="flex flex-col mb-4 flex-1">
-            <label className="font-medium mb-1.5">Chọn giai đoạn</label>
-            <select
-              value={selectedStage}
-              onChange={(e) => setSelectedStage(e.target.value)}
-              className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              <option value="">Chọn giai đoạn...</option>
-              {stages.length > 0 ? (
-                stages.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))
-              ) : (
-                <option value="" disabled>
-                  Không có giai đoạn nào
-                </option>
-              )}
-            </select>
-            {loadingStage && (
               <span className="text-xs text-gray-400">Đang tải...</span>
             )}
           </div>
@@ -558,8 +494,6 @@ const CreateTaskContainer: React.FC = () => {
             className="bg-green-700 text-white border-none py-2.5 px-8 rounded-lg text-base cursor-pointer hover:bg-green-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             disabled={
               !name ||
-              // !selectedEL ||
-              // !selectedStage ||
               !startDate ||
               !endDate ||
               attributes.some((a) => !a.elementId || !a.value) ||

@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
-import { useSnackbar } from "notistack";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -85,7 +84,6 @@ const STATUS_COLORS: Record<StatusType, string> = {
 
 export default function AdminTasks() {
   const navigate = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
 
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -115,11 +113,6 @@ export default function AdminTasks() {
   // Chart 2 filter cụ thể
   const [filterMode, setFilterMode] = useState<"day" | "week" | "month">("day");
   const [filterDate, setFilterDate] = useState<string>("");
-
-  // Chart 3 filter cụ thể (hoàn thành đúng hạn)
-  const [completedOnTimeMode, setCompletedOnTimeMode] = useState<
-    "day" | "week" | "month"
-  >("day");
 
   const tasksPerPage = 20;
 
@@ -224,12 +217,12 @@ export default function AdminTasks() {
       {
         label: "Tổng số nhiệm vụ được tạo",
         data: chartStats.map((item) => item.total),
-        backgroundColor: "#22c55e",
+        backgroundColor: "#3b82f6",
       },
       {
         label: "Nhiệm vụ hoàn thành đúng hạn",
         data: chartStats.map((item) => item.completedOnTime),
-        backgroundColor: "#10b981",
+        backgroundColor: "#22c55e",
       },
     ],
   };
@@ -267,7 +260,7 @@ export default function AdminTasks() {
 
     // Nhóm các task theo ngày/tuần/tháng hiển thị
     filteredTasks.forEach((task) => {
-      const date = new Date(task.create_at);
+      const date = new Date(task.create_at!);
       let key = "";
       if (filterMode === "day") {
         key = date.toLocaleDateString("vi-VN");
@@ -306,44 +299,7 @@ export default function AdminTasks() {
       {
         label: "Nhiệm vụ hoàn thành đúng hạn",
         data: filteredChartStats.map((item) => item.completedOnTime),
-        backgroundColor: "#10b981",
-      },
-    ],
-  };
-
-  // Chart 3: nhiệm vụ hoàn thành đúng hạn theo end_date
-  const completedOnTimeChartStats = useMemo(() => {
-    const grouped: Record<string, number> = {};
-    // Chỉ lấy các task có status là DoneInTime
-    const completedTasks = allTasks.filter(
-      (task) => task.status === "DoneInTime"
-    );
-
-    completedTasks.forEach((task) => {
-      if (!task.end_date) return;
-      const date = new Date(task.end_date);
-      let key = "";
-      if (completedOnTimeMode === "day") {
-        key = date.toLocaleDateString("vi-VN");
-      } else if (completedOnTimeMode === "week") {
-        const startOfWeek = new Date(date);
-        startOfWeek.setDate(date.getDate() - date.getDay() + 1);
-        key = `Tuần ${startOfWeek.toLocaleDateString("vi-VN")}`;
-      } else if (completedOnTimeMode === "month") {
-        key = `${date.getMonth() + 1}/${date.getFullYear()}`;
-      }
-      grouped[key] = (grouped[key] || 0) + 1;
-    });
-    return Object.entries(grouped).map(([label, value]) => ({ label, value }));
-  }, [allTasks, completedOnTimeMode]);
-
-  const completedOnTimeChartData = {
-    labels: completedOnTimeChartStats.map((item) => item.label),
-    datasets: [
-      {
-        label: "Nhiệm vụ hoàn thành đúng hạn",
-        data: completedOnTimeChartStats.map((item) => item.value),
-        backgroundColor: "#10b981",
+        backgroundColor: "#22c55e",
       },
     ],
   };
@@ -353,11 +309,13 @@ export default function AdminTasks() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">
-            Thống kê tổng nhiệm vụ được tạo
+            Thống kê tổng nhiệm vụ được tạo và hoàn thành đúng hạn
           </h1>
           <select
             value={timeMode}
-            onChange={(e) => setTimeMode(e.target.value as any)}
+            onChange={(e) =>
+              setTimeMode(e.target.value as "day" | "week" | "month")
+            }
             className="border px-3 py-2 rounded-lg"
           >
             <option value="day">Theo ngày</option>
@@ -374,11 +332,13 @@ export default function AdminTasks() {
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold text-gray-900">
-              Thống kê nhiệm vụ được tạo cụ thể
+              Thống kê nhiệm vụ được tạo và hoàn thành đúng hạn cụ thể
             </h1>
             <select
               value={filterMode}
-              onChange={(e) => setFilterMode(e.target.value as any)}
+              onChange={(e) =>
+                setFilterMode(e.target.value as "day" | "week" | "month")
+              }
               className="border px-3 py-2 rounded-lg"
             >
               <option value="day">Theo ngày</option>
@@ -396,7 +356,7 @@ export default function AdminTasks() {
         </div>
 
         {/* Chart 3: nhiệm vụ hoàn thành đúng hạn */}
-        <div className="bg-white rounded-lg shadow p-6 space-y-4">
+        {/* <div className="bg-white rounded-lg shadow p-6 space-y-4">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold text-gray-900">
               Thống kê nhiệm vụ hoàn thành đúng hạn
@@ -412,7 +372,7 @@ export default function AdminTasks() {
             </select>
           </div>
           <Bar data={completedOnTimeChartData} />
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
           {Object.entries(STATUS_SUMMARY_LABELS).map(([key, label]) => (
@@ -522,7 +482,7 @@ export default function AdminTasks() {
                     <tr
                       key={task.id}
                       className="border-b hover:bg-green-50 cursor-pointer"
-                      onClick={() => navigate(`/admin/tasks/${task.id}`)}
+                      onClick={() => void navigate(`/admin/tasks/${task.id}`)}
                     >
                       <td className="p-4">{task.name}</td>
                       <td className="p-4">{task.researcher}</td>
@@ -558,6 +518,7 @@ export default function AdminTasks() {
                 <div className="flex gap-2">
                   {currentPage > 1 && (
                     <button
+                      type="button"
                       onClick={() => setCurrentPage(currentPage - 1)}
                       className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300"
                     >
@@ -579,6 +540,7 @@ export default function AdminTasks() {
 
                     return (
                       <button
+                        type="button"
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-1 rounded-lg ${
@@ -593,6 +555,7 @@ export default function AdminTasks() {
                   })}
                   {currentPage < totalPages && (
                     <button
+                      type="button"
                       onClick={() => setCurrentPage(currentPage + 1)}
                       className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300"
                     >
