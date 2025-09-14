@@ -2,38 +2,40 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CreateTaskStepper from "../Step/CreateTaskStepper";
 import { useCreateTask } from "../../../context/CreateTaskContext";
-import type { Attribute, ExperimentLog, Stage, Sample, Element } from "../../../context/CreateTaskContext";
+import type {
+  Attribute,
+  ExperimentLog,
+  Stage,
+  Sample,
+  Element,
+} from "../../../context/CreateTaskContext";
 import axiosInstance from "../../../api/axiosInstance";
-import { useSnackbar } from 'notistack';
+import { useSnackbar } from "notistack";
 import AutoCreateTaskContainer from "./AutoCreateTaskContainer";
-
-
 
 interface ApiElementResponse {
   value?: {
-    data?: { id: string; name: string; description: string; }[];
+    data?: { id: string; name: string; description: string }[];
   };
 }
 
 interface ApiExperimentLogResponse {
   value?: {
-    data?: { id: string; name: string; }[];
+    data?: { id: string; name: string }[];
   };
 }
 
 interface ApiStageResponse {
   value?: {
-    stages?: { id: string; name: string; }[];
+    stages?: { id: string; name: string }[];
   };
 }
 
 interface ApiSampleResponse {
   value?: {
-    data?: { id: string; name: string; }[];
+    data?: { id: string; name: string }[];
   };
 }
-
-
 
 const CreateTaskContainer: React.FC = () => {
   const [name, setName] = useState("");
@@ -48,14 +50,16 @@ const CreateTaskContainer: React.FC = () => {
   const [endDate, setEndDate] = useState("");
   const [isDaily, setIsDaily] = useState(false);
   const [elements, setElements] = useState<Element[]>([]);
-  const [attributes, setAttributes] = useState<Attribute[]>([{
-    elementId: "",
-    elementName: "",
-    measurementUnit: "",
-    value: 0,
-    description: ""
-  }]);
-  
+  const [attributes, setAttributes] = useState<Attribute[]>([
+    {
+      elementId: "",
+      elementName: "",
+      measurementUnit: "",
+      value: 0,
+      description: "",
+    },
+  ]);
+
   const [loadingEL, setLoadingEL] = useState(false);
   const [loadingStage, setLoadingStage] = useState(false);
   const [loadingSample, setLoadingSample] = useState(false);
@@ -68,18 +72,25 @@ const CreateTaskContainer: React.FC = () => {
   // Fetch elements
   useEffect(() => {
     setLoadingElements(true);
-    axiosInstance.get("/api/element?pageNumber=1&pageSize=100")
+    axiosInstance
+      .get("/api/element?pageNumber=1&pageSize=100")
       .then((res: { data: ApiElementResponse }) => {
-        const data = Array.isArray(res.data?.value?.data) ? res.data.value.data : [];
-        setElements(data.map((el) => ({ 
-          id: el.id, 
-          name: el.name, 
-          description: el.description 
-        })));
+        const data = Array.isArray(res.data?.value?.data)
+          ? res.data.value.data
+          : [];
+        setElements(
+          data.map((el) => ({
+            id: el.id,
+            name: el.name,
+            description: el.description,
+          }))
+        );
       })
       .catch(() => {
         setElements([]);
-        enqueueSnackbar('Không thể tải danh sách nguyên vật liệu!', { variant: 'error' });
+        enqueueSnackbar("Không thể tải danh sách nguyên vật liệu!", {
+          variant: "error",
+        });
       })
       .finally(() => setLoadingElements(false));
   }, [enqueueSnackbar]);
@@ -87,14 +98,19 @@ const CreateTaskContainer: React.FC = () => {
   // Fetch experiment logs (EL)
   useEffect(() => {
     setLoadingEL(true);
-    axiosInstance.get("/api/experimentlog?pageNumber=1&pageSize=100")
+    axiosInstance
+      .get("/api/experimentlog?pageNumber=1&pageSize=100")
       .then((res: { data: ApiExperimentLogResponse }) => {
-        const data = Array.isArray(res.data?.value?.data) ? res.data.value.data : [];
+        const data = Array.isArray(res.data?.value?.data)
+          ? res.data.value.data
+          : [];
         setExperimentLogs(data.map((el) => ({ id: el.id, name: el.name })));
       })
       .catch(() => {
         setExperimentLogs([]);
-        enqueueSnackbar('Không thể tải danh sách nhật ký thí nghiệm!', { variant: 'error' });
+        enqueueSnackbar("Không thể tải danh sách nhật ký thí nghiệm!", {
+          variant: "error",
+        });
       })
       .finally(() => setLoadingEL(false));
   }, [enqueueSnackbar]);
@@ -109,14 +125,19 @@ const CreateTaskContainer: React.FC = () => {
       return;
     }
     setLoadingStage(true);
-    axiosInstance.get(`/api/experimentlog/${selectedEL}`)
+    axiosInstance
+      .get(`/api/experimentlog/${selectedEL}`)
       .then((res: { data: ApiStageResponse }) => {
-        const stagesData = Array.isArray(res.data?.value?.stages) ? res.data.value.stages : [];
+        const stagesData = Array.isArray(res.data?.value?.stages)
+          ? res.data.value.stages
+          : [];
         setStages(stagesData.map((s) => ({ id: s.id, name: s.name })));
       })
       .catch(() => {
         setStages([]);
-        enqueueSnackbar('Không thể tải danh sách giai đoạn!', { variant: 'error' });
+        enqueueSnackbar("Không thể tải danh sách giai đoạn!", {
+          variant: "error",
+        });
       })
       .finally(() => setLoadingStage(false));
   }, [selectedEL, enqueueSnackbar]);
@@ -129,64 +150,74 @@ const CreateTaskContainer: React.FC = () => {
       return;
     }
     setLoadingSample(true);
-    axiosInstance.get(`/api/sample?pageNo=1&pageSize=100&experimentLogId=${selectedEL}`)
+    axiosInstance
+      .get(`/api/sample?pageNo=1&pageSize=100&experimentLogId=${selectedEL}`)
       .then((res: { data: ApiSampleResponse }) => {
-        const data = Array.isArray(res.data?.value?.data) ? res.data.value.data : [];
+        const data = Array.isArray(res.data?.value?.data)
+          ? res.data.value.data
+          : [];
         setSamples(data.map((s) => ({ id: s.id, name: s.name })));
       })
       .catch(() => {
         setSamples([]);
-        enqueueSnackbar('Không thể tải danh sách mẫu thí nghiệm!', { variant: 'error' });
+        enqueueSnackbar("Không thể tải danh sách mẫu thí nghiệm!", {
+          variant: "error",
+        });
       })
       .finally(() => setLoadingSample(false));
   }, [selectedEL, enqueueSnackbar]);
 
-
-
-
-
   // Attribute handlers
-  const handleAttributeChange = (idx: number, field: keyof Attribute, value: string | number) => {
-    setAttributes(prev => prev.map((attr, i) => {
-      if (i === idx) {
-        if (field === "elementId") {
-          // Khi chọn element, tự động cập nhật tên và đơn vị
-          const selectedElement = elements.find(el => el.id === value);
-          return {
-            ...attr,
-            elementId: value as string,
-            elementName: selectedElement?.name ?? "",
-            measurementUnit: selectedElement?.description ?? ""
-          };
+  const handleAttributeChange = (
+    idx: number,
+    field: keyof Attribute,
+    value: string | number
+  ) => {
+    setAttributes((prev) =>
+      prev.map((attr, i) => {
+        if (i === idx) {
+          if (field === "elementId") {
+            // Khi chọn element, tự động cập nhật tên và đơn vị
+            const selectedElement = elements.find((el) => el.id === value);
+            return {
+              ...attr,
+              elementId: value as string,
+              elementName: selectedElement?.name ?? "",
+              measurementUnit: selectedElement?.description ?? "",
+            };
+          }
+          return { ...attr, [field]: value };
         }
-        return { ...attr, [field]: value };
-      }
-      return attr;
-    }));
+        return attr;
+      })
+    );
   };
 
   const handleAddAttribute = () => {
-    setAttributes(prev => ([...prev, { 
-      elementId: "", 
-      elementName: "",
-      measurementUnit: "", 
-      value: 0, 
-      description: "" 
-    }]));
+    setAttributes((prev) => [
+      ...prev,
+      {
+        elementId: "",
+        elementName: "",
+        measurementUnit: "",
+        value: 0,
+        description: "",
+      },
+    ]);
   };
 
   const handleRemoveAttribute = (idx: number) => {
-    setAttributes(prev => prev.filter((_, i) => i !== idx));
+    setAttributes((prev) => prev.filter((_, i) => i !== idx));
   };
 
   // Submit (Next)
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    
+
     // Chuyển đổi startDate và endDate sang múi giờ Việt Nam (thêm 7 tiếng)
     let startDateWithTimezone = startDate;
     let endDateWithTimezone = endDate;
-    
+
     if (startDate) {
       // Tạo Date object từ chuỗi YYYY-MM-DD
       const startDateObj = new Date(startDate);
@@ -194,7 +225,7 @@ const CreateTaskContainer: React.FC = () => {
       startDateObj.setHours(7, 0, 0, 0);
       startDateWithTimezone = startDateObj.toISOString();
     }
-    
+
     if (endDate) {
       // Tạo Date object từ chuỗi YYYY-MM-DD
       const endDateObj = new Date(endDate);
@@ -202,13 +233,13 @@ const CreateTaskContainer: React.FC = () => {
       endDateObj.setHours(7, 0, 0, 0);
       endDateWithTimezone = endDateObj.toISOString();
     }
-    
-    setState(prev => ({
+
+    setState((prev) => ({
       ...prev,
       name,
-      experimentLog: experimentLogs.find(el => el.id === selectedEL) ?? null,
-      stage: stages.find(s => s.id === selectedStage) ?? null,
-      sample: samples.find(s => s.id === selectedSample) ?? null,
+      experimentLog: experimentLogs.find((el) => el.id === selectedEL) ?? null,
+      stage: stages.find((s) => s.id === selectedStage) ?? null,
+      sample: samples.find((s) => s.id === selectedSample) ?? null,
       description,
       start_date: startDateWithTimezone,
       end_date: endDateWithTimezone,
@@ -218,136 +249,166 @@ const CreateTaskContainer: React.FC = () => {
     void navigate("/create-task/step-2");
   };
 
-  
-    // Check if this is auto-create mode
-    const [searchParams] = useSearchParams();
-    const autoCreate = searchParams.get('autoCreate') === 'true';
-    const experimentLogId = searchParams.get('experimentLogId');
-    const stageId = searchParams.get('stageId');
-    const sampleId = searchParams.get('sampleId');
-  
-    // Debug: Log URL parameters
-    console.log('CreateTaskContainer URL params:', { autoCreate, experimentLogId, stageId, sampleId });
-  
-    // If auto-create mode, show auto-create component
-    if (autoCreate && experimentLogId && stageId) {
-      console.log('Rendering AutoCreateTaskContainer');
-      return <AutoCreateTaskContainer />;
-    }
-  
-    // Fetch sample details when sampleId is provided
-    // Fetch sample details khi có sampleId
-useEffect(() => {
-  if (!sampleId) return;
-  
-  const fetchSampleDetails = async () => {
-    setLoadingSampleDetails(true);
-    try {
-      const res = await axiosInstance.get(`/api/sample/${sampleId}`);
-      const data = res.data.value as Sample;
-      if (data) {
-        setSelectedSample(data.id);
-        setSamples([{ id: data.id, name: data.name }]); // để UI hiển thị
-      }
-    } catch (err) {
-      console.error("Error fetching sample details:", err);
-      enqueueSnackbar("Không thể tải thông tin mẫu!", { variant: "error" });
-    } finally {
-      setLoadingSampleDetails(false);
-    }
-  };
+  // Check if this is auto-create mode
+  const [searchParams] = useSearchParams();
+  const autoCreate = searchParams.get("autoCreate") === "true";
+  const experimentLogId = searchParams.get("experimentLogId");
+  const stageId = searchParams.get("stageId");
+  const sampleId = searchParams.get("sampleId");
 
-  void fetchSampleDetails();
-}, [sampleId, enqueueSnackbar]);
+  // Debug: Log URL parameters
+  console.log("CreateTaskContainer URL params:", {
+    autoCreate,
+    experimentLogId,
+    stageId,
+    sampleId,
+  });
+
+  // Fetch sample details when sampleId is provided
+  // Fetch sample details khi có sampleId
+  useEffect(() => {
+    if (!sampleId) return;
+
+    const fetchSampleDetails = async () => {
+      setLoadingSampleDetails(true);
+      try {
+        const res = await axiosInstance.get<{ value: Sample }>(
+          `/api/sample/${sampleId}`
+        );
+        const data = res.data.value;
+        if (data) {
+          setSelectedSample(data.id);
+          setSamples([{ id: data.id, name: data.name }]); // để UI hiển thị
+        }
+      } catch (err) {
+        console.error("Error fetching sample details:", err);
+        enqueueSnackbar("Không thể tải thông tin mẫu!", { variant: "error" });
+      } finally {
+        setLoadingSampleDetails(false);
+      }
+    };
+
+    void fetchSampleDetails();
+  }, [sampleId, enqueueSnackbar]);
+
+  // If auto-create mode, show auto-create component
+  if (autoCreate && experimentLogId && stageId) {
+    console.log("Rendering AutoCreateTaskContainer");
+    return <AutoCreateTaskContainer />;
+  }
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 flex flex-col items-center py-10">
       <CreateTaskStepper currentStep={1} />
-      <form className="bg-white rounded-2xl px-8 pt-8 pb-6 shadow-lg max-w-4xl w-full mx-auto" onSubmit={handleSubmit}>
+      <form
+        className="bg-white rounded-2xl px-8 pt-8 pb-6 shadow-lg max-w-4xl w-full mx-auto"
+        onSubmit={handleSubmit}
+      >
         <h2 className="text-xl font-semibold mb-6">Tạo nhiệm vụ</h2>
         <div className="flex flex-col mb-4 flex-1">
           <label className="font-medium mb-1.5">Tên nhiệm vụ *</label>
           <input
             type="text"
             value={name}
-            onChange={e => setName(e.target.value)}
+            onChange={(e) => setName(e.target.value)}
             required
             className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
         </div>
-        <div className="flex flex-col mb-4 flex-1">
-          <label className="font-medium mb-1.5">Chọn nhật ký thí nghiệm *</label>
-          <select
-            value={selectedEL}
-            onChange={e => setSelectedEL(e.target.value)}
-            required
-            className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          >
-            <option value="">Chọn nhật ký thí nghiệm...</option>
-            {experimentLogs.map(el => (
-              <option key={el.id} value={el.id}>{el.name}</option>
-            ))}
-          </select>
-          {loadingEL && <span className="text-xs text-gray-400">Đang tải...</span>}
-        </div>
-        {/* Always show stage dropdown after EL is selected */}
-        {selectedEL && (
+        {!sampleId && (
           <div className="flex flex-col mb-4 flex-1">
-            <label className="font-medium mb-1.5">Chọn giai đoạn *</label>
+            <label className="font-medium mb-1.5">
+              Chọn nhật ký thí nghiệm
+            </label>
+            <select
+              value={selectedEL}
+              onChange={(e) => setSelectedEL(e.target.value)}
+              className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="">Chọn nhật ký thí nghiệm...</option>
+              {experimentLogs.map((el) => (
+                <option key={el.id} value={el.id}>
+                  {el.name}
+                </option>
+              ))}
+            </select>
+            {loadingEL && (
+              <span className="text-xs text-gray-400">Đang tải...</span>
+            )}
+          </div>
+        )}
+        {/* Always show stage dropdown after EL is selected */}
+        {selectedEL && !sampleId && (
+          <div className="flex flex-col mb-4 flex-1">
+            <label className="font-medium mb-1.5">Chọn giai đoạn</label>
             <select
               value={selectedStage}
-              onChange={e => setSelectedStage(e.target.value)}
-              required
+              onChange={(e) => setSelectedStage(e.target.value)}
               className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
               <option value="">Chọn giai đoạn...</option>
               {stages.length > 0 ? (
-                stages.map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
+                stages.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
                 ))
               ) : (
-                <option value="" disabled>Không có giai đoạn nào</option>
+                <option value="" disabled>
+                  Không có giai đoạn nào
+                </option>
               )}
             </select>
-            {loadingStage && <span className="text-xs text-gray-400">Đang tải...</span>}
+            {loadingStage && (
+              <span className="text-xs text-gray-400">Đang tải...</span>
+            )}
           </div>
         )}
-        
+
         {/* Show sample info when sampleId is provided from URL */}
         {sampleId && (
-  <div className="flex flex-col mb-4 flex-1">
-    <label className="font-medium mb-1.5">Mẫu thí nghiệm đã chọn</label>
-    <div className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-100">
-      {samples.find(s => s.id === selectedSample)?.name || "Đang tải..."}
-    </div>
-    {loadingSampleDetails && (
-      <span className="text-xs text-gray-400">Đang tải thông tin mẫu...</span>
-    )}
-  </div>
-)}
-        
+          <div className="flex flex-col mb-4 flex-1">
+            <label className="font-medium mb-1.5">Mẫu thí nghiệm đã chọn</label>
+            <div className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-100">
+              {samples.find((s) => s.id === selectedSample)?.name ??
+                "Đang tải..."}
+            </div>
+            {loadingSampleDetails && (
+              <span className="text-xs text-gray-400">
+                Đang tải thông tin mẫu...
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Show sample dropdown when sampleId is not provided and samples are available */}
         {!sampleId && samples.length > 0 && (
           <div className="flex flex-col mb-4 flex-1">
-            <label className="font-medium mb-1.5">Chọn mẫu thí nghiệm (Tùy chọn)</label>
+            <label className="font-medium mb-1.5">
+              Chọn mẫu thí nghiệm (Tùy chọn)
+            </label>
             <select
               value={selectedSample}
-              onChange={e => setSelectedSample(e.target.value)}
+              onChange={(e) => setSelectedSample(e.target.value)}
               className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
               <option value="">Chọn mẫu thí nghiệm...</option>
-              {samples.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+              {samples.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
               ))}
             </select>
-            {loadingSample && <span className="text-xs text-gray-400">Đang tải...</span>}
+            {loadingSample && (
+              <span className="text-xs text-gray-400">Đang tải...</span>
+            )}
           </div>
         )}
         <div className="flex flex-col mb-4 flex-1">
           <label className="font-medium mb-1.5">Mô tả nhiệm vụ</label>
           <textarea
             value={description}
-            onChange={e => setDescription(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
             className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 min-h-[60px] resize-y"
           />
         </div>
@@ -357,7 +418,7 @@ useEffect(() => {
             <input
               type="date"
               value={startDate}
-              onChange={e => setStartDate(e.target.value)}
+              onChange={(e) => setStartDate(e.target.value)}
               required
               className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50"
             />
@@ -367,29 +428,36 @@ useEffect(() => {
             <input
               type="date"
               value={endDate}
-              onChange={e => setEndDate(e.target.value)}
+              onChange={(e) => setEndDate(e.target.value)}
               required
               className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50"
             />
           </div>
         </div>
-        
+
         {/* Daily checkbox */}
         <div className="flex items-center mb-4">
           <input
             type="checkbox"
             id="isDaily"
             checked={isDaily}
-            onChange={e => setIsDaily(e.target.checked)}
+            onChange={(e) => setIsDaily(e.target.checked)}
             className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
           />
-          <label htmlFor="isDaily" className="ml-2 text-sm font-medium text-gray-700">
+          <label
+            htmlFor="isDaily"
+            className="ml-2 text-sm font-medium text-gray-700"
+          >
             Nhiệm vụ hàng ngày
           </label>
         </div>
         <div className="flex flex-col mb-4 flex-1">
           <label className="font-medium mb-1.5">Nguyên vật liệu</label>
-          {loadingElements && <span className="text-xs text-gray-400 mb-2">Đang tải danh sách nguyên vật liệu...</span>}
+          {loadingElements && (
+            <span className="text-xs text-gray-400 mb-2">
+              Đang tải danh sách nguyên vật liệu...
+            </span>
+          )}
           {/* {selectedTemplateId && (
             <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
               Đã tự động điền từ mẫu nhiệm vụ "{taskTemplates.find(t => t.id === selectedTemplateId)?.name}"
@@ -397,18 +465,26 @@ useEffect(() => {
           )} */}
           <div className="space-y-4">
             {attributes.map((attr, idx) => (
-              <div key={idx} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              // eslint-disable-next-line react-x/no-array-index-key
+              <div
+                key={idx}
+                className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+              >
                 {/* Dòng 1: Select box nguyên vật liệu */}
                 <div className="mb-3">
                   <select
                     value={attr.elementId}
-                    onChange={e => handleAttributeChange(idx, "elementId", e.target.value)}
+                    onChange={(e) =>
+                      handleAttributeChange(idx, "elementId", e.target.value)
+                    }
                     className="w-full py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     required
                   >
                     <option value="">Chọn nguyên vật liệu...</option>
-                    {elements.map(element => (
-                      <option key={element.id} value={element.id}>{element.name}</option>
+                    {elements.map((element) => (
+                      <option key={element.id} value={element.id}>
+                        {element.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -432,7 +508,13 @@ useEffect(() => {
                     type="number"
                     placeholder="Số lượng"
                     value={attr.value}
-                    onChange={e => handleAttributeChange(idx, "value", Number(e.target.value))}
+                    onChange={(e) =>
+                      handleAttributeChange(
+                        idx,
+                        "value",
+                        Number(e.target.value)
+                      )
+                    }
                     className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     required
                   />
@@ -440,7 +522,9 @@ useEffect(() => {
                     type="text"
                     placeholder="Mô tả"
                     value={attr.description}
-                    onChange={e => handleAttributeChange(idx, "description", e.target.value)}
+                    onChange={(e) =>
+                      handleAttributeChange(idx, "description", e.target.value)
+                    }
                     className="py-2 px-3 border border-gray-300 rounded-md text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
@@ -473,12 +557,12 @@ useEffect(() => {
             type="submit"
             className="bg-green-700 text-white border-none py-2.5 px-8 rounded-lg text-base cursor-pointer hover:bg-green-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             disabled={
-              !name || 
-              // !selectedEL || 
-              // !selectedStage || 
-              !startDate || 
-              !endDate || 
-              attributes.some(a => !a.elementId || !a.value) ||
+              !name ||
+              // !selectedEL ||
+              // !selectedStage ||
+              !startDate ||
+              !endDate ||
+              attributes.some((a) => !a.elementId || !a.value) ||
               loadingElements
             }
           >

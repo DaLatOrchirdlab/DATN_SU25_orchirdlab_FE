@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import CreateTaskStepper from "../Step/CreateTaskStepper";
 import { useCreateTask } from "../../../context/CreateTaskContext";
 import axiosInstance from "../../../api/axiosInstance";
-import { useSnackbar } from 'notistack';
+import { useSnackbar } from "notistack";
 
 const ConfirmTaskContainer: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +14,9 @@ const ConfirmTaskContainer: React.FC = () => {
     void navigate("/create-task/step-2");
   };
 
-  const handleCreate = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleCreate = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
     // Chuẩn bị body đúng format
     const body = {
@@ -23,17 +25,19 @@ const ConfirmTaskContainer: React.FC = () => {
       sampleID: state.sample?.id ?? "",
       name: state.name,
       description: state.description,
-      start_date: state.start_date ? new Date(state.start_date).toISOString() : "",
+      start_date: state.start_date
+        ? new Date(state.start_date).toISOString()
+        : "",
       end_date: state.end_date ? new Date(state.end_date).toISOString() : "",
       isDaily: state.isDaily,
-      attribute: state.attribute.map(attr => ({
+      attribute: state.attribute.map((attr) => ({
         elementId: attr.elementId,
         name: attr.elementName, // Thêm field name cho API
         measurementUnit: attr.measurementUnit,
         value: attr.value,
-        description: attr.description
+        description: attr.description,
       })),
-      technicianID: state.technician ? [state.technician.id] : [],
+      assignCommand: state.assignCommand,
     };
     try {
       await axiosInstance.post("/api/tasks", body);
@@ -42,7 +46,10 @@ const ConfirmTaskContainer: React.FC = () => {
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       enqueueSnackbar(
-        "Tạo task thất bại!\n" + (error?.response?.data?.message ?? JSON.stringify(error?.response?.data) ?? ""),
+        "Tạo task thất bại!\n" +
+          (error?.response?.data?.message ??
+            JSON.stringify(error?.response?.data) ??
+            ""),
         { variant: "error" }
       );
     }
@@ -51,81 +58,89 @@ const ConfirmTaskContainer: React.FC = () => {
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 flex flex-col items-center py-10 px-4">
       <CreateTaskStepper currentStep={3} />
-      <form 
-        className="bg-white rounded-xl px-8 pt-8 pb-8 shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-full max-w-[900px] mx-auto mt-8" 
-        onSubmit={e => { void handleCreate(e); }}
+      <form
+        className="bg-white rounded-xl px-8 pt-8 pb-8 shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-full max-w-[900px] mx-auto mt-8"
+        onSubmit={(e) => {
+          void handleCreate(e);
+        }}
       >
-        <h2 className="text-2xl font-semibold mb-6">Xác nhận thông tin nhiệm vụ</h2>
+        <h2 className="text-2xl font-semibold mb-6">
+          Xác nhận thông tin nhiệm vụ
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Tên nhiệm vụ</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={state.name}
-              disabled 
+              disabled
               className="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
             />
           </div>
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Nhật ký thí nghiệm</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={state.experimentLog ? state.experimentLog.name : ""}
-              disabled 
+              disabled
               className="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
             />
           </div>
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Giai đoạn</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={state.stage ? state.stage.name : ""}
-              disabled 
+              disabled
               className="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
             />
           </div>
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Mẫu thí nghiệm</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={state.sample ? state.sample.name : ""}
-              disabled 
+              disabled
               className="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
             />
           </div>
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Ngày bắt đầu</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={state.start_date}
-              disabled 
+              disabled
               className="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
             />
           </div>
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Ngày kết thúc</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={state.end_date}
-              disabled 
+              disabled
               className="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
             />
           </div>
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Kỹ thuật viên</label>
-            <input 
-              type="text" 
-              value={state.technician ? state.technician.name : ""}
-              disabled 
+            <input
+              type="text"
+              value={
+                state.assignCommand && state.assignCommand.length > 0
+                  ? state.assignCommand[0].technicianName ?? ""
+                  : ""
+              }
+              disabled
               className="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
             />
           </div>
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Nhiệm vụ hàng ngày</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={state.isDaily ? "Có" : "Không"}
-              disabled 
+              disabled
               className="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
             />
           </div>

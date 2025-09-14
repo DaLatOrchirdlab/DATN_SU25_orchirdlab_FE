@@ -36,6 +36,11 @@ export interface Technician {
   name: string;
 }
 
+export interface AssignCommandItem {
+  technicianId: string;
+  technicianName?: string;
+}
+
 export interface CreateTaskState {
   name: string;
   experimentLog: ExperimentLog | null;
@@ -46,7 +51,7 @@ export interface CreateTaskState {
   end_date: string;
   isDaily: boolean;
   attribute: Attribute[];
-  technician: Technician | null;
+  assignCommand: AssignCommandItem[];
 }
 
 const defaultState: CreateTaskState = {
@@ -59,20 +64,18 @@ const defaultState: CreateTaskState = {
   end_date: "",
   isDaily: false,
   attribute: [],
-  technician: null,
+  assignCommand: [],
 };
 
 export const CreateTaskContext = createContext<{
   state: CreateTaskState;
   setState: React.Dispatch<React.SetStateAction<CreateTaskState>>;
-}>(
-  {
-    state: defaultState,
-    setState: () => {
-      // no-op
-    },
-  }
-);
+}>({
+  state: defaultState,
+  setState: () => {
+    // no-op
+  },
+});
 
 export const useCreateTask = () => useContext(CreateTaskContext);
 

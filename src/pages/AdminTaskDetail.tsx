@@ -38,6 +38,9 @@ interface TaskData {
   end_date: string;
   create_at: string;
   status: StatusType;
+  url?: string | null;
+  reportInformation?: string | null;
+  isDaily?: boolean | null;
 }
 
 const AdminTaskDetail: React.FC = () => {
@@ -178,7 +181,7 @@ const AdminTaskDetail: React.FC = () => {
       <div className="bg-white rounded-xl px-8 pt-8 pb-8 shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-full max-w-[900px] mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">
-            Chi tiết Task: {taskData.name}
+            Chi tiết Task: {taskData.name || "Không có"}
           </h2>
         </div>
 
@@ -198,13 +201,13 @@ const AdminTaskDetail: React.FC = () => {
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Tên nhiệm vụ</label>
             <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
-              {taskData.name}
+              {taskData.name || "Không có"}
             </div>
           </div>
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Tên researcher</label>
             <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
-              {taskData.researcher}
+              {taskData.researcher || "Không có"}
             </div>
           </div>
         </div>
@@ -212,7 +215,7 @@ const AdminTaskDetail: React.FC = () => {
         <div className="flex flex-col mb-6">
           <label className="font-medium mb-1.5">Mô tả nhiệm vụ</label>
           <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 min-h-[80px]">
-            {taskData.description}
+            {taskData.description || "Không có"}
           </div>
         </div>
 
@@ -260,19 +263,21 @@ const AdminTaskDetail: React.FC = () => {
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Ngày bắt đầu</label>
             <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
-              {formatDate(taskData.start_date)}
+              {taskData.start_date
+                ? formatDate(taskData.start_date)
+                : "Không có"}
             </div>
           </div>
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Ngày kết thúc</label>
             <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
-              {formatDate(taskData.end_date)}
+              {taskData.end_date ? formatDate(taskData.end_date) : "Không có"}
             </div>
           </div>
           <div className="flex flex-col">
             <label className="font-medium mb-1.5">Ngày tạo</label>
             <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
-              {formatDate(taskData.create_at)}
+              {taskData.create_at ? formatDate(taskData.create_at) : "Không có"}
             </div>
           </div>
         </div>
@@ -290,7 +295,9 @@ const AdminTaskDetail: React.FC = () => {
                   <span className="w-8 h-8 rounded-full bg-[#4cafef] text-white flex items-center justify-center font-bold text-[1.05rem] mr-2.5 flex-shrink-0">
                     TV
                   </span>
-                  <span className="flex-1">{assign.technicianName}</span>
+                  <span className="flex-1">
+                    {assign.technicianName || "Không có"}
+                  </span>
                   <span
                     className={`text-[0.98em] ml-2.5 flex-shrink-0 px-2 py-1 rounded-full text-xs ${
                       assign.status
@@ -308,6 +315,44 @@ const AdminTaskDetail: React.FC = () => {
               Chưa có kỹ thuật viên nào được giao
             </div>
           )}
+        </div>
+
+        {/* Báo cáo và hình ảnh */}
+        <div className="flex flex-col mb-6">
+          <label className="font-medium mb-1.5">Thông tin báo cáo</label>
+          <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+            {taskData.reportInformation || "Không có"}
+          </div>
+        </div>
+        {taskData.url && (
+          <div className="flex flex-col mb-6">
+            <label className="font-medium mb-1.5">Ảnh báo cáo</label>
+            <a
+              href={taskData.url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-600 underline break-all mb-2"
+            >
+              {taskData.url}
+            </a>
+            <img
+              src={taskData.url}
+              alt="Report"
+              className="max-h-64 object-contain border rounded"
+            />
+          </div>
+        )}
+
+        {/* Loại nhiệm vụ */}
+        <div className="flex flex-col mb-6">
+          <label className="font-medium mb-1.5">Loại nhiệm vụ</label>
+          <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+            {taskData.isDaily === true
+              ? "Lặp lại hằng ngày tới ngày kết thúc"
+              : taskData.isDaily === false
+              ? "Thực hiện một lần"
+              : "Không có"}
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t">

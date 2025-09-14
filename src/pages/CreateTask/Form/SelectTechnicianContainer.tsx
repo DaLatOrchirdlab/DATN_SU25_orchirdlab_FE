@@ -19,10 +19,13 @@ const SelectTechnicianContainer: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    axiosInstance.get("/api/user?pageNumber=1&pageSize=100")
-      .then(res => {
-        const data = Array.isArray(res.data?.data) ? res.data.data as TechnicianApi[] : [];
-        setTechnicians(data.filter(t => String(t.roleID) === "3"));
+    axiosInstance
+      .get("/api/user?pageNumber=1&pageSize=100")
+      .then((res) => {
+        const data = Array.isArray(res.data?.data)
+          ? (res.data.data as TechnicianApi[])
+          : [];
+        setTechnicians(data.filter((t) => String(t.roleID) === "3"));
       })
       .catch(() => setTechnicians([]))
       .finally(() => setLoading(false));
@@ -31,8 +34,13 @@ const SelectTechnicianContainer: React.FC = () => {
   const handleNext = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     if (selectedTech) {
-      const techObj = technicians.find(t => t.id === selectedTech);
-      setState(prev => ({ ...prev, technician: techObj ? { id: techObj.id, name: techObj.name } : null }));
+      const techObj = technicians.find((t) => t.id === selectedTech);
+      setState((prev) => ({
+        ...prev,
+        assignCommand: techObj
+          ? [{ technicianId: techObj.id, technicianName: techObj.name }]
+          : [],
+      }));
       void navigate("/create-task/step-3");
     }
   };
@@ -44,14 +52,20 @@ const SelectTechnicianContainer: React.FC = () => {
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100 flex flex-col items-center py-10">
       <CreateTaskStepper currentStep={2} />
-      <form 
-        className="bg-white rounded-xl px-8 pt-8 pb-6 shadow-[0_2px_8px_rgba(0,0,0,0.06)] max-w-[900px] mx-auto mt-8" 
+      <form
+        className="bg-white rounded-xl px-8 pt-8 pb-6 shadow-[0_2px_8px_rgba(0,0,0,0.06)] max-w-[900px] mx-auto mt-8"
         onSubmit={handleNext}
       >
         <h2 className="text-2xl font-semibold mb-6">Chọn kỹ thuật viên</h2>
         <div className="flex flex-col gap-4 my-6 mb-8">
-          {loading && <div className="text-gray-500">Đang tải danh sách kỹ thuật viên...</div>}
-          {!loading && technicians.length === 0 && <div className="text-red-500">Không có kỹ thuật viên nào!</div>}
+          {loading && (
+            <div className="text-gray-500">
+              Đang tải danh sách kỹ thuật viên...
+            </div>
+          )}
+          {!loading && technicians.length === 0 && (
+            <div className="text-red-500">Không có kỹ thuật viên nào!</div>
+          )}
           {technicians.map((tech) => (
             <div
               key={tech.id}
@@ -64,10 +78,12 @@ const SelectTechnicianContainer: React.FC = () => {
             >
               <div className="flex items-center gap-[14px] mb-2">
                 <div className="w-[38px] h-[38px] rounded-full flex items-center justify-center font-bold text-[1.1rem] text-white mr-2 bg-green-700">
-                  {tech.name.slice(0,2).toUpperCase()}
+                  {tech.name.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1 flex flex-col">
-                  <span className="font-semibold text-[1.08rem]">{tech.name}</span>
+                  <span className="font-semibold text-[1.08rem]">
+                    {tech.name}
+                  </span>
                 </div>
                 <input
                   type="radio"
