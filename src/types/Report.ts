@@ -14,6 +14,7 @@ export interface Report {
   technician: string;
   status: string;
   reportAttributes: reportAttributes[];
+  reviewReport?: string;
 }
 export interface ReportApiResponse {
   value: {

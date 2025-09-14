@@ -7,68 +7,69 @@ import {
 } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
-import Method from "./pages/method/Method";
-import Tasks from "./pages/Tasks";
-import ExperimentLog from "./pages/ExperimentLog";
-import Seedlings from "./pages/seedling/Seedlings";
-import ReportsDetails from "./pages/reports/ReportsDetails";
-import ReportsFollowUpDetails from "./pages/reports/ReportsFollowUpDetails";
-import SeedlingDetail from "./pages/seedling/SeedlingDetail";
+import Method from "./pages/researcher/method/Method";
+import Tasks from "./pages/researcher/task/Tasks";
+import ExperimentLog from "./pages/researcher/experimentlog/ExperimentLog";
+import Seedlings from "./pages/researcher/seeding/Seedlings";
+import ReportsDetails from "./pages/researcher/report/ReportsDetails";
+import ReportsFollowUpDetails from "./pages/researcher/report/ReportsFollowUpDetails";
+import SeedlingDetail from "./pages/researcher/seeding/SeedlingDetail";
 
 import { SeedlingFormProvider } from "./context/SeedlingFormContext";
-import CreateTaskContainer from "./pages/CreateTask/Form/CreateTaskContainer";
-import SelectTechnicianContainer from "./pages/CreateTask/Form/SelectTechnicianContainer";
-import ConfirmTaskContainer from "./pages/CreateTask/Form/ConfirmTaskContainer";
-import TaskDetailPage from "./pages/CreateTask/TaskDetailPage";
-import EditTask from "./pages/CreateTask/EditTask";
-import CreateExperimentStep1 from "./pages/CreateExperimentLog/Form/CreateExperimentStep1";
-import CreateExperimentStep2 from "./pages/CreateExperimentLog/Form/CreateExperimentStep2";
-import CreateExperimentStep3 from "./pages/CreateExperimentLog/Form/CreateExperimentStep3";
+import CreateTaskContainer from "./pages/researcher/task/create/CreateTaskContainer";
+import SelectTechnicianContainer from "./pages/researcher/task/create/SelectTechnicianContainer";
+import ConfirmTaskContainer from "./pages/researcher/task/create/ConfirmTaskContainer";
+import TaskDetailPage from "./pages/researcher/task/TaskDetailPage";
+// import EditTask from "./pages/CreateTask/EditTask"; // This file seems to be missing in new structure
+import CreateExperimentStep1 from "./pages/researcher/experimentlog/create/CreateExperimentStep1";
+import CreateExperimentStep2 from "./pages/researcher/experimentlog/create/CreateExperimentStep2";
+import CreateExperimentStep3 from "./pages/researcher/experimentlog/create/CreateExperimentStep3";
 import { ExperimentLogFormProvider } from "./context/ExperimentLogFormContext";
-import ProfilePage from "./pages/ProfilePage";
-import MethodDetail from "./pages/method/MethodDetail";
-import MethodCreate from "./pages/method/MethodCreate";
-import SeedlingDetailsForm from "./pages/seedling/SeedlingDetailsForm";
-import SeedlingCharacteristicsForm from "./pages/seedling/SeedlingCharacteristicsForm";
-import SeedlingSummary from "./pages/seedling/SeedlingSummary";
-import ExperimentLogDetail from "./pages/ExperimentLogDetail";
+import ProfilePage from "./pages/landing/ProfilePage";
+import MethodDetail from "./pages/researcher/method/MethodDetail";
+import MethodCreate from "./pages/researcher/method/MethodCreate";
+import SeedlingDetailsForm from "./pages/researcher/seeding/SeedlingDetailsForm";
+import SeedlingCharacteristicsForm from "./pages/researcher/seeding/SeedlingCharacteristicsForm";
+import SeedlingSummary from "./pages/researcher/seeding/SeedlingSummary";
+import ExperimentLogDetail from "./pages/researcher/experimentlog/ExperimentLogDetail";
 import SidebarAdmin from "./components/SidebarAdmin";
 import Login from "./pages/landing/Login";
-import DashboardAdmin from "./pages/DashboardAdmin";
+import DashboardAdmin from "./pages/admin/dashboard/DashboardAdmin";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Unauthorized from "./pages/Unauthorized";
 import { CreateTaskProvider } from "./context/CreateTaskContext";
-import TaskTemplateList from "./pages/TaskTemplateList";
-import TaskTemplateCreate from "./pages/TaskTemplateCreate";
-import TaskTemplateDetail from "./pages/TaskTemplateDetail";
+import TaskTemplateList from "./pages/researcher/task/template/TaskTemplateList";
+import TaskTemplateCreate from "./pages/researcher/task/template/create/TaskTemplateCreate";
+import TaskTemplateDetail from "./pages/researcher/task/template/TaskTemplateDetail";
 import { SnackbarProvider } from "notistack";
-import ReportsCreate from "./pages/reports/technician/ReportsCreate";
-import ReportList from "./pages/reports/Reports";
-import ReportsTechnician from "./pages/reports/technician/Reports";
+import ReportsCreate from "./pages/technician/report/ReportsCreate";
+import ReportList from "./pages/researcher/report/Reports";
+import ReportsTechnician from "./pages/technician/report/Reports";
 import SidebarTechnician from "./components/SidebarTechinician";
 import ListTask from "./pages/technician/task/listTask";
 import TechDetailTask from "./pages/technician/task/TechDetailTask";
 import ListSample from "./pages/technician/sample/ListSample";
 import TechDetailSample from "./pages/technician/sample/TechDetailSample";
+
 // Import admin pages
-import AdminTasks from "./pages/AdminTasks";
-import AdminTaskDetail from "./pages/AdminTaskDetail";
-import AdminExperimentLog from "./pages/AdminExperimentLog";
-import AdminExperimentLogDetail from "./pages/AdminExperimentLogDetail";
-import AdminLabRoomList from "./pages/AdminLabRoomList";
-import AdminLabRoomCreate from "./pages/AdminLabRoomCreate";
-import AdminLabRoomDetail from "./pages/AdminLabRoomDetail";
-import AdminSeedlings from "./pages/seedling/adminRole/AdminSeedlings";
-import AdminSeedlingDetail from "./pages/seedling/adminRole/AdminSeedlingDetail";
-import AdminMethodDetail from "./pages/method/adminRole/AdminMethodDetail";
-import AdminMethod from "./pages/method/adminRole/AdminMethod";
-import AdminReport from "./pages/reports/adminRole/AdminReports";
-import AdminReportsDetails from "./pages/reports/adminRole/AdminReportsDetails";
-import AdminElement from "./pages/element/adminRole/AdminElement";
-import AdminTissueCultureBatchList from "./pages/AdminTissueCultureBatchList";
-import AdminTissueCultureBatchCreate from "./pages/AdminTissueCultureBatchCreate";
-import AdminTissueCultureBatchDetail from "./pages/AdminTissueCultureBatchDetail";
+import AdminTasks from "./pages/admin/task/AdminTasks";
+import AdminTaskDetail from "./pages/admin/task/AdminTaskDetail";
+import AdminExperimentLog from "./pages/admin/experimentlog/AdminExperimentLog";
+import AdminExperimentLogDetail from "./pages/admin/experimentlog/AdminExperimentLogDetail";
+import AdminLabRoomList from "./pages/admin/labroom/AdminLabRoomList";
+import AdminLabRoomCreate from "./pages/admin/labroom/AdminLabRoomCreate";
+import AdminLabRoomDetail from "./pages/admin/labroom/AdminLabRoomDetail";
+import AdminSeedlings from "./pages/admin/seeding/AdminSeedlings";
+import AdminSeedlingDetail from "./pages/admin/seeding/AdminSeedlingDetail";
+import AdminMethodDetail from "./pages/admin/method/AdminMethodDetail";
+import AdminMethod from "./pages/admin/method/AdminMethod";
+import AdminReport from "./pages/admin/report/AdminReports";
+import AdminReportsDetails from "./pages/admin/report/AdminReportsDetails";
+import AdminElement from "./pages/admin/element/AdminElement";
+import AdminTissueCultureBatchList from "./pages/admin/tissueculturebatch/AdminTissueCultureBatchList";
+import AdminTissueCultureBatchCreate from "./pages/admin/tissueculturebatch/AdminTissueCultureBatchCreate";
+import AdminTissueCultureBatchDetail from "./pages/admin/tissueculturebatch/AdminTissueCultureBatchDetail";
 
 function AppLayout() {
   const { user, isAuthReady } = useAuth();
@@ -288,7 +289,7 @@ function AppLayout() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/tasks/:id/edit" element={<EditTask />} />
+            {/* <Route path="/tasks/:id/edit" element={<EditTask />} /> */}
             <Route path="/task-templates" element={<TaskTemplateList />} />
             <Route
               path="/task-templates/new"
