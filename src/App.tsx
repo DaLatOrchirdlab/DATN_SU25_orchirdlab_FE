@@ -37,7 +37,7 @@ import Login from "./pages/landing/Login";
 import DashboardAdmin from "./pages/admin/dashboard/DashboardAdmin";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Unauthorized from "./pages/Unauthorized";
+import Unauthorized from "./pages/landing/Unauthorized";
 import { CreateTaskProvider } from "./context/CreateTaskContext";
 import TaskTemplateList from "./pages/researcher/task/template/TaskTemplateList";
 import TaskTemplateCreate from "./pages/researcher/task/template/create/TaskTemplateCreate";
