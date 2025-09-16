@@ -201,10 +201,10 @@ export default function AdminReportsDetails() {
                     {attr.name}-({attr.measurementUnit}):
                   </span>
                   <span>
-                    Yêu cầu: {attr.valueFrom} - {attr.valueTo}
+                    Kỳ vọng: {attr.valueFrom} - {attr.valueTo}
                   </span>
                   <span className="ml-2">
-                    Thu thập:{" "}
+                    Thực tế:{" "}
                     <span
                       className={
                         attr.value < attr.valueFrom || attr.value > attr.valueTo
