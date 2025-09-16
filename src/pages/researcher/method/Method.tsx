@@ -139,7 +139,13 @@ export default function Method() {
               paginated.map((m) => (
                 <tr key={m.id} className="border-t hover:bg-green-50">
                   <td className="py-3 px-4">{m.name}</td>
-                  <td className="px-4">{m.type}</td>
+                  <td className="px-4">
+                    {m.type === "Clonal"
+                      ? "Vô tính"
+                      : m.type === "Sexual"
+                      ? "Hữu tính"
+                      : m.type}
+                  </td>
                   <td className="px-4">
                     {m.status == true ? "Active" : "Inactive"}
                   </td>
