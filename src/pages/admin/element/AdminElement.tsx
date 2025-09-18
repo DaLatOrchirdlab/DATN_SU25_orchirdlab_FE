@@ -298,31 +298,22 @@ export default function AdminElement() {
               Thêm nguyên vật liệu
             </h2>
             <input
-              className="border rounded px-2 py-1 w-full mb-3"
+              className="border rounded px-2 py-1 w-full mb-3 break-words"
               placeholder="Tên"
               value={newElement.name}
               onChange={(e) =>
                 setNewElement({ ...newElement, name: e.target.value })
               }
             />
-            {showAdd && !newElement.name.trim() && (
-              <div className="text-red-500 text-xs mb-2">
-                Vui lòng nhập tên!
-              </div>
-            )}
             <input
-              className="border rounded px-2 py-1 w-full mb-3"
+              className="border rounded px-2 py-1 w-full mb-3 break-words"
               placeholder="Mô tả"
               value={newElement.description}
               onChange={(e) =>
                 setNewElement({ ...newElement, description: e.target.value })
               }
             />
-            {showAdd && !newElement.description.trim() && (
-              <div className="text-red-500 text-xs mb-2">
-                Vui lòng nhập mô tả!
-              </div>
-            )}
+            {/* Hiển thị lỗi chỉ khi bấm Lưu mà thiếu thông tin */}
             <div className="flex gap-2 justify-end">
               <button
                 type="button"
@@ -336,6 +327,17 @@ export default function AdminElement() {
                 className="px-4 py-2 rounded bg-green-700 text-white"
                 disabled={addLoading}
                 onClick={() => {
+                  if (
+                    !newElement.name.trim() ||
+                    !newElement.description.trim()
+                  ) {
+                    enqueueSnackbar("Vui lòng nhập đầy đủ tên và mô tả!", {
+                      variant: "error",
+                      preventDuplicate: true,
+                      autoHideDuration: 2000,
+                    });
+                    return;
+                  }
                   void handleAddElement();
                 }}
               >
@@ -354,7 +356,7 @@ export default function AdminElement() {
               Sửa nguyên vật liệu
             </h2>
             <input
-              className="border rounded px-2 py-1 w-full mb-3"
+              className="border rounded px-2 py-1 w-full mb-3 break-words"
               placeholder="Tên"
               value={editElement.name}
               onChange={(e) =>
@@ -367,7 +369,7 @@ export default function AdminElement() {
               </div>
             )}
             <input
-              className="border rounded px-2 py-1 w-full mb-3"
+              className="border rounded px-2 py-1 w-full mb-3 break-words"
               placeholder="Mô tả"
               value={editElement.description}
               onChange={(e) =>

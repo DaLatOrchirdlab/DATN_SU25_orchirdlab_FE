@@ -3,6 +3,7 @@ import { FaEdit, FaTrash, FaSearch, FaPlus } from "react-icons/fa";
 import type { User, UserApiResponse } from "../../../types/Auth";
 import axiosInstance from "../../../api/axiosInstance";
 import { useSnackbar } from "notistack";
+import { useAuth } from "../../../context/AuthContext";
 
 const roleOptions: { value: string; label: string }[] = [
   { value: "", label: "Tất cả vai trò" },
@@ -31,6 +32,7 @@ function getRoleName(roleID: number) {
 const PAGE_SIZE = 5;
 
 export default function DashboardAdmin() {
+  const { user } = useAuth();
   const [search, setSearch] = useState<string>("");
   const [roleFilter, setRoleFilter] = useState<string>("");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -78,16 +80,18 @@ export default function DashboardAdmin() {
     void fetchUsers();
   }, [page]);
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      (user.userName ?? "").toLowerCase().includes(search.toLowerCase()) ||
-      (user.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
-      (user.email ?? "").toLowerCase().includes(search.toLowerCase());
-    const matchesRole = !roleFilter || getRoleName(user.roleID) === roleFilter;
-    // Nếu có status thực tế thì sửa lại dòng dưới
-    const matchesStatus = !statusFilter || statusFilter === "active";
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  const filteredUsers = users
+    .filter((u) => u.id !== user?.id)
+    .filter((u) => {
+      const matchesSearch =
+        (u.userName ?? "").toLowerCase().includes(search.toLowerCase()) ||
+        (u.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
+        (u.email ?? "").toLowerCase().includes(search.toLowerCase());
+      const matchesRole = !roleFilter || getRoleName(u.roleID) === roleFilter;
+      // Nếu có status thực tế thì sửa lại dòng dưới
+      const matchesStatus = !statusFilter || statusFilter === "active";
+      return matchesSearch && matchesRole && matchesStatus;
+    });
 
   // Stats
   // const active = users.length; // Nếu có status thực tế thì filter theo status
@@ -423,9 +427,10 @@ export default function DashboardAdmin() {
               }
             />
             <input
-              className="border rounded px-3 py-2 w-full mb-2"
+              className="border bg-gray-200 rounded px-3 py-2 w-full mb-2"
               placeholder="Email"
               value={editUser.email}
+              disabled
               onChange={(e) =>
                 setEditUser((u) => (u ? { ...u, email: e.target.value } : u))
               }

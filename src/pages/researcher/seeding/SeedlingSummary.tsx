@@ -66,7 +66,7 @@ export default function SeedlingSummary() {
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : "Có lỗi xảy ra";
       setError(errMsg ?? "Có lỗi xảy ra");
-      enqueueSnackbar(errMsg, { variant: "error" });
+      enqueueSnackbar("Tạo cây giống thất bại!", { variant: "error" });
     } finally {
       setLoading(false);
     }
