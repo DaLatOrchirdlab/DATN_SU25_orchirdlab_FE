@@ -189,22 +189,65 @@ export default function Seedlings() {
         </div>
       </div>
       {/* Pagination */}
-      <div className="flex flex-wrap justify-end mt-4 gap-2">
-        {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            type="button"
-            key={i + 1}
-            className={`w-8 h-8 cursor-pointer rounded ${
-              page === i + 1
-                ? "bg-green-800 text-white"
-                : "border border-green-800 text-green-800 hover:bg-green-800 hover:text-white"
-            } transition`}
-            onClick={() => setPage(i + 1)}
-          >
-            {i + 1}
-          </button>
-        ))}
-      </div>
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center text-sm text-gray-600 mt-4">
+          <span>
+            Hiển thị {pagedSeedlings.length} cây giống trên tổng số {total} cây
+            giống
+          </span>
+          <div className="flex gap-2">
+            {/* Previous button */}
+            {page > 1 && (
+              <button
+                type="button"
+                onClick={() => setPage(page - 1)}
+                className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                ←
+              </button>
+            )}
+
+            {/* Page numbers (tối đa 5 số, giống task) */}
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (page <= 3) {
+                pageNum = i + 1;
+              } else if (page >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = page - 2 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  type="button"
+                  onClick={() => setPage(pageNum)}
+                  className={`px-3 py-1 rounded-lg ${
+                    page === pageNum
+                      ? "bg-green-700 text-white"
+                      : "bg-gray-200 hover:bg-gray-300"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            {/* Next button */}
+            {page < totalPages && (
+              <button
+                type="button"
+                onClick={() => setPage(page + 1)}
+                className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                →
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

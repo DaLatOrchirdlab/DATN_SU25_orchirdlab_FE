@@ -57,6 +57,7 @@ export default function AdminElement() {
     void fetchData();
   };
 
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const filteredData = data.filter((el) =>
     el.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -66,11 +67,6 @@ export default function AdminElement() {
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE
   );
-  const filteredTotalPages = Math.max(
-    1,
-    Math.ceil(filteredData.length / PAGE_SIZE)
-  );
-
   const handleAddElement = async () => {
     setAddLoading(true);
     try {
@@ -274,22 +270,65 @@ export default function AdminElement() {
         </div>
       </div>
       {/* Pagination */}
-      <div className="flex justify-end mt-4 gap-2">
-        {Array.from({ length: filteredTotalPages }, (_, i) => (
-          <button
-            type="button"
-            key={i + 1}
-            className={`w-8 h-8 cursor-pointer rounded ${
-              page === i + 1
-                ? "bg-green-800 text-white"
-                : "border border-green-800 text-green-800 hover:bg-green-800 hover:text-white"
-            } transition`}
-            onClick={() => setPage(i + 1)}
-          >
-            {i + 1}
-          </button>
-        ))}
-      </div>
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center text-sm text-gray-600 mt-4">
+          <span>
+            Hiển thị {pagedData.length} nguyên vật liệu trên tổng số {total}{" "}
+            nguyên vật liệu{" "}
+          </span>
+          <div className="flex gap-2">
+            {/* Previous button */}
+            {page > 1 && (
+              <button
+                type="button"
+                onClick={() => setPage(page - 1)}
+                className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                ←
+              </button>
+            )}
+
+            {/* Page numbers (tối đa 5 số, giống task) */}
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (page <= 3) {
+                pageNum = i + 1;
+              } else if (page >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = page - 2 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  type="button"
+                  onClick={() => setPage(pageNum)}
+                  className={`px-3 py-1 rounded-lg ${
+                    page === pageNum
+                      ? "bg-green-700 text-white"
+                      : "bg-gray-200 hover:bg-gray-300"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            {/* Next button */}
+            {page < totalPages && (
+              <button
+                type="button"
+                onClick={() => setPage(page + 1)}
+                className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                →
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {/* Modal thêm mới */}
       {showAdd && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">

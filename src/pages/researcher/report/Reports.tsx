@@ -48,15 +48,6 @@ export default function ReportList() {
       const matchSearch =
         r.name.toLowerCase().includes(search.toLowerCase()) ||
         r.technician.toLowerCase().includes(search.toLowerCase());
-      // const matchFrom = fromDate
-      //   ? dayjs(String(r.date)).isAfter(
-      //       dayjs(String(fromDate)).subtract(1, "day")
-      //     )
-      //   : true;
-      // const matchTo = toDate
-      //   ? dayjs(String(r.date)).isBefore(dayjs(String(toDate)).add(1, "day"))
-      //   : true;
-      // return matchSearch && matchFrom && matchTo;
       return matchSearch;
     });
   }, [data, search]);
@@ -172,22 +163,63 @@ export default function ReportList() {
           </div>
         </div>
         {/* Pagination */}
-        <div className="flex justify-end mt-4 gap-2">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              type="button"
-              key={i + 1}
-              className={`w-8 h-8 cursor-pointer rounded ${
-                page === i + 1
-                  ? "bg-green-800 text-white"
-                  : "border border-green-800 text-green-800 hover:bg-green-800 hover:text-white"
-              } transition`}
-              onClick={() => setPage(i + 1)}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center text-sm text-gray-600 mt-4">
+            <span>
+              Hiển thị {filteredReports.length} báo cáo trên tổng số {total} báo
+              cáo
+            </span>
+            <div className="flex gap-2">
+              {/* Previous button */}
+              {page > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setPage(page - 1)}
+                  className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300"
+                >
+                  ←
+                </button>
+              )}
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (page <= 3) {
+                  pageNum = i + 1;
+                } else if (page >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = page - 2 + i;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    onClick={() => setPage(pageNum)}
+                    className={`px-3 py-1 rounded-lg ${
+                      page === pageNum
+                        ? "bg-green-700 text-white"
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              {/* Next button */}
+              {page < totalPages && (
+                <button
+                  type="button"
+                  onClick={() => setPage(page + 1)}
+                  className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300"
+                >
+                  →
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
