@@ -33,7 +33,7 @@ export default function Login() {
       } else if (data.user.roleID === 2) {
         void navigate("/method");
       } else if (data.user.roleID === 3) {
-        void navigate("/technician/reports");
+        void navigate("/technician/tasks");
       }
     } catch {
       setError("Sai email hoặc mật khẩu!");

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import type { Seedling } from "../../../types/Seedling";
 import axiosInstance from "../../../api/axiosInstance";
 
 export default function SeedlingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const page = searchParams.get("page") ?? "1";
   const [seedling, setSeedling] = useState<Seedling | null>(null);
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -88,7 +90,7 @@ export default function SeedlingDetail() {
       <button
         type="button"
         className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-4 hover:bg-green-800 hover:text-white transition"
-        onClick={() => void navigate("/seedlings")}
+        onClick={() => void navigate(`/seedlings?page=${page}`)}
       >
         &larr; Trở về
       </button>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Method, MethodApiResponse } from "../../../types/Method";
 import axiosInstance from "../../../api/axiosInstance";
 
@@ -13,12 +13,14 @@ const PAGE_SIZE = 5;
 
 export default function Method() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialPage = Number(searchParams.get("page")) || 1;
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
   const [data, setData] = useState<Method[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -153,7 +155,9 @@ export default function Method() {
                     <button
                       type="button"
                       className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
-                      onClick={() => void navigate(`/method/${m.id}`)} // Nếu có trang chi tiết
+                      onClick={() =>
+                        void navigate(`/method/${m.id}?page=${page}`)
+                      } // Nếu có trang chi tiết
                     >
                       Chi tiết
                     </button>

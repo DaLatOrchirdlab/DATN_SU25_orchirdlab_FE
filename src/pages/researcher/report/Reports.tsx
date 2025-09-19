@@ -1,15 +1,19 @@
 import { useState, useMemo, useEffect } from "react";
 import axiosInstance from "../../../api/axiosInstance";
 import type { Report, ReportApiResponse } from "../../../types/Report";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const PAGE_SIZE = 5;
 
 export default function ReportList() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialPage = Number(searchParams.get("page")) || 1;
   const [search, setSearch] = useState("");
   const [data, setData] = useState<Report[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -144,12 +148,15 @@ export default function ReportList() {
                       </span>
                     </td>
                     <td className="px-4">
-                      <a
-                        href={`/reports/${r.id}`}
+                      <button
+                        type="button"
                         className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
+                        onClick={() =>
+                          void navigate(`/reports/${r.id}?page=${page}`)
+                        }
                       >
                         Chi tiết
-                      </a>
+                      </button>
                     </td>
                   </tr>
                 ))

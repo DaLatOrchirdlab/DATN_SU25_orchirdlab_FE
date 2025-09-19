@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { useEffect, useState } from "react";
 import axiosInstance from "../../../api/axiosInstance";
@@ -9,10 +9,12 @@ const PAGE_SIZE = 5;
 
 export default function ReportsTechnician() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialPage = Number(searchParams.get("page")) || 1;
   const navigate = useNavigate();
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Report[]>([]);
   const [samples, setSamples] = useState<Sample[]>([]);
@@ -114,21 +116,23 @@ export default function ReportsTechnician() {
                       s.sample}
                   </td>
                   <td className="px-4">
-  <span
-    className={`px-2 py-1 rounded-full text-xs font-semibold ${
-      s.status === "Seen"
-        ? "bg-green-100 text-green-800"
-        : "bg-yellow-100 text-yellow-800"
-    }`}
-  >
-    {s.status === "Seen" ? "Đã xem" : "Chưa xem"}
-  </span>
-</td>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        s.status === "Seen"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {s.status === "Seen" ? "Đã xem" : "Chưa xem"}
+                    </span>
+                  </td>
                   <td className="px-4 flex gap-2 mt-2">
                     <button
                       type="button"
                       className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
-                      onClick={() => void navigate(`/reports/${s.id}`)}
+                      onClick={() =>
+                        void navigate(`/reports/${s.id}?page=${page}`)
+                      }
                     >
                       Chi tiết
                     </button>

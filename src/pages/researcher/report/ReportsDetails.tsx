@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { Report } from "../../../types/Report";
 import axiosInstance from "../../../api/axiosInstance";
 import { useAuth } from "../../../context/AuthContext";
@@ -24,6 +24,8 @@ interface AnalyzeResult {
 export default function ReportsDetails() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const page = searchParams.get("page") ?? "1";
   const { id } = useParams();
   const { enqueueSnackbar } = useSnackbar();
   const [report, setReport] = useState<Report | null>(null);
@@ -185,7 +187,9 @@ export default function ReportsDetails() {
           className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-6 hover:bg-green-800 hover:text-white transition"
           onClick={() =>
             void navigate(
-              user?.roleID === 3 ? "/technician/reports" : "/reports"
+              user?.roleID === 3
+                ? `/technician/reports?page=${page}`
+                : `/reports?page=${page}`
             )
           }
         >
