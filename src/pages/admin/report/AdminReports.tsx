@@ -1,17 +1,19 @@
 import { useState, useMemo, useEffect } from "react";
 import axiosInstance from "../../../api/axiosInstance";
 import type { ReportApiResponse, Report } from "../../../types/Report";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const PAGE_SIZE = 5;
 
 export default function AdminReport() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialPage = Number(searchParams.get("page")) || 1;
   const [search, setSearch] = useState("");
   const [data, setData] = useState<Report[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -135,21 +137,23 @@ export default function AdminReport() {
                     <td className="px-4">{r.description}</td>
                     <td className="px-4">{r.technician}</td>
                     <td className="px-4">
-  <span
-    className={`px-2 py-1 rounded-full text-xs font-semibold ${
-      r.status === "Seen"
-        ? "bg-green-100 text-green-800"
-        : "bg-yellow-100 text-yellow-800"
-    }`}
-  >
-    {r.status === "Seen" ? "Đã xem" : "Chưa xem"}
-  </span>
-</td>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          r.status === "Seen"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {r.status === "Seen" ? "Đã xem" : "Chưa xem"}
+                      </span>
+                    </td>
                     <td className="px-4">
                       <button
                         type="button"
                         className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
-                        onClick={() => void navigate(`/admin/report/${r.id}`)}
+                        onClick={() =>
+                          void navigate(`/admin/report/${r.id}?page=${page}`)
+                        }
                       >
                         Chi tiết
                       </button>

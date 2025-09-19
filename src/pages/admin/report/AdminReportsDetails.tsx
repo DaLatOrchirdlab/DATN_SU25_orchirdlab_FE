@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import axiosInstance from "../../../api/axiosInstance";
 import type { Report } from "../../../types/Report";
@@ -23,6 +23,8 @@ interface AnalyzeResult {
 export default function AdminReportsDetails() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const page = searchParams.get("page") ?? "1";
   const { id } = useParams();
   const [report, setReport] = useState<Report | null>(null);
   const [sample, setSample] = useState<Sample | null>(null);
@@ -161,7 +163,11 @@ export default function AdminReportsDetails() {
           type="button"
           className="border cursor-pointer border-green-800 text-green-800 rounded px-4 py-1 mb-6 hover:bg-green-800 hover:text-white transition"
           onClick={() =>
-            void navigate(user?.roleID === 1 ? "/admin/report" : "/reports")
+            void navigate(
+              user?.roleID === 1
+                ? `/admin/report?page=${page}`
+                : `/reports?page=${page}`
+            )
           }
         >
           &larr; Trở về

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axiosInstance from "../../../api/axiosInstance";
 import type { Seedling, SeedlingApiResponse } from "../../../types/Seedling";
 
@@ -7,10 +7,10 @@ const PAGE_SIZE = 5;
 
 export default function AdminSeedlings() {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
+  const [searchParams] = useSearchParams();
+  const initialPage = Number(searchParams.get("page")) || 1;
+  const [page, setPage] = useState(initialPage);
   const [searchTerm, setSearchTerm] = useState("");
-  const [byMother, setByMother] = useState("");
-  const [byFather, setByFather] = useState("");
   const [loading, setLoading] = useState(false);
   const [allSeedlings, setAllSeedlings] = useState<Seedling[]>([]);
 
@@ -22,7 +22,7 @@ export default function AdminSeedlings() {
           "https://net-api.orchid-lab.systems/api/seedling?pageNumber=1&pageSize=1000"
         );
         const allJson = allRes.data as SeedlingApiResponse;
-        setAllSeedlings(allJson.value.data || []);
+        setAllSeedlings((allJson.value.data || []).reverse());
       } catch {
         setAllSeedlings([]);
       } finally {
@@ -32,23 +32,24 @@ export default function AdminSeedlings() {
     void fetchData();
   }, []);
 
-  const filteredSeedlings = allSeedlings.filter((s) => {
-    // Lọc theo tên, mô tả, cây bố mẹ (chỉ dùng parent1, parent2)
-    const searchMatch =
-      !searchTerm ||
-      s.localName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.parent1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.parent2?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredSeedlings = allSeedlings
+    .filter((s) => s.delete_date === null)
+    .filter((s) => {
+      // Lọc theo tên, mô tả, cây bố mẹ (chỉ dùng parent1, parent2)
+      const searchMatch =
+        !searchTerm ||
+        s.localName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.parent1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.parent2?.toLowerCase().includes(searchTerm.toLowerCase());
+      return searchMatch;
+    });
 
-    const motherMatch =
-      !byMother || s.parent1?.toLowerCase().includes(byMother.toLowerCase());
-
-    const fatherMatch =
-      !byFather || s.parent2?.toLowerCase().includes(byFather.toLowerCase());
-
-    return searchMatch && motherMatch && fatherMatch;
-  });
+  const getSeedlingNameById = (id: string | null) => {
+    if (!id) return "";
+    const found = allSeedlings.find((s) => s.id === id);
+    return found ? found.localName : id;
+  };
 
   const total = filteredSeedlings.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -88,37 +89,17 @@ export default function AdminSeedlings() {
             </span>
           </div>
         </div>
-        <input
-          type="text"
-          placeholder="Lọc theo cây giống 1"
-          className="border rounded px-3 py-2"
-          value={byMother}
-          onChange={(e) => {
-            setByMother(e.target.value);
-            setPage(1);
-          }}
-        />
-        <input
-          type="text"
-          placeholder="Lọc theo cây giống 2"
-          className="border rounded px-3 py-2"
-          value={byFather}
-          onChange={(e) => {
-            setByFather(e.target.value);
-            setPage(1);
-          }}
-        />
       </div>
       <div className="bg-white rounded shadow p-0 overflow-x-auto">
         <table className="w-full text-left table-fixed min-w-[600px]">
           <thead>
             <tr className="bg-green-50 text-green-800 font-semibold">
               <th className="py-3 px-4">Tên</th>
-              <th className="px-4">Cây giống 1</th>
-              <th className="px-4">Cây giống 2</th>
+              <th className="px-4 text-center">Cây giống 1</th>
+              <th className="px-4 text-center">Cây giống 2</th>
               <th className="px-4">Ngày sinh</th>
-              <th className="px-4">Ngày tạo</th>
-              <th className="px-4">Tạo bởi</th>
+              <th className="px-4 text-center">Ngày tạo</th>
+              <th className="px-4 text-center">Tạo bởi</th>
               <th className="px-4">Hành động</th>
             </tr>
           </thead>
@@ -162,24 +143,26 @@ export default function AdminSeedlings() {
                   <td className="py-3 px-4 whitespace-nowrap overflow-hidden text-ellipsis">
                     {s.localName}
                   </td>
-                  <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                    {s.parent1 || ""}
+                  <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis text-center">
+                    {getSeedlingNameById(s.parent1) || "-"}
                   </td>
-                  <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                    {s.parent2 || ""}
+                  <td className="px-4 whitespace-nowrap overflow-hidden text-ellipsis text-center">
+                    {getSeedlingNameById(s.parent2) || "-"}
                   </td>
                   <td className="px-4">{s.doB}</td>
-                  <td className="px-4">
+                  <td className="px-4 text-center">
                     {s.create_date
                       ? new Date(s.create_date).toLocaleString()
-                      : ""}
+                      : "-"}
                   </td>
-                  <td className="px-4">{s.create_by}</td>
+                  <td className="px-4 text-center">{s.create_by || "-"}</td>
                   <td className="px-4 flex gap-2 mt-2">
                     <button
                       type="button"
                       className="border cursor-pointer border-green-800 text-green-800 rounded-full px-4 py-1 hover:bg-green-800 hover:text-white transition"
-                      onClick={() => void navigate(`/admin/seedling/${s.id}`)}
+                      onClick={() =>
+                        void navigate(`/admin/seedling/${s.id}?page=${page}`)
+                      }
                     >
                       Chi tiết
                     </button>
