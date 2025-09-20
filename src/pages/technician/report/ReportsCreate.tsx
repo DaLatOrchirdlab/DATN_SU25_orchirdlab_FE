@@ -199,7 +199,7 @@ export default function ReportsCreate() {
                 ))}
               </select>
               <input
-                placeholder="Tên thuộc tính"
+                placeholder="Đơn vị"
                 value={attr.name}
                 onChange={(e) => handleAttrChange(idx, "name", e.target.value)}
                 className="border rounded px-2 py-1"
