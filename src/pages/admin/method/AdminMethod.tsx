@@ -56,7 +56,6 @@ export default function AdminMethod() {
       (m.name.toLowerCase().includes(search.toLowerCase()) ||
         m.type.toLowerCase().includes(search.toLowerCase()))
   );
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <main className="ml-64 mt-16 min-h-[calc(100vh-64px)] bg-gray-100">
@@ -124,14 +123,14 @@ export default function AdminMethod() {
                   </td>
                 </tr>
               ))
-            ) : paginated.length === 0 ? (
+            ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={5} className="text-center py-8 text-gray-400">
                   Không có dữ liệu
                 </td>
               </tr>
             ) : (
-              paginated.map((m) => (
+              filtered.map((m) => (
                 <tr key={m.id} className="border-t hover:bg-green-50">
                   <td className="py-3 px-4">{m.name}</td>
                   <td className="px-4">
@@ -183,10 +182,10 @@ export default function AdminMethod() {
         </div>
       </div>
       {/* Pagination */}
-      {totalPages >= 1 && (
+      {totalPages > 1 && (
         <div className="flex justify-between items-center text-sm text-gray-600 mt-4">
           <span>
-            Hiển thị {paginated.length} phương pháp trên tổng số {total} phương
+            Hiển thị {filtered.length} phương pháp trên tổng số {total} phương
             pháp
           </span>
           <div className="flex gap-2">
