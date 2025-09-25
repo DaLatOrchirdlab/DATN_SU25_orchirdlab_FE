@@ -390,7 +390,11 @@ const ExperimentLogDetail = () => {
                 onClick={() => {
                   void handleChangeStage();
                 }}
-                disabled={loadingStage || log.status === "Done"}
+                disabled={
+                  loadingStage ||
+                  log.status === "Done" ||
+                  selectedStage !== (log.stages?.length ?? 1)
+                }
               >
                 {loadingStage
                   ? "Đang hoàn thành..."
