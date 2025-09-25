@@ -79,12 +79,24 @@ export default function ProfilePage() {
         preventDuplicate: true,
         autoHideDuration: 2000,
       });
-    } catch (err) {
-      console.error(err);
-      enqueueSnackbar("Cập nhật thất bại!", {
+    } catch (error) {
+      console.error(error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Thông tin hồ sơ cập nhật thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
+        autoHideDuration: 5000,
         preventDuplicate: true,
-        autoHideDuration: 2000,
       });
     }
   };

@@ -246,7 +246,23 @@ const TaskTemplateCreate: React.FC = () => {
       void navigate("/task-templates");
     } catch (error) {
       console.error("Error creating task template:", error);
-      enqueueSnackbar("Lỗi khi tạo mẫu nhiệm vụ!", { variant: "error" });
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Tạo mẫu nhiệm vụ thất bại!";
+
+      enqueueSnackbar(backendMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
+      });
     } finally {
       setSubmitting(false);
     }

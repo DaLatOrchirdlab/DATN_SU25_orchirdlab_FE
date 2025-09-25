@@ -198,11 +198,23 @@ const ExperimentLogDetail = () => {
           preventDuplicate: true,
         });
       }
-    } catch (err) {
-      console.log(err);
-      enqueueSnackbar("Chuyển giai đoạn thất bại!", {
+    } catch (error) {
+      console.log(error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Chuyển giai đoạn thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
-        autoHideDuration: 3000,
+        autoHideDuration: 5000,
         preventDuplicate: true,
       });
     } finally {
@@ -240,11 +252,21 @@ const ExperimentLogDetail = () => {
         autoHideDuration: 3000,
         preventDuplicate: true,
       });
-    } catch (err) {
-      console.error(err);
-      enqueueSnackbar("Xuất PDF thất bại!", {
+    } catch (error) {
+      console.error(error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ?? apiError.message ?? "Xuất PDF thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
-        autoHideDuration: 3000,
+        autoHideDuration: 5000,
         preventDuplicate: true,
       });
     } finally {
@@ -599,16 +621,25 @@ const ExperimentLogDetail = () => {
                                 );
                                 setSamplesLoading(true);
                                 setReloadLog((prev) => prev + 1);
-                              } catch (err) {
-                                console.log(err);
-                                enqueueSnackbar(
-                                  "Chuyển thành cây giống thất bại!",
-                                  {
-                                    variant: "error",
-                                    autoHideDuration: 3000,
-                                    preventDuplicate: true,
-                                  }
-                                );
+                              } catch (error) {
+                                console.log(error);
+                                const apiError = error as {
+                                  response?: {
+                                    data?: string;
+                                    status?: number;
+                                  };
+                                  message?: string;
+                                };
+                                const backendMessage =
+                                  apiError.response?.data ??
+                                  apiError.message ??
+                                  "Chuyển thành cây giống thất bại!";
+
+                                enqueueSnackbar(backendMessage, {
+                                  variant: "error",
+                                  autoHideDuration: 5000,
+                                  preventDuplicate: true,
+                                });
                               } finally {
                                 setSamplesLoading(false);
                               }

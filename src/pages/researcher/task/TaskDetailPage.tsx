@@ -342,8 +342,25 @@ const TaskDetailPage: React.FC = () => {
             : []
         );
       }
-    } catch (err) {
-      enqueueSnackbar("Cập nhật nhiệm vụ thất bại", { variant: "error" });
+    } catch (error) {
+      console.log("Error updating task:", error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Cập nhật nhiệm vụ thất bại!";
+
+      enqueueSnackbar(backendMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
+      });
     } finally {
       setSaving(false);
     }
@@ -356,8 +373,23 @@ const TaskDetailPage: React.FC = () => {
       await axiosInstance.delete(`/api/tasks`, { data: { id: taskData.id } });
       enqueueSnackbar("Đã xóa nhiệm vụ", { variant: "success" });
       void navigate("/tasks");
-    } catch (err) {
-      enqueueSnackbar("Xóa nhiệm vụ thất bại", { variant: "error" });
+    } catch (error) {
+      console.log("Error deleting task:", error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ?? apiError.message ?? "Xóa nhiệm vụ thất bại!";
+
+      enqueueSnackbar(backendMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
+      });
     }
   };
 

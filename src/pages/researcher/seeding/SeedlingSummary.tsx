@@ -63,10 +63,26 @@ export default function SeedlingSummary() {
       if (!res.data) throw new Error("Tạo cây giống thất bại");
       enqueueSnackbar("Tạo cây giống thành công!", { variant: "success" });
       void navigate("/seedlings");
-    } catch (e) {
-      const errMsg = e instanceof Error ? e.message : "Có lỗi xảy ra";
-      setError(errMsg ?? "Có lỗi xảy ra");
-      enqueueSnackbar("Tạo cây giống thất bại!", { variant: "error" });
+    } catch (error) {
+      console.error("Error creating seedling:", error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Tạo phương pháp thất bại!";
+
+      enqueueSnackbar(backendMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
+      });
+      setError(apiError.response?.data ?? "Có lỗi xảy ra");
     } finally {
       setLoading(false);
     }

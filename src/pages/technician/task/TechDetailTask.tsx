@@ -199,10 +199,24 @@ const TechDetailTask: React.FC = () => {
           { variant: "success" }
         );
       }
-    } catch (err) {
-      console.error("Error updating task status:", err);
-      enqueueSnackbar("Không thể cập nhật trạng thái nhiệm vụ", {
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Cập nhật trạng thái thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
       });
     } finally {
       setUpdatingStatus(false);
@@ -280,9 +294,23 @@ const TechDetailTask: React.FC = () => {
       enqueueSnackbar("Báo cáo đã được gửi thành công!", {
         variant: "success",
       });
-    } catch (err) {
-      console.error("Error submitting report:", err);
-      enqueueSnackbar("Không thể gửi báo cáo", { variant: "error" });
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ?? apiError.message ?? "Gửi bao cáo thất bại!";
+
+      enqueueSnackbar(backendMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
+      });
     } finally {
       setSubmittingReport(false);
     }

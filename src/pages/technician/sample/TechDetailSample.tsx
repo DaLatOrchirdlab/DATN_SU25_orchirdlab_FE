@@ -82,9 +82,24 @@ export default function TechDetailSample() {
       await axiosInstance.delete(`/api/sample`, { data: { id } });
       enqueueSnackbar("Đã tiêu hủy mẫu thí nghiệm", { variant: "success" });
       void navigate("/technician/samples");
-    } catch (e) {
-      enqueueSnackbar("Không thể tiêu hủy mẫu thí nghiệm", {
+    } catch (error) {
+      console.log("Error destroying sample:", error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Tiêu hủy mẫu thí nghiệm thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
       });
     } finally {
       setDestroying(false);

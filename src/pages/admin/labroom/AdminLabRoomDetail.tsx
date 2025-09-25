@@ -57,9 +57,23 @@ const AdminLabRoomDetail: React.FC = () => {
         description: data.description,
       });
       enqueueSnackbar("Cập nhật thành công", { variant: "success" });
-    } catch (err) {
-      console.error("Update phòng thực nghiệm error:", err);
-      enqueueSnackbar("Không thể cập nhật", { variant: "error" });
+    } catch (error) {
+      console.error("Update phòng thực nghiệm error:", error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ?? apiError.message ?? "Cập nhật thất bại!";
+
+      enqueueSnackbar(backendMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
+      });
     } finally {
       setSaving(false);
     }
@@ -74,9 +88,23 @@ const AdminLabRoomDetail: React.FC = () => {
       });
       enqueueSnackbar("Xóa thành công", { variant: "success" });
       navigate("/admin/labroom");
-    } catch (err) {
-      console.error("Delete phòng thực nghiệm error:", err);
-      enqueueSnackbar("Không thể xóa", { variant: "error" });
+    } catch (error) {
+      console.error("Delete phòng thực nghiệm error:", error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ?? apiError.message ?? "Xóa thất bại!";
+
+      enqueueSnackbar(backendMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
+      });
     } finally {
       setDeleting(false);
     }

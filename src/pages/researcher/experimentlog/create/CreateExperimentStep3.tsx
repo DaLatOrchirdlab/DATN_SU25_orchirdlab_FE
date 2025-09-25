@@ -62,10 +62,25 @@ const CreateExperimentStep3 = () => {
       });
       resetForm();
       void navigate("/experiment-log");
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Lỗi không xác định.";
-      setError(errorMessage);
+    } catch (error) {
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Tạo phương pháp thất bại!";
+
+      enqueueSnackbar(backendMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
+      });
+      setError(apiError.message ?? "Có lỗi xảy ra.");
     } finally {
       setIsSubmitting(false);
     }

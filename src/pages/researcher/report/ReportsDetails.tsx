@@ -130,9 +130,24 @@ export default function ReportsDetails() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setAnalyzeResult(res.data as AnalyzeResult);
-    } catch {
-      enqueueSnackbar("Phân tích thất bại. Vui lòng thử lại.", {
+    } catch (error) {
+      console.error("Error analyzing image:", error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Lỗi khi phân tích hình!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
       });
     } finally {
       setAnalyzeLoading(false);
@@ -167,7 +182,21 @@ export default function ReportsDetails() {
       });
     } catch (error) {
       console.error("Lỗi khi gửi đánh giá:", error);
-      enqueueSnackbar("Gửi đánh giá thất bại!", { variant: "error" });
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ?? apiError.message ?? "Đánh giá gửi thất bại!";
+
+      enqueueSnackbar(backendMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
+      });
     }
   };
 

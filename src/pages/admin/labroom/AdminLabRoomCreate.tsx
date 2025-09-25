@@ -24,9 +24,25 @@ const AdminLabRoomCreate: React.FC = () => {
         variant: "success",
       });
       navigate("/admin/labroom");
-    } catch (err) {
-      console.error("Create lab room error:", err);
-      enqueueSnackbar("Không thể tạo phòng thực nghiệm", { variant: "error" });
+    } catch (error) {
+      console.error("Create lab room error:", error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Tạo phòng thực nghiệm thất bại!";
+
+      enqueueSnackbar(backendMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+        preventDuplicate: true,
+      });
     } finally {
       setSubmitting(false);
     }

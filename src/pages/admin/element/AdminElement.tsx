@@ -84,12 +84,24 @@ export default function AdminElement() {
       setShowAdd(false);
       setNewElement({ name: "", description: "" });
       reload();
-    } catch (e) {
-      console.error(e);
-      enqueueSnackbar("Thêm thất bại!", {
+    } catch (error) {
+      console.error(error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Thêm nguyên vật liệu thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
+        autoHideDuration: 5000,
         preventDuplicate: true,
-        autoHideDuration: 2000,
       });
     } finally {
       setAddLoading(false);
@@ -118,12 +130,24 @@ export default function AdminElement() {
       });
       setEditElement(null);
       reload();
-    } catch (e) {
-      console.error(e);
-      enqueueSnackbar("Sửa thất bại!", {
+    } catch (error) {
+      console.error(error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Sửa nguyên vật liệu thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
+        autoHideDuration: 5000,
         preventDuplicate: true,
-        autoHideDuration: 2000,
       });
     } finally {
       setEditLoading(false);
@@ -149,12 +173,24 @@ export default function AdminElement() {
       });
       setDeleteId(null);
       reload();
-    } catch (e) {
-      console.error(e);
-      enqueueSnackbar("Xóa thất bại!", {
+    } catch (error) {
+      console.error(error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Xóa nguyên vật liệu thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
+        autoHideDuration: 5000,
         preventDuplicate: true,
-        autoHideDuration: 2000,
       });
     } finally {
       setDeleteLoading(false);

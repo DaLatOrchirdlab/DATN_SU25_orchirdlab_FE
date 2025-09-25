@@ -123,10 +123,23 @@ export default function DashboardAdmin() {
         autoHideDuration: 3000,
         preventDuplicate: true,
       });
-    } catch {
-      enqueueSnackbar("Cập nhật người dùng thất bại!", {
+    } catch (error) {
+      console.log(error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Cập nhật người dùng thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
-        autoHideDuration: 3000,
+        autoHideDuration: 5000,
         preventDuplicate: true,
       });
     }
@@ -144,10 +157,22 @@ export default function DashboardAdmin() {
         autoHideDuration: 3000,
         preventDuplicate: true,
       });
-    } catch {
-      enqueueSnackbar("Thêm người dùng thất bại!", {
+    } catch (error) {
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Tạo người dùng thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
-        autoHideDuration: 3000,
+        autoHideDuration: 5000,
         preventDuplicate: true,
       });
     }
@@ -168,10 +193,23 @@ export default function DashboardAdmin() {
         autoHideDuration: 3000,
         preventDuplicate: true,
       });
-    } catch {
-      enqueueSnackbar("Xóa người dùng thất bại!", {
+    } catch (error) {
+      console.log(error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Xóa người dùng thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
-        autoHideDuration: 3000,
+        autoHideDuration: 5000,
         preventDuplicate: true,
       });
     }

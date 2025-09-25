@@ -112,12 +112,22 @@ export default function ReportsCreate() {
         autoHideDuration: 2000,
       });
       void navigate("/technician/reports");
-    } catch (err) {
-      console.error("Failed to create report", err);
-      enqueueSnackbar("Tạo báo cáo thất bại!", {
+    } catch (error) {
+      console.error("Failed to create report", error);
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ?? apiError.message ?? "Tạo báo cáo thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
+        autoHideDuration: 5000,
         preventDuplicate: true,
-        autoHideDuration: 2000,
       });
     }
   };
