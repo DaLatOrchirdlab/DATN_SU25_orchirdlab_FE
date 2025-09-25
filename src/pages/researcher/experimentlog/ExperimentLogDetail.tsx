@@ -187,17 +187,10 @@ const ExperimentLogDetail = () => {
         autoHideDuration: 3000,
         preventDuplicate: true,
       });
-      setReloadLog((prev) => prev + 1);
-
-      if (selectedStage < (log.stages?.length ?? 1)) {
-        setSelectedStage(selectedStage + 1);
-      } else {
-        enqueueSnackbar("Đã ở giai đoạn cuối cùng!", {
-          variant: "info",
-          autoHideDuration: 3000,
-          preventDuplicate: true,
-        });
-      }
+      
+      // Reload trang sau khi chuyển giai đoạn thành công
+      window.location.reload();
+      
     } catch (error) {
       console.log(error);
       const apiError = error as {
@@ -415,7 +408,10 @@ const ExperimentLogDetail = () => {
                 disabled={
                   loadingStage ||
                   log.status === "Done" ||
-                  selectedStage !== (log.stages?.length ?? 1)
+                  (log.stages?.findIndex(
+                    (s) => s.name === log.currentStageName
+                  ) ?? 0) !==
+                    (log.stages?.length ?? 1) - 1
                 }
               >
                 {loadingStage
@@ -430,12 +426,11 @@ const ExperimentLogDetail = () => {
                 }}
                 disabled={
                   loadingStage ||
-                  selectedStage !==
-                    (log.stages?.findIndex(
-                      (s) => s.name === log.currentStageName
-                    ) ?? 0) +
-                      1 ||
-                  selectedStage === (log.stages?.length ?? 1)
+                  log.status === "Done" ||
+                  (log.stages?.findIndex(
+                    (s) => s.name === log.currentStageName
+                  ) ?? 0) ===
+                    (log.stages?.length ?? 1) - 1
                 }
               >
                 {loadingStage ? "Đang chuyển..." : "Chuyển giai đoạn"}
@@ -517,7 +512,7 @@ const ExperimentLogDetail = () => {
               </p>
               {(() => {
                 const stage = log.stages?.[selectedStage - 1];
-                if (!stage?.elementDTO) return null;
+                if (!stage?.elementDTO) return null;             
                 const elements = Array.isArray(stage.elementDTO)
                   ? stage.elementDTO
                   : [stage.elementDTO];
@@ -525,7 +520,7 @@ const ExperimentLogDetail = () => {
                 return (
                   <div>
                     <b>Nguyên vật liệu:</b>
-                    <div className="ml-4 space-y-1">
+                    <div className="ml-4 space-y-1">                      
                       {elements.map((el) => (
                         <div key={el.id}>
                           <p>- {el.name ?? "-"}</p>
