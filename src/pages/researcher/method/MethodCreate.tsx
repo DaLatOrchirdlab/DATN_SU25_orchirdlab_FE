@@ -7,8 +7,8 @@ import type { Referent } from "../../../types/Referent";
 import { useSnackbar } from "notistack";
 
 const methodTypes = [
-  { label: "Nhân giống vô tính", value: 1 },
-  { label: "Nhân giống hữu tính", value: 2 },
+  { label: "Nhân giống vô tính", value: 0 },
+  { label: "Nhân giống hữu tính", value: 1 },
 ];
 
 interface ReferentForCreate {
@@ -21,6 +21,7 @@ interface ReferentForCreate {
 interface StageForm {
   title: string;
   content: string;
+  dateOfProcessing: number;
   elementInStages: string[];
   referents: ReferentForCreate[];
 }
@@ -28,7 +29,12 @@ interface StageForm {
 export default function MethodCreate() {
   const navigate = useNavigate();
   const [elements, setElements] = useState<Element[]>([]);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    name: string;
+    type: string;
+    description: string;
+    stages: StageForm[];
+  }>({
     name: "",
     type: "",
     description: "",
@@ -36,9 +42,10 @@ export default function MethodCreate() {
       {
         title: "",
         content: "",
+        dateOfProcessing: 1,
         elementInStages: [],
-        referents: [{ name: "", unit: "", valueFrom: 0, valueTo: 0 }],
-      } as StageForm,
+        referents: [],
+      },
     ],
   });
   const [error, setError] = useState<string>("");
@@ -76,7 +83,7 @@ export default function MethodCreate() {
   const handleStageChange = (
     idx: number,
     field: keyof StageForm,
-    value: string | string[] | Referent[]
+    value: string | string[] | number | Referent[]
   ) => {
     setForm((prev) => {
       const stages = [...prev.stages];
@@ -143,8 +150,9 @@ export default function MethodCreate() {
         {
           title: "",
           content: "",
+          dateOfProcessing: 1,
           elementInStages: [],
-          referents: [{ name: "", unit: "", valueFrom: 0, valueTo: 0 }],
+          referents: [],
         },
       ],
     }));
@@ -176,31 +184,62 @@ export default function MethodCreate() {
     }
 
     for (const stage of form.stages) {
-      for (const ref of stage.referents) {
-        if (ref.valueTo <= ref.valueFrom) {
-          setLoading(false);
-          setError(
-            "Giá trị 'Đến' (valueTo) phải lớn hơn 'Từ' (valueFrom) ở tất cả các referent!"
-          );
-          return;
+      if (!stage.title.trim()) {
+        setLoading(false);
+        setError("Tất cả các giai đoạn phải có tên");
+        return;
+      }
+      if (!stage.content.trim()) {
+        setLoading(false);
+        setError("Tất cả các giai đoạn phải có mô tả");
+        return;
+      }
+      if (stage.dateOfProcessing < 1) {
+        setLoading(false);
+        setError("Số ngày xử lý phải lớn hơn 0");
+        return;
+      }
+
+      // Validate referents - chỉ validate nếu có referents
+      if (stage.referents.length > 0) {
+        for (const ref of stage.referents) {
+          if (!ref.name.trim()) {
+            setLoading(false);
+            setError("Tên thông tin tham chiếu không được để trống");
+            return;
+          }
+          if (!ref.unit.trim()) {
+            setLoading(false);
+            setError("Đơn vị thông tin tham chiếu không được để trống");
+            return;
+          }
+          if (ref.valueTo <= ref.valueFrom) {
+            setLoading(false);
+            setError(
+              "Giá trị 'Đến' phải lớn hơn 'Từ' trong thông tin tham chiếu"
+            );
+            return;
+          }
         }
       }
     }
+    // Payload - chỉ gửi referents nếu có data
     const payload = {
       name: form.name,
       description: form.description,
-      type: form.type,
+      type: parseInt(form.type),
       stages: form.stages.map((stage, idx) => ({
         name: stage.title,
         description: stage.content,
-        dateOfProcessing: 1,
+        dateOfProcessing: stage.dateOfProcessing,
         step: idx + 1,
         elementInStages: stage.elementInStages,
-        referents: stage.referents,
+        // Chỉ gửi referents nếu có data
+        ...(stage.referents.length > 0 && { referents: stage.referents }),
       })),
     };
 
-    console.log(payload);
+    console.log("Payload being sent:", JSON.stringify(payload, null, 2));
 
     try {
       await axiosInstance.post(
@@ -216,9 +255,21 @@ export default function MethodCreate() {
       });
     } catch (error) {
       setLoading(false);
-      enqueueSnackbar("Tạo phương pháp thất bại!", {
+      const apiError = error as {
+        response?: {
+          data?: string;
+          status?: number;
+        };
+        message?: string;
+      };
+      const backendMessage =
+        apiError.response?.data ??
+        apiError.message ??
+        "Tạo phương pháp thất bại!";
+
+      enqueueSnackbar(backendMessage, {
         variant: "error",
-        autoHideDuration: 3000,
+        autoHideDuration: 5000,
         preventDuplicate: true,
       });
       console.error("Error creating method:", error);
@@ -329,6 +380,27 @@ export default function MethodCreate() {
                   className="mb-2 w-full border px-3 py-2 rounded"
                 />
                 {error && <p className="text-red-500">{error}</p>}
+                <div className="mb-2">
+                  <label className="block font-medium mb-1">
+                    Số ngày xử lý
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={stage.dateOfProcessing}
+                    onChange={(e) =>
+                      handleStageChange(
+                        stageIdx,
+                        "dateOfProcessing",
+                        Number(e.target.value)
+                      )
+                    }
+                    placeholder="Số ngày"
+                    required
+                    className="w-full border px-3 py-2 rounded"
+                  />
+                  {error && <p className="text-red-500">{error}</p>}
+                </div>
                 <label className="block font-semibold mb-1">
                   Chọn nguyên vật liệu cho giai đoạn này
                 </label>
@@ -348,116 +420,94 @@ export default function MethodCreate() {
                 <div>
                   <label className="block font-semibold mb-1">
                     Thông tin tham chiếu
+                    <span className="text-gray-500 font-normal text-sm ml-2">
+                      (Tùy chọn)
+                    </span>
                   </label>
-                  {stage.referents.map((ref, refIdx) => (
-                    <div key={refIdx} className="flex gap-2 mb-2 items-center">
-                      <input
-                        value={ref.name}
-                        onChange={(e) =>
-                          handleReferentChange(
-                            stageIdx,
-                            refIdx,
-                            "name",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Tên"
-                        required
-                        className="border px-2 py-1 rounded"
-                      />
-                      {/* <Select
-                        showSearch
-                        style={{ minWidth: 180, marginRight: 8 }}
-                        placeholder="Chọn tham chiếu"
-                        value={ref.name}
-                        onChange={(value) => {
-                          const selected = referentOptions.find(
-                            (r) => r.id === value
-                          );
-                          handleReferentChange(
-                            stageIdx,
-                            refIdx,
-                            "name",
-                            selected?.name ?? ""
-                          );
-                        }}
-                        options={referentOptions.map((r) => ({
-                          label: r.name,
-                          value: r.id,
-                        }))}
-                      /> */}
-                      {error && <p className="text-red-500">{error}</p>}
-                      <input
-                        type="text"
-                        value={ref.unit}
-                        onChange={(e) =>
-                          handleReferentChange(
-                            stageIdx,
-                            refIdx,
-                            "unit",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Đơn vị"
-                        required
-                        className="border px-2 py-1 rounded w-20"
-                      />
-                      {error && <p className="text-red-500">{error}</p>}
-                      <label className="block font-semibold mb-1">
-                        Giá trị min:
-                      </label>
-                      <input
-                        type="number"
-                        value={ref.valueFrom}
-                        onChange={(e) =>
-                          handleReferentChange(
-                            stageIdx,
-                            refIdx,
-                            "valueFrom",
-                            Number(e.target.value)
-                          )
-                        }
-                        placeholder="Từ"
-                        required
-                        className="border px-2 py-1 rounded w-20"
-                      />
-                      {error && <p className="text-red-500">{error}</p>}
-                      <label className="block font-semibold mb-1">
-                        Giá trị max:
-                      </label>
-                      <input
-                        type="number"
-                        value={ref.valueTo}
-                        onChange={(e) =>
-                          handleReferentChange(
-                            stageIdx,
-                            refIdx,
-                            "valueTo",
-                            Number(e.target.value)
-                          )
-                        }
-                        placeholder="Đến"
-                        required
-                        className="border px-2 py-1 rounded w-20"
-                      />
-                      {error && <p className="text-red-500">{error}</p>}
-                      {stage.referents.length > 1 && (
-                        <button
-                          type="button"
-                          className="text-red-600 hover:underline"
-                          onClick={() => handleRemoveReferent(stageIdx, refIdx)}
-                        >
-                          Xóa
-                        </button>
-                      )}
+
+                  {/* Chỉ hiển thị referents nếu có */}
+                  {stage.referents.length > 0 && (
+                    <div className="space-y-2 mb-2">
+                      {stage.referents.map((ref, refIdx) => (
+                        <div key={refIdx} className="flex gap-2 items-center">
+                          <input
+                            value={ref.name}
+                            onChange={(e) =>
+                              handleReferentChange(
+                                stageIdx,
+                                refIdx,
+                                "name",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Tên"
+                            className="border px-2 py-1 rounded"
+                          />
+                          <input
+                            type="text"
+                            value={ref.unit}
+                            onChange={(e) =>
+                              handleReferentChange(
+                                stageIdx,
+                                refIdx,
+                                "unit",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Đơn vị"
+                            className="border px-2 py-1 rounded w-20"
+                          />
+                          <label className="text-sm">Từ:</label>
+                          <input
+                            type="number"
+                            value={ref.valueFrom}
+                            onChange={(e) =>
+                              handleReferentChange(
+                                stageIdx,
+                                refIdx,
+                                "valueFrom",
+                                Number(e.target.value)
+                              )
+                            }
+                            placeholder="Min"
+                            className="border px-2 py-1 rounded w-20"
+                          />
+                          <label className="text-sm">Đến:</label>
+                          <input
+                            type="number"
+                            value={ref.valueTo}
+                            onChange={(e) =>
+                              handleReferentChange(
+                                stageIdx,
+                                refIdx,
+                                "valueTo",
+                                Number(e.target.value)
+                              )
+                            }
+                            placeholder="Max"
+                            className="border px-2 py-1 rounded w-20"
+                          />
+                          <button
+                            type="button"
+                            className="text-red-600 hover:underline"
+                            onClick={() =>
+                              handleRemoveReferent(stageIdx, refIdx)
+                            }
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
+
+                  {/* Nút thêm thông tin tham chiếu */}
                   <button
                     type="button"
-                    className="text-green-700 hover:underline cursor-pointer"
+                    className="text-green-700 hover:underline cursor-pointer text-sm"
                     onClick={() => handleAddReferent(stageIdx)}
                   >
-                    Thêm thông tin tham chiếu
+                    + Thêm thông tin tham chiếu
                   </button>
                 </div>
               </div>
