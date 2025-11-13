@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/AuthContext";
 import type { LoginResponse } from "../../types/Auth";
+import LoginBackground from "../../assets/LoginBackground.jpg";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -41,8 +42,20 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#e6e2ea]">
-      <div className="w-[900px] h-[520px] bg-white rounded-[40px] shadow-xl flex overflow-hidden border border-gray-300 relative">
+    <div className="min-h-screen w-full flex items-center justify-center relative">
+      {/* Background với opacity */}
+      <div 
+        className="absolute inset-0 -z-10"
+        style={{
+          backgroundImage: `url(${LoginBackground})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          opacity: 0.5
+        }}
+      />
+      
+      <div className="w-[900px] h-[520px] bg-white rounded-[40px] shadow-xl flex overflow-hidden border border-gray-300 relative z-10">
         {/* Left: Login Form */}
         <div className="w-1/2 bg-[#d8eddb] flex flex-col justify-center px-12 py-10">
           <h1 className="text-4xl font-bold text-green-800 mb-8 leading-tight">
